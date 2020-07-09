@@ -1,14 +1,18 @@
 package org.clulab.alignment
 
+import ai.lum.common.ConfigFactory
+import ai.lum.common.ConfigUtils._
+import com.typesafe.config.Config
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.processors.Processor
+import org.clulab.processors.fastnlp.FastNLPProcessor
 
 class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) extends Aligner {
 
   val name = "WeightedParentSimilarity"
   private val separator: String = "/"
 
-  override def align(c1: Concept, c2: Concept): Score = {
+  override def align(c1: Concept, c2: Concept): ScoredPair = {
     // like entity/natural_resource/water ==> Seq(entity, natural_resource, water)
     // reverse: Seq(water, natural_resource, water)
     val parents1 = getParents(c1.name).reverse
@@ -19,7 +23,7 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
       val score = mweStringSimilarity(parents1(i), parents2(i))
       avg += score / (i + 1)
     }
-    Score(name, avg)
+    ScoredPair(name, c1, c2, avg)
   }
 
   private def getParents(conceptName: String): Seq[String] = {
@@ -52,7 +56,12 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
       ws
     }
   }
+}
 
-
-
+object WeightedParentSimilarityAligner {
+  def fromConfig(config: Config = ConfigFactory.load()): WeightedParentSimilarityAligner = {
+    val w2v = new Word2Vec(config[String]("aligner.w2v"))
+    val proc = new FastNLPProcessor()
+    new WeightedParentSimilarityAligner(w2v, proc)
+  }
 }

@@ -4,6 +4,7 @@ import org.scalatest._
 import org.clulab.wm.eidos.utils.Sourcer
 import org.clulab.wm.eidos.utils.Closer.AutoCloser
 import ai.lum.common.ConfigUtils._
+import org.clulab.alignment.utils.ConceptUtils
 import org.clulab.alignment.{Aligner, Concept, WeightedParentSimilarityAligner}
 
 import scala.collection.mutable.ArrayBuffer
@@ -56,10 +57,10 @@ object TestAlignerTopDownUtils {
 
     val uniqueAnswerConcepts = ArrayBuffer[Concept]()
     for (answer <- uniqueAnswers){
-
+      uniqueAnswerConcepts.append(ConceptUtils.conceptBOWFromString(aligner.w2v, answer.split(" /").mkString(" ")))
     }
 
-
+    uniqueAnswerConcepts
   }
 
 }
@@ -67,7 +68,7 @@ object TestAlignerTopDownUtils {
 class TestAlignerTopDown extends FlatSpec with Matchers {
 
   // TODO: fix this, how to load this?
-  //val aligner = WeightedParentSimilarityAligner.fromConfig()
+  val aligner = WeightedParentSimilarityAligner.fromConfig()
 
   behavior of "Top down concept aligner"
 

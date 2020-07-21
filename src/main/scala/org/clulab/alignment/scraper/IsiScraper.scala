@@ -24,8 +24,6 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
       val variablesText = requests.get(variablesUrl, auth).text(StandardCharsets.UTF_8)
       val variables = ujson.read(variablesText).arr.toIndexedSeq
 
-      println(variablesText)
-      println()
       variables.foreach { variable =>
         val variableId = variable("variable_id").str
         val variableName = variable("name").str

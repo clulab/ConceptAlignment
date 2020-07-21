@@ -7,7 +7,7 @@ import org.clulab.wm.eidos.utils.TsvWriter
 
 import scala.collection.JavaConverters._
 
-object Scraper extends App {
+object ScraperApp extends App {
   val config = ConfigFactory.load
   val scraperNames = config.getStringList("Scraper.scrapers").asScala
   val scrapers = scraperNames.map { scraperName => DatamartScraper(config, scraperName) }

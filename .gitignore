@@ -5,3 +5,7 @@
 project/project
 project/target
 target
+
+cache/*
+.cache/*
+

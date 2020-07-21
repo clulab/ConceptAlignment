@@ -1,8 +1,7 @@
 package org.clulab.alignment
 
-import ai.lum.common.ConfigFactory
 import ai.lum.common.ConfigUtils._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.processors.Processor
 import org.clulab.processors.fastnlp.FastNLPProcessor
@@ -21,7 +20,7 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
     var avg = 0.0f // optimization
     for (i <- 0 until k) {
       val score = mweStringSimilarity(parents1(i), parents2(i))
-      avg += score / (i + 1)
+      avg += score.toFloat / (i + 1)
     }
     ScoredPair(name, c1, c2, avg)
   }

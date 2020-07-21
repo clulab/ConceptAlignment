@@ -11,6 +11,7 @@ val procVer = "8.0.2"
 libraryDependencies ++= Seq(
   "org.clulab"    %% "processors-main"          % procVer,
   "org.clulab"    %% "processors-corenlp"       % procVer,
+  "org.clulab"    %% "eidos"                    % "1.0.3", // "1.1.0-SNAPSHOT",
   "ai.lum"        %% "common"                   % "0.0.10",
   "com.lihaoyi"   %% "ujson"                    % "0.7.1",
   "com.lihaoyi"   %% "upickle"                  % "0.7.1",

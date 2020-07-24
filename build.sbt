@@ -12,16 +12,17 @@ libraryDependencies ++= {
   val ulihaoyiVer = "0.7.1"
 
   Seq(
-    "org.clulab"        %% "processors-main"         % procVer,
-    "org.clulab"        %% "processors-corenlp"      % procVer,
-    "org.clulab"        %% "eidos"                   % "1.0.3", // "1.1.0-SNAPSHOT",
-    "ai.lum"            %% "common"                  % "0.0.10",
-    "com.lihaoyi"       %% "ujson"                   % ulihaoyiVer,
-    "com.lihaoyi"       %% "upickle"                 % ulihaoyiVer,
-    "com.lihaoyi"       %% "requests"                % "0.5.1",
-    "org.apache.lucene"  % "lucene-core"             % luceneVer,
-    "org.apache.lucene"  % "lucene-analyzers-common" % luceneVer,
-    "org.apache.lucene"  % "lucene-queryparser"      % luceneVer
+    "org.clulab"         %% "processors-main"         % procVer,
+    "org.clulab"         %% "processors-corenlp"      % procVer,
+    "org.clulab"         %% "eidos"                   % "1.0.3", // "1.1.0-SNAPSHOT",
+    "ai.lum"             %% "common"                  % "0.0.10",
+    "com.lihaoyi"        %% "ujson"                   % ulihaoyiVer,
+    "com.lihaoyi"        %% "upickle"                 % ulihaoyiVer,
+    "com.lihaoyi"        %% "requests"                % "0.5.1",
+    "org.apache.lucene"   % "lucene-core"             % luceneVer,
+    "org.apache.lucene"   % "lucene-analyzers-common" % luceneVer,
+    "org.apache.lucene"   % "lucene-queryparser"      % luceneVer,
+    "com.github.jelmerk" %% "hnswlib-scala"           % "0.0.45"
   )
 }
 

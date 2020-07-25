@@ -1,28 +1,51 @@
 package org.clulab.alignment.knn.hnswlib
 
+import java.io.File
+
 import com.github.jelmerk.knn.scalalike._
 import com.github.jelmerk.knn.scalalike.hnsw._
+import org.clulab.embeddings.word2vec.CompactWord2Vec
 
-object Indexer extends App {
+object IndexerApp extends App {
 
-  case class Word(id: String, vector: Array[Float]) extends Item[String, Array[Float]] {
-    override def dimensions(): Int = vector.length
+  def indexTest(): Unit = {
+    val filename = "../hnswlib-test.idx"
+    val dimensions = 4
+    val items = Array(
+      TestAlignmentItem("one",   Array(1f, 2f, 3f, 4f)),
+      TestAlignmentItem("two",   Array(2f, 3f, 4f, 5f)),
+      TestAlignmentItem("three", Array(3f, 4f, 5f, 6f))
+    )
+    val index = HnswIndex[String, Array[Float], TestAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
+
+    index.addAll(items)
+    index.save(new File(filename))
   }
 
-  val dimensions = 4
-  val words = Array(
-    Word("one",   Array(1f, 2f, 3f, 4f)),
-    Word("two",   Array(2f, 3f, 4f, 5f)),
-    Word("three", Array(3f, 4f, 5f, 6f))
-  )
-  val index = HnswIndex[String, Array[Float], Word, Float](dimensions, floatCosineDistance, words.size)
+  def indexGlove(): Unit = {
+    val filename = "../hnswlib-glove.idx"
+    val dimensions = 300
+    val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+    val keys = w2v.keys
+    val index = HnswIndex[String, Array[Float], GloveAlignmentItem, Float](dimensions, floatCosineDistance, keys.size)
+    val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
 
-  index.addAll(words)
-  // This finds neighbors of specific, known item.
-  index.findNeighbors("three", k = 10).foreach { case SearchResult(item, distance) =>
-    println(s"$item $distance")
+    index.addAll(items)
+    index.save(new File(filename))
   }
 
-  // This finds neighbors based on location that doesn't necessarily correspond to any known item.
+  def indexOntology(): Unit = {
+    // This is waiting for easier access to the ontologies.
+    val filename = "../hnswlib-ontology.idx"
+    val dimensions = 300
+    val items = Array.empty[OntologyAlignmentItem]
+    val index = HnswIndex[String, Array[Float], OntologyAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
 
+    index.addAll(items)
+    index.save(new File(filename))
+  }
+
+  indexTest()
+  indexGlove()
+  indexOntology()
 }

@@ -33,9 +33,9 @@ object SearcherApp extends App {
 
   def searchGlove(): Unit = {
     val filename = "../hnswlib-glove.idx"
-    val index = HnswIndex.load[String, Array[Float], GloveAlignmentItem, Float](new File(filename))
     val random = new Random(0)
     val vector = new Array[Float](300)
+    val index = HnswIndex.load[String, Array[Float], GloveAlignmentItem, Float](new File(filename))
 
     vector.indices.foreach { index => vector(index) = random.nextFloat() }
     normalize(vector)
@@ -60,4 +60,8 @@ object SearcherApp extends App {
       println(s"$item $distance")
     }
   }
+
+  searchTest()
+  searchGlove()
+//  searchOntology()
 }

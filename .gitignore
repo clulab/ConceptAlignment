@@ -9,3 +9,5 @@ target
 cache/*
 .cache/*
 
+# For MacOS filesystem
+.DS_Store

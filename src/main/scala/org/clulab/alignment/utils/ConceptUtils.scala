@@ -1,7 +1,7 @@
 package org.clulab.alignment.utils
 
 import org.clulab.alignment.{CompositionalConcept, Concept, ConceptSequence, FlatConcept}
-import org.clulab.embeddings.word2vec.Word2Vec
+import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.wm.eidos.groundings.{EidosOntologyGrounder, OntologyHandler}
 
 object ConceptUtils {
@@ -9,7 +9,7 @@ object ConceptUtils {
   // This has to wait for Eidos 1.1.0.
   lazy val ontologyHandler: OntologyHandler = null // OntologyHandler.fromConfig()
 
-  def conceptBOWFromString(s: String, w2v: Word2Vec, flat: Boolean): Concept = {
+  def conceptBOWFromString(s: String, w2v: CompactWord2Vec, flat: Boolean): Concept = {
     val tokens = s.split(" ").map(_.trim.toLowerCase())
     val emb = w2v.makeCompositeVector(tokens).map(_.toFloat)
     val flatConcept = new FlatConcept(s, emb)

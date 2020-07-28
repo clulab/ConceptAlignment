@@ -6,3 +6,8 @@ class DatamartParser {
     text.split(' ')
   }
 }
+
+object DatamartParser {
+
+  def apply(): DatamartParser = new DatamartParser()
+}

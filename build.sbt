@@ -15,7 +15,9 @@ libraryDependencies ++= Seq(
   "ai.lum"        %% "common"                   % "0.0.8",
   "com.lihaoyi"   %% "ujson"                    % "0.7.1",
   "com.lihaoyi"   %% "upickle"                  % "0.7.1",
-  "org.scalatest" %% "scalatest"                % "3.0.4" % "test"
+  "org.scalatest" %% "scalatest"                % "3.0.4" % "test",
+  "org.clulab"    % "glove-840b-300d"          % "0.1.0"
+
 )
 
 lazy val core = project in file(".")

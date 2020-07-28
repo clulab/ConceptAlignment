@@ -4,8 +4,11 @@ import org.scalatest._
 import org.clulab.wm.eidos.utils.Sourcer
 import org.clulab.wm.eidos.utils.Closer.AutoCloser
 import ai.lum.common.ConfigUtils._
+import org.clulab.alignment.Example.{aligner, tdConcepts}
 import org.clulab.alignment.utils.ConceptUtils
-import org.clulab.alignment.{Aligner, Concept, WeightedParentSimilarityAligner}
+import org.clulab.alignment.utils.ConceptUtils.ontologyHandler
+import org.clulab.alignment._
+import org.clulab.wm.eidos.groundings.EidosWordToVec
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -49,30 +52,59 @@ object TestAlignerTopDownUtils {
     queryAnswerSeq
   }
 
-  def constructCandidateAnswerExampleEmbeddings(aligner:Aligner, queryAnswerSeq:Seq[(String, Seq[String])]):Seq[Concept] = {
+  def constructCandidateAnswerExampleEmbeddings(w2v: EidosWordToVec, queryAnswerSeq:Seq[(String, Seq[String])]):ConceptSequence = {
 
     val allAnswers = ArrayBuffer[String]()
     queryAnswerSeq.foreach{x => allAnswers++=x._2}
-    val uniqueAnswers = allAnswers.flatten.distinct
+    val uniqueAnswers = allAnswers.distinct
 
-    val uniqueAnswerConcepts = ArrayBuffer[Concept]()
-    for (answer <- uniqueAnswers){
-      uniqueAnswerConcepts.append(ConceptUtils.conceptBOWFromString(aligner.w2v, answer.split(" /").mkString(" ")))
-    }
-
-    uniqueAnswerConcepts
+    ConceptSequence(uniqueAnswers.map(answerString => new FlatConcept(answerString, w2v.makeCompositeVector(answerString.split(" ")))))
   }
 
+  def ymlTextToConcept(ymlText: String, w2v:EidosWordToVec):Concept = {
+    val normalizedText = ymlText.replace("/","_")
+    new FlatConcept(normalizedText, w2v.makeCompositeVector(normalizedText.split("_")))
+  }
+
+  def getPrecisionAtTen(pred: Seq[ScoredPair], target: Seq[String]):Float = {
+
+    var hitCount = 0.0f
+    for (scoredPair <- pred){
+      if (target.contains(scoredPair.dst.name)){
+        hitCount+=1
+      }
+    }
+    hitCount/target.length
+  }
 }
 
 class TestAlignerTopDown extends FlatSpec with Matchers {
 
-  // TODO: fix this, how to load this?
-  val aligner = WeightedParentSimilarityAligner.fromConfig()
+  // load evaluation data
+  val rawEvaluationData = TestAlignerTopDownUtils.readEvaluationDataFromTsv()
+  val topDownSamplePairSeq = TestAlignerTopDownUtils.generateQueryAnswerPairs(rawEvaluationData)
 
+  // load aligner
+  val (_, w2v) = ConceptUtils.conceptsFromWMOntology("wm_flattened")
+  val aligner = WeightedParentSimilarityAligner.fromConfig(w2v)
+
+  // load candidate answer embeddings
+  val conceptSeq = TestAlignerTopDownUtils.constructCandidateAnswerExampleEmbeddings(w2v, topDownSamplePairSeq)
+
+  // actual testing
   behavior of "Top down concept aligner"
 
-  it should "have an precision@10 above 0.6" in {
-    1>0 should be (true)
+  it should "have an precision@10 above 0.5" in {
+
+    var precisionSeq = new ArrayBuffer[Float]()
+    for (evalPair <- topDownSamplePairSeq) {
+      val ymlConcept = TestAlignerTopDownUtils.ymlTextToConcept(evalPair._1, w2v)
+      val top10 = aligner.topk(ymlConcept, conceptSeq, 10)
+      precisionSeq.append(TestAlignerTopDownUtils.getPrecisionAtTen(top10, evalPair._2))
+    }
+
+    val precisionAt10 = precisionSeq.sum/precisionSeq.length
+
+    precisionAt10>0.5 should be (true)
   }
 }

@@ -2,11 +2,10 @@ package org.clulab.alignment.utils
 
 import com.typesafe.config.Config
 import ai.lum.common.ConfigUtils._
-
 import org.clulab.alignment.{CompositionalConcept, Concept, ConceptSequence, FlatConcept}
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.wm.eidos.{EidosProcessor, EidosSystem}
-import org.clulab.wm.eidos.groundings.{EidosOntologyGrounder, OntologyHandler}
+import org.clulab.wm.eidos.groundings.{EidosOntologyGrounder, EidosWordToVec, OntologyHandler}
 import org.clulab.wm.eidos.utils.StopwordManager
 
 object ConceptUtils {
@@ -23,7 +22,7 @@ object ConceptUtils {
     tagSet
   )
 
-  def conceptBOWFromString(s: String, w2v: Word2Vec, flat: Boolean): Concept = {
+  def conceptBOWFromString(s: String, w2v: EidosWordToVec, flat: Boolean): Concept = {
     val tokens = s.split(" ").map(_.trim.toLowerCase())
     val emb = w2v.makeCompositeVector(tokens).map(_.toFloat)
     val flatConcept = new FlatConcept(s, emb)
@@ -34,12 +33,12 @@ object ConceptUtils {
     }
   }
 
-  def conceptsFromWMOntology(namespace: String): ConceptSequence = {
+  def conceptsFromWMOntology(namespace: String): (ConceptSequence, EidosWordToVec) = {
     val TDOntology = ontologyHandler.ontologyGrounders
       .collect { case grounder: EidosOntologyGrounder => grounder}
       .find { grounder => grounder.name == namespace }.get
     val TDConceptEmbeddings = TDOntology.conceptEmbeddings
-    ConceptSequence(TDConceptEmbeddings.map(ce => new FlatConcept(ce.namer.name, ce.embedding)))
+    (ConceptSequence(TDConceptEmbeddings.map(ce => new FlatConcept(ce.namer.name, ce.embedding))), ontologyHandler.wordToVec)
   }
 
 }

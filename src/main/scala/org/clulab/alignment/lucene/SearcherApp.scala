@@ -10,7 +10,7 @@ import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.TopScoreDocCollector
 import org.apache.lucene.store.FSDirectory
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.Closer.AutoCloser
 
 object SearcherApp extends App {
   val luceneDir = "../lucene"

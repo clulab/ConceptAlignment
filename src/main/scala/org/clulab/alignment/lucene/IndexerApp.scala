@@ -10,9 +10,9 @@ import org.apache.lucene.document.TextField
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.index.IndexWriterConfig
 import org.apache.lucene.store.FSDirectory
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import org.clulab.wm.eidos.utils.Sourcer
-import org.clulab.wm.eidos.utils.TsvReader
+import org.clulab.alignment.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.Sourcer
+import org.clulab.alignment.utils.TsvReader
 
 object IndexerApp extends App {
   val filename = "../datamarts.tsv"

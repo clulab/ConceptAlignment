@@ -3,9 +3,9 @@ package org.clulab.alignment.groundings.ontologies
 import org.clulab.alignment.groundings.DatamartEntry
 import org.clulab.alignment.groundings.DatamartIdentifier
 import org.clulab.alignment.groundings.DatamartParser
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import org.clulab.wm.eidos.utils.Sourcer
-import org.clulab.wm.eidos.utils.TsvReader
+import org.clulab.alignment.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.Sourcer
+import org.clulab.alignment.utils.TsvReader
 
 class DatamartOntology(val datamartEntries: Seq[DatamartEntry])
 

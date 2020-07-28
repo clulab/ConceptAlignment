@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.typesafe.config.Config
 import org.clulab.alignment.utils.PropertiesBuilder
-import org.clulab.wm.eidos.utils.TsvWriter
+import org.clulab.alignment.utils.TsvWriter
 import requests.RequestAuth.Basic
 
 class IsiScraper(baseUrl: String, username: String, password: String) extends DatamartScraper {

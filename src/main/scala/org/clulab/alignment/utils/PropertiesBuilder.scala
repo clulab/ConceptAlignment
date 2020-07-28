@@ -2,8 +2,7 @@ package org.clulab.alignment.utils
 
 import java.util.Properties
 
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import org.clulab.wm.eidos.utils.FileUtils
+import org.clulab.alignment.utils.Closer.AutoCloser
 
 import scala.collection.JavaConverters._
 

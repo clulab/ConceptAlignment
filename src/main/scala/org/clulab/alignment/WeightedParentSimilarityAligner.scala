@@ -21,7 +21,7 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
     var avg = 0.0f // optimization
     for (i <- 0 until k) {
       val score = mweStringSimilarity(parents1(i), parents2(i))
-      avg += score / (i + 1)
+      avg += score.toFloat / (i + 1)
     }
     ScoredPair(name, c1, c2, avg)
   }

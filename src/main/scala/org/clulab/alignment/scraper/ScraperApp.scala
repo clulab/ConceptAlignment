@@ -1,9 +1,9 @@
 package org.clulab.alignment.scraper
 
 import com.typesafe.config.ConfigFactory
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import org.clulab.wm.eidos.utils.FileUtils
-import org.clulab.wm.eidos.utils.TsvWriter
+import org.clulab.alignment.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.FileUtils
+import org.clulab.alignment.utils.TsvWriter
 
 import scala.collection.JavaConverters._
 

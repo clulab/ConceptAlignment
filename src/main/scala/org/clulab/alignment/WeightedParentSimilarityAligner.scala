@@ -3,11 +3,12 @@ package org.clulab.alignment
 import ai.lum.common.ConfigFactory
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.Config
+import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.embeddings.word2vec.Word2Vec
 import org.clulab.processors.Processor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 
-class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) extends Aligner {
+class WeightedParentSimilarityAligner(val w2v: CompactWord2Vec, val proc: Processor) extends Aligner {
 
   val name = "WeightedParentSimilarity"
   private val separator: String = "/"
@@ -34,7 +35,7 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
     dotProduct(mkMWEmbedding(a), mkMWEmbedding(b))
   }
 
-  def mkMWEmbedding(s: String, contentOnly: Boolean = false): Array[Double] = {
+  def mkMWEmbedding(s: String, contentOnly: Boolean = false): Array[Float] = {
     val words = s.split("[ |_]").map(Word2Vec.sanitizeWord(_))
     w2v.makeCompositeVector(selectWords(words, contentOnly))
   }
@@ -60,7 +61,7 @@ class WeightedParentSimilarityAligner(val w2v: Word2Vec, val proc: Processor) ex
 
 object WeightedParentSimilarityAligner {
   def fromConfig(config: Config = ConfigFactory.load()): WeightedParentSimilarityAligner = {
-    val w2v = new Word2Vec(config[String]("aligner.w2v"))
+    val w2v: CompactWord2Vec = null // new Word2Vec(config[String]("aligner.w2v"))
     val proc = new FastNLPProcessor()
     new WeightedParentSimilarityAligner(w2v, proc)
   }

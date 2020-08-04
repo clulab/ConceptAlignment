@@ -1,45 +1,37 @@
 package org.clulab.alignment.groundings.ontologies
 
-import org.clulab.alignment.groundings.DatamartNamer
+import org.clulab.alignment.groundings.DatamartEntry
+import org.clulab.alignment.groundings.DatamartIdentifier
 import org.clulab.alignment.groundings.DatamartParser
-import org.clulab.wm.eidos.groundings.EidosWordToVec
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import org.clulab.wm.eidos.utils.Namer
-import org.clulab.wm.eidos.utils.Sourcer
-import org.clulab.wm.eidos.utils.TsvReader
+import org.clulab.alignment.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.Sourcer
+import org.clulab.alignment.utils.TsvReader
 
-class DatamartOntology(namersAndValues: Seq[(Namer, Array[String])]) {
-
-  def size: Integer =  namersAndValues.size
-
-  def getNamer(n: Integer): Namer = namersAndValues(n)._1
-
-  def getValues(n: Integer): Array[String] = namersAndValues(n)._2
-}
+class DatamartOntology(val datamartEntries: Seq[DatamartEntry])
 
 object DatamartOntology {
 
-  def fromFile(filename: String, word2Vec: EidosWordToVec, parser: DatamartParser): DatamartOntology = {
+  def fromFile(filename: String, parser: DatamartParser): DatamartOntology = {
     val tsvReader = new TsvReader()
-    val namersAndValues = Sourcer.sourceFromFile(filename).autoClose { source =>
+    val datamartEntries = Sourcer.sourceFromFile(filename).autoClose { source =>
       source.getLines.buffered.drop(1).map { line =>
         val Array(
-        datamartId,
-        datasetId,
-        _,
-        _,
-        _,
-        variableId,
-        _,
-        variableDescription
+          datamartId,
+          datasetId,
+          _,
+          _,
+          _,
+          variableId,
+          _,
+          variableDescription
         ) = tsvReader.readln(line, length = 8)
-        val namer = new DatamartNamer(datamartId, datasetId, variableId)
+        val datamartIdentifier = new DatamartIdentifier(datamartId, datasetId, variableId)
         val words = parser.parse(variableDescription)
 
-        (namer, words)
+        DatamartEntry(datamartIdentifier, words)
       }.toVector
     }
 
-    new DatamartOntology(namersAndValues)
+    new DatamartOntology(datamartEntries)
   }
 }

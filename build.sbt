@@ -12,15 +12,16 @@ libraryDependencies ++= {
   val   luceneVer = "6.6.6" // Match transitive dependency in Eidos.
 
   Seq(
-    "ai.lum"             %% "common"                  % "0.0.10",
-    "org.apache.lucene"   % "lucene-core"             % luceneVer,
-    "org.apache.lucene"   % "lucene-analyzers-common" % luceneVer,
-    "org.apache.lucene"   % "lucene-queryparser"      % luceneVer,
+    "ai.lum"                     %% "common"                  % "0.0.10",
+    "org.apache.lucene"           % "lucene-core"             % luceneVer,
+    "org.apache.lucene"           % "lucene-analyzers-common" % luceneVer,
+    "org.apache.lucene"           % "lucene-queryparser"      % luceneVer,
 
-    "org.slf4j"                   % "slf4j-api"       % "1.7.10",
-    "com.typesafe.scala-logging" %% "scala-logging"   % "3.7.2",
+    "com.typesafe.scala-logging" %% "scala-logging"           % "3.7.2",
+    "ch.qos.logback"              % "logback-classic"         % "1.0.10",
+    "org.slf4j"                   % "slf4j-api"               % "1.7.10",
 
-    "com.github.jelmerk" %% "hnswlib-scala"           % "0.0.45"
+    "com.github.jelmerk"         %% "hnswlib-scala"           % "0.0.45"
   )
 }
 

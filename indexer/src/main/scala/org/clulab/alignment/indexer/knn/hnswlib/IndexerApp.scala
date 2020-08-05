@@ -1,8 +1,8 @@
-package org.clulab.alignment.knn.hnswlib
+package org.clulab.alignment.indexer.knn.hnswlib
 
 import java.io.File
 
-import ai.lum.common.ConfigUtils
+//import ai.lum.common.ConfigUtils
 import com.github.jelmerk.knn.scalalike._
 import com.github.jelmerk.knn.scalalike.hnsw._
 import org.clulab.alignment.grounder.datamart.DatamartOntology
@@ -28,7 +28,7 @@ object IndexerApp extends App {
       TestAlignmentItem("two",   Array(2f, 3f, 4f, 5f)),
       TestAlignmentItem("three", Array(3f, 4f, 5f, 6f))
     )
-    val index = HnswIndex[String, Array[Float], TestAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
+    val index = HnswIndex[String, Array[Float], TestAlignmentItem, Float](dimensions, floatCosineDistance, items.length)
 
     index.addAll(items)
     index.save(new File(filename))

@@ -1,10 +1,8 @@
-package org.clulab.alignment
+package org.clulab.alignment.aligner
 
-import ai.lum.common.ConfigUtils._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.clulab.alignment.aligner.Aligner
-import org.clulab.alignment.aligner.ScoredPair
+import org.clulab.alignment.Concept
 import org.clulab.alignment.utils.DotProduct
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.embeddings.word2vec.Word2Vec
@@ -27,7 +25,7 @@ class WeightedParentSimilarityAligner(val w2v: CompactWord2Vec, val proc: Proces
       val score = mweStringSimilarity(parents1(i), parents2(i))
       avg += score.toFloat / (i + 1)
     }
-    aligner.ScoredPair(name, c1, c2, avg)
+    ScoredPair(name, c1, c2, avg)
   }
 
   private def getParents(conceptName: String): Seq[String] = {
@@ -63,9 +61,11 @@ class WeightedParentSimilarityAligner(val w2v: CompactWord2Vec, val proc: Proces
 }
 
 object WeightedParentSimilarityAligner {
+
   def fromConfig(config: Config = ConfigFactory.load()): WeightedParentSimilarityAligner = {
-    val w2v: CompactWord2Vec = null // new Word2Vec(config[String]("aligner.w2v"))
+    val w2v: CompactWord2Vec = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
     val proc = new FastNLPProcessor()
+
     new WeightedParentSimilarityAligner(w2v, proc)
   }
 }

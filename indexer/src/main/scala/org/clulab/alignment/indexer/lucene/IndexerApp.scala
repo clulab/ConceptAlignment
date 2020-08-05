@@ -1,4 +1,4 @@
-package org.clulab.alignment.lucene
+package org.clulab.alignment.indexer.lucene
 
 import java.nio.file.Paths
 

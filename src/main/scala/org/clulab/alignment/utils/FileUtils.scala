@@ -4,7 +4,6 @@ import java.io._
 
 import org.clulab.alignment.utils.Closer.AutoCloser
 
-import scala.collection.JavaConverters._
 import scala.io.Source
 
 object FileUtils {
@@ -17,7 +16,6 @@ object FileUtils {
 
   def printWriterFromFile(path: String): PrintWriter = Sinker.printWriterFromFile(path, append = false)
 
-  //
   def findFiles(collectionDir: String, extension: String): Seq[File] = {
     val dir = new File(collectionDir)
     val filter = new FilenameFilter {

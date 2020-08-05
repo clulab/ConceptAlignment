@@ -1,5 +1,6 @@
 package org.clulab.alignment
 
+import org.clulab.alignment.aligner.WeightedParentSimilarityAligner
 import org.clulab.alignment.utils.ConceptUtils
 
 object ExampleApp extends App {

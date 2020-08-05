@@ -11,7 +11,7 @@ object ConceptUtils {
 
   def conceptBOWFromString(s: String, w2v: CompactWord2Vec, flat: Boolean): Concept = {
     val tokens = s.split(" ").map(_.trim.toLowerCase())
-    val emb = w2v.makeCompositeVector(tokens).map(_.toFloat)
+    val emb = w2v.makeCompositeVector(tokens)
     val flatConcept = new FlatConcept(s, emb)
     if (flat) {
       flatConcept

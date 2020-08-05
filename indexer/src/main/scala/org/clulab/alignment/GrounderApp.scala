@@ -1,13 +1,14 @@
-package org.clulab.alignment.groundings
+package org.clulab.alignment
 
 import org.clulab.alignment.aligner.EmbeddingOnlyAligner
-import org.clulab.alignment.groundings.grounders.DatamartGrounder
-import org.clulab.alignment.groundings.ontologies.DatamartOntology
+import org.clulab.alignment.grounder.datamart.DatamartGrounder
+import org.clulab.alignment.grounder.datamart.DatamartOntology
+import org.clulab.alignment.grounder.datamart.DatamartTokenizer
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 
 object GrounderApp extends App {
   val filename = "./src/main/resources/datamarts.tsv"
-  val parser = new DatamartParser()
+  val parser = new DatamartTokenizer()
   val ontology = DatamartOntology.fromFile(filename, parser)
   val aligner = new EmbeddingOnlyAligner()
   val word2vec = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", true, false)

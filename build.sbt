@@ -12,7 +12,7 @@ libraryDependencies ++= {
   val   luceneVer = "6.6.6" // Match transitive dependency in Eidos.
 
   Seq(
-    "ai.lum"                     %% "common"                  % "0.0.10",
+    "ai.lum"                     %% "common"                  % "0.0.8", // match eidos
     "org.apache.lucene"           % "lucene-core"             % luceneVer,
     "org.apache.lucene"           % "lucene-analyzers-common" % luceneVer,
     "org.apache.lucene"           % "lucene-queryparser"      % luceneVer,

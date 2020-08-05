@@ -1,8 +1,8 @@
 package org.clulab.alignment
 
-import ai.lum.common.ConfigFactory
 import ai.lum.common.ConfigUtils._
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.clulab.alignment.aligner.Aligner
 import org.clulab.alignment.aligner.ScoredPair
 import org.clulab.alignment.utils.DotProduct

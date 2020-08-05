@@ -1,16 +1,13 @@
-package org.clulab.alignment.groundings.grounders
+package org.clulab.alignment.grounder.datamart
 
 import org.clulab.alignment.ConceptSequence
 import org.clulab.alignment.aligner.Aligner
 import org.clulab.alignment.aligner.ScoredPair
-import org.clulab.alignment.groundings.DatamartConcept
-import org.clulab.alignment.groundings.DatamartParser
-import org.clulab.alignment.groundings.ontologies.DatamartOntology
 import org.clulab.alignment.utils.ConceptUtils
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 
 class DatamartGrounder(ontology: DatamartOntology, word2vec: CompactWord2Vec, aligner: Aligner) {
-  val parser = DatamartParser()
+  val tokenizer = DatamartTokenizer()
   val datamartConcepts = ontology.datamartEntries.map { datamartEntry =>
     val identifier = datamartEntry.identifier
     val words = datamartEntry.words

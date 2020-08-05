@@ -2,7 +2,7 @@ package org.clulab.alignment
 
 import org.clulab.alignment.utils.ConceptUtils
 
-object Example extends App {
+object ExampleApp extends App {
 
   // Get the WM ontology(ies) being used and convert to the local data structure
   val TDConcepts = ConceptUtils.conceptsFromWMOntology("wm_flat")

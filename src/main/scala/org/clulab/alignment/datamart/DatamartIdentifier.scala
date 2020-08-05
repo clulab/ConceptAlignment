@@ -1,4 +1,4 @@
-package org.clulab.alignment.groundings
+package org.clulab.alignment.datamart
 
 import org.clulab.alignment.utils.Identifier
 

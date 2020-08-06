@@ -1,9 +1,6 @@
 package org.clulab.alignment.searcher.knn.hnswlib
 
-import java.io.File
-
 import com.github.jelmerk.knn.scalalike.SearchResult
-import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
@@ -34,7 +31,7 @@ object HnswlibSearcherApp extends App {
   }
 
   def searchSample(): Unit = {
-    val filename = "../hnswlib-test.idx"
+    val filename = "../hnswlib-sample.idx"
     val item = SampleAlignmentItem("three", Array(3f, 4f, 5f, 6f))
     val index = SampleIndex.load(filename)
 
@@ -60,7 +57,7 @@ object HnswlibSearcherApp extends App {
   }
 
   def searchOntology(): Unit = {
-    val filename = "../hnswlib-ontology.idx"
+    val filename = "../hnswlib-wm_flattened.idx"
     val vector = newVector()
     val index = OntologyIndex.load(filename)
 
@@ -83,6 +80,6 @@ object HnswlibSearcherApp extends App {
 
 //  searchSample()
 //  searchGlove()
-//  searchOntology()
-  searchDatamart()
+  searchOntology()
+//  searchDatamart()
 }

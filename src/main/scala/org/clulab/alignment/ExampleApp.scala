@@ -9,7 +9,7 @@ import org.clulab.alignment.searcher.lucene.LuceneSearcher
 object ExampleApp extends App {
   val luceneDir = "../lucene"
   val datamartFilename = "../hnswlib-datamart.idx"
-  val ontologyFilename = "../hnswlib-ontology.idx"
+  val ontologyFilename = "../hnswlib-wm_flattened.idx"
 
   val field = "variableDescription"
   val maxHits = 10
@@ -22,7 +22,7 @@ object ExampleApp extends App {
   // In this example, just take the single best search result.
   val datamartDocumentOpt = luceneSearcher.datamartSearch(queryString, 1).headOption.map(_._2)
   val datamartItemOpt = datamartDocumentOpt.flatMap { datamartDocument =>
-    val id = new DatamartIdentifier(datamartDocument.datamartId, datamartDocument.datasetId, datamartDocument.variableId)
+    val id = DatamartIdentifier(datamartDocument.datamartId, datamartDocument.datasetId, datamartDocument.variableId)
     val datamartAlignmentItemOpt = datamartIndex.get(id)
 
     datamartAlignmentItemOpt
@@ -33,8 +33,11 @@ object ExampleApp extends App {
     val vector = datamartItem.vector
 
     println(s"$id =>")
-    ontologyIndex.findNearest(vector, maxHits).foreach { case SearchResult(item, distance) =>
-      println(s"$item $distance")
-    }
+    ontologyIndex
+        .findNearest(vector, maxHits)
+        .sortBy(-_.distance)
+        .foreach { case SearchResult(item, distance) =>
+          println(s"$item $distance")
+        }
   }
 }

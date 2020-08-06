@@ -31,7 +31,7 @@ object HnswlibIndexerApp extends App {
       SampleAlignmentItem("three", Array(3f, 4f, 5f, 6f))
     )
     val index = SampleIndex.newIndex(items)
-    val filename = "../hnswlib-test.idx"
+    val filename = "../hnswlib-sample.idx"
 
     index.save(new File(filename))
   }
@@ -84,8 +84,8 @@ object HnswlibIndexerApp extends App {
     index.save(new File(filename))
   }
 
-  indexSample()
-  indexGlove()
+//  indexSample()
+//  indexGlove()
   indexOntology()
-  indexDatamart()
+//  indexDatamart()
 }

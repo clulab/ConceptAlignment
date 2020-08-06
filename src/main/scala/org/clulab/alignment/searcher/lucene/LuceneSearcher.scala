@@ -11,9 +11,10 @@ import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.TopScoreDocCollector
 import org.apache.lucene.store.FSDirectory
+import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.Closer.AutoCloser
 
-class Searcher(luceneDir: String, field: String) {
+class LuceneSearcher(luceneDir: String, field: String) {
 
   def newReader(): DirectoryReader = {
     DirectoryReader.open(FSDirectory.open(Paths.get(luceneDir)))
@@ -36,5 +37,11 @@ class Searcher(luceneDir: String, field: String) {
       val scoreDocs = collector.topDocs().scoreDocs
       scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
     }
+  }
+
+  def datamartSearch(queryString: String, maxHits: Int): Array[(Float, DatamartDocument)] = {
+    val scoreDocs = search(queryString, maxHits)
+
+    scoreDocs.map { case (score, document) => (score, new DatamartDocument(document)) }
   }
 }

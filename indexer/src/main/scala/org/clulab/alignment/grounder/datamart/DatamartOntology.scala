@@ -1,7 +1,8 @@
 package org.clulab.alignment.grounder.datamart
 
-import org.clulab.alignment.datamart.DatamartEntry
-import org.clulab.alignment.datamart.DatamartIdentifier
+import org.clulab.alignment.data.datamart.DatamartEntry
+import org.clulab.alignment.data.datamart.DatamartIdentifier
+import org.clulab.alignment.data.datamart.DatamartTokenizer
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.Sourcer
 import org.clulab.alignment.utils.TsvReader

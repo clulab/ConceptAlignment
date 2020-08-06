@@ -1,4 +1,4 @@
-package org.clulab.alignment.datamart
+package org.clulab.alignment.data.datamart
 
 import org.clulab.alignment.utils.Identifier
 

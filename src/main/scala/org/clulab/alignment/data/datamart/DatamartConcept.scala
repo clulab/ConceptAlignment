@@ -1,7 +1,6 @@
-package org.clulab.alignment.grounder.datamart
+package org.clulab.alignment.data.datamart
 
 import org.clulab.alignment.FlatConcept
-import org.clulab.alignment.datamart.DatamartIdentifier
 
 class DatamartConcept(val identifier: DatamartIdentifier, embedding: Array[Float])
     extends FlatConcept(identifier.toString, embedding) {

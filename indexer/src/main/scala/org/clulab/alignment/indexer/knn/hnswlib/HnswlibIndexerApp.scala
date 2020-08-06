@@ -2,46 +2,47 @@ package org.clulab.alignment.indexer.knn.hnswlib
 
 import java.io.File
 
-//import ai.lum.common.ConfigUtils
+import org.clulab.alignment.data.datamart.DatamartTokenizer
+import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.SampleIndex
+import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 import com.github.jelmerk.knn.scalalike._
 import com.github.jelmerk.knn.scalalike.hnsw._
+import org.clulab.alignment.data.ontology.OntologyIdentifier
 import org.clulab.alignment.grounder.datamart.DatamartOntology
-import org.clulab.alignment.grounder.datamart.DatamartTokenizer
-import org.clulab.alignment.searcher.knn.hnswlib.DatamartAlignmentItem
-import org.clulab.alignment.searcher.knn.hnswlib.GloveAlignmentItem
-import org.clulab.alignment.searcher.knn.hnswlib.OntologyAlignmentItem
-import org.clulab.alignment.searcher.knn.hnswlib.TestAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
 import org.clulab.alignment.utils.{OntologyHandlerHelper => OntologyHandler}
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
 
-object IndexerApp extends App {
+object HnswlibIndexerApp extends App {
   lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
   val dimensions = 300
 
   // This is just for testing.
-  def indexTest(): Unit = {
-    val filename = "../hnswlib-test.idx"
-    val dimensions = 4
+  def indexSample(): Unit = {
     val items = Array(
-      TestAlignmentItem("one",   Array(1f, 2f, 3f, 4f)),
-      TestAlignmentItem("two",   Array(2f, 3f, 4f, 5f)),
-      TestAlignmentItem("three", Array(3f, 4f, 5f, 6f))
+      SampleAlignmentItem("one",   Array(1f, 2f, 3f, 4f)),
+      SampleAlignmentItem("two",   Array(2f, 3f, 4f, 5f)),
+      SampleAlignmentItem("three", Array(3f, 4f, 5f, 6f))
     )
-    val index = HnswIndex[String, Array[Float], TestAlignmentItem, Float](dimensions, floatCosineDistance, items.length)
+    val index = SampleIndex.newIndex(items)
+    val filename = "../hnswlib-test.idx"
 
-    index.addAll(items)
     index.save(new File(filename))
   }
 
   // There isn't much call for this.  It is mostly to test the indexer with a large number of entries.
   def indexGlove(): Unit = {
-    val filename = "../hnswlib-glove.idx"
     val keys = w2v.keys
-    val index = HnswIndex[String, Array[Float], GloveAlignmentItem, Float](dimensions, floatCosineDistance, keys.size)
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
+    val index = GloveIndex.newIndex(items)
+    val filename = "../hnswlib-glove.idx"
 
-    index.addAll(items)
     index.save(new File(filename))
   }
 
@@ -56,13 +57,14 @@ object IndexerApp extends App {
     val filename = s"../hnswlib-$namespace.idx"
     val items = conceptEmbeddings.map { conceptEmbedding =>
       val name = conceptEmbedding.namer.name
-      val concept = conceptEmbedding.embedding
+      val branch = conceptEmbedding.namer.branch
+      val embedding = conceptEmbedding.embedding
+      val identifier = new OntologyIdentifier(namespace, name, branch)
 
-      OntologyAlignmentItem(name, concept)
+      OntologyAlignmentItem(identifier, embedding)
     }
-    val index = HnswIndex[String, Array[Float], OntologyAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
+    val index = OntologyIndex.newIndex(items)
 
-    index.addAll(items)
     index.save(new File(filename))
   }
 
@@ -70,21 +72,20 @@ object IndexerApp extends App {
     val filename = "../hnswlib-datamart.idx"
     val tokenizer = DatamartTokenizer()
     val ontology = DatamartOntology.fromFile("../datamarts.tsv", tokenizer)
-    val index = HnswIndex[String, Array[Float], DatamartAlignmentItem, Float](dimensions, floatCosineDistance, ontology.size)
     val items = ontology.datamartEntries.map { datamartEntry =>
       val identifier = datamartEntry.identifier
       val words = datamartEntry.words
       val embedding = w2v.makeCompositeVector(words)
 
-      DatamartAlignmentItem(identifier.toString, embedding)
+      DatamartAlignmentItem(identifier, embedding)
     }
+    val index = DatamartIndex.newIndex(items)
 
-    index.addAll(items)
     index.save(new File(filename))
   }
 
-  indexTest()
-//  indexGlove()
+  indexSample()
+  indexGlove()
   indexOntology()
-//  indexDatamart()
+  indexDatamart()
 }

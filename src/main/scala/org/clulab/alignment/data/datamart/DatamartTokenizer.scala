@@ -1,4 +1,4 @@
-package org.clulab.alignment.grounder.datamart
+package org.clulab.alignment.data.datamart
 
 class DatamartTokenizer {
 

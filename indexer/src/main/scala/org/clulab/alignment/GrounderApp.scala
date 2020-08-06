@@ -1,9 +1,9 @@
 package org.clulab.alignment
 
 import org.clulab.alignment.aligner.EmbeddingOnlyAligner
+import org.clulab.alignment.data.datamart.DatamartTokenizer
 import org.clulab.alignment.grounder.datamart.DatamartGrounder
 import org.clulab.alignment.grounder.datamart.DatamartOntology
-import org.clulab.alignment.grounder.datamart.DatamartTokenizer
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 
 object GrounderApp extends App {

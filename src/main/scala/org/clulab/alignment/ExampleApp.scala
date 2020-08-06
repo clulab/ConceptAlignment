@@ -1,12 +1,10 @@
 package org.clulab.alignment
 
-import java.io.File
-
 import com.github.jelmerk.knn.scalalike.SearchResult
-import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
-import org.clulab.alignment.searcher.lucene.{Searcher => LuceneSearcher}
-import org.clulab.alignment.datamart.DatamartIdentifier
-import org.clulab.alignment.searcher.knn.hnswlib.DatamartAlignmentItem
+import org.clulab.alignment.data.datamart.DatamartIdentifier
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.searcher.lucene.LuceneSearcher
 
 object ExampleApp extends App {
   val luceneDir = "../lucene"
@@ -18,21 +16,19 @@ object ExampleApp extends App {
   val queryString = "food"
 
   val luceneSearcher = new LuceneSearcher(luceneDir, field)
-  val datamartIndex = HnswIndex.load[String, Array[Float], DatamartAlignmentItem, Float](new File(datamartFilename))
-  val ontologyIndex = HnswIndex.load[String, Array[Float], DatamartAlignmentItem, Float](new File(ontologyFilename))
+  val datamartIndex = DatamartIndex.load(datamartFilename)
+  val ontologyIndex = OntologyIndex.load(ontologyFilename)
 
   // In this example, just take the single best search result.
-  val documentOpt = luceneSearcher.search(queryString, 1).headOption.map(_._2)
-  val datamartItemOpt = documentOpt.flatMap { document =>
-    val datamartId = document.get("datamartId")
-    val datasetId = document.get("datasetId")
-    val variableId = document.get("variableId")
-    val id = new DatamartIdentifier(datamartId, datasetId, variableId).toString
+  val datamartDocumentOpt = luceneSearcher.datamartSearch(queryString, 1).headOption.map(_._2)
+  val datamartItemOpt = datamartDocumentOpt.flatMap { datamartDocument =>
+    val id = new DatamartIdentifier(datamartDocument.datamartId, datamartDocument.datasetId, datamartDocument.variableId)
     val datamartAlignmentItemOpt = datamartIndex.get(id)
 
     datamartAlignmentItemOpt
   }
-  val resultsOpt = datamartItemOpt.map { datamartItem =>
+
+  datamartItemOpt.map { datamartItem =>
     val id = datamartItem.id
     val vector = datamartItem.vector
 

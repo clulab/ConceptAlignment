@@ -4,10 +4,18 @@ import java.io.File
 
 import com.github.jelmerk.knn.scalalike.SearchResult
 import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.SampleIndex
+import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 
 import scala.util.Random
 
-object SearcherApp extends App {
+object HnswlibSearcherApp extends App {
   val random = new Random(0)
 
   def normalize(array: Array[Float]): Unit = {
@@ -25,10 +33,10 @@ object SearcherApp extends App {
     vector
   }
 
-  def searchTest(): Unit = {
+  def searchSample(): Unit = {
     val filename = "../hnswlib-test.idx"
-    val item = TestAlignmentItem("three", Array(3f, 4f, 5f, 6f))
-    val index = HnswIndex.load[String, Array[Float], TestAlignmentItem, Float](new File(filename))
+    val item = SampleAlignmentItem("three", Array(3f, 4f, 5f, 6f))
+    val index = SampleIndex.load(filename)
 
     // This finds neighbors of specific, known item.
     index.findNeighbors(item.id, k = 10).foreach { case SearchResult(item, distance) =>
@@ -43,7 +51,7 @@ object SearcherApp extends App {
   def searchGlove(): Unit = {
     val filename = "../hnswlib-glove.idx"
     val vector = newVector()
-    val index = HnswIndex.load[String, Array[Float], GloveAlignmentItem, Float](new File(filename))
+    val index = GloveIndex.load(filename)
 
     // This finds neighbors based on location that doesn't necessarily correspond to any known item.
     index.findNearest(vector, k = 10).foreach { case SearchResult(item, distance) =>
@@ -54,7 +62,7 @@ object SearcherApp extends App {
   def searchOntology(): Unit = {
     val filename = "../hnswlib-ontology.idx"
     val vector = newVector()
-    val index = HnswIndex.load[String, Array[Float], OntologyAlignmentItem, Float](new File(filename))
+    val index = OntologyIndex.load(filename)
 
     // This finds neighbors based on location that doesn't necessarily correspond to any known item.
     index.findNearest(vector, k = 10).foreach { case SearchResult(item, distance) =>
@@ -65,7 +73,7 @@ object SearcherApp extends App {
   def searchDatamart(): Unit = {
     val filename = "../hnswlib-datamart.idx"
     val vector = newVector()
-    val index = HnswIndex.load[String, Array[Float], DatamartAlignmentItem, Float](new File(filename))
+    val index = DatamartIndex.load(filename)
 
     // This finds neighbors based on location that doesn't necessarily correspond to any known item.
     index.findNearest(vector, k = 10).foreach { case SearchResult(item, distance) =>
@@ -73,7 +81,7 @@ object SearcherApp extends App {
     }
   }
 
-//  searchTest()
+//  searchSample()
 //  searchGlove()
 //  searchOntology()
   searchDatamart()

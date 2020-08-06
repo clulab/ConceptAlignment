@@ -3,6 +3,8 @@ package org.clulab.alignment.grounder.datamart
 import org.clulab.alignment.ConceptSequence
 import org.clulab.alignment.aligner.Aligner
 import org.clulab.alignment.aligner.ScoredPair
+import org.clulab.alignment.data.datamart.DatamartConcept
+import org.clulab.alignment.data.datamart.DatamartTokenizer
 import org.clulab.alignment.utils.ConceptUtils
 import org.clulab.embeddings.word2vec.CompactWord2Vec
 

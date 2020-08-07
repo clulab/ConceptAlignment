@@ -1,34 +1,41 @@
 name := "ConceptAlignment"
 organization := "org.clulab"
 
+scalaVersion := "2.12.4"
+crossScalaVersions := Seq("2.11.11", "2.12.4")
+
 resolvers ++= Seq(
-  "jitpack" at "https://jitpack.io", // com.github.WorldModelers/Ontologies
-  "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release" // org.clulab/glove-840b-300d
+  "jitpack" at "https://jitpack.io" // com.github.WorldModelers/Ontologies, com.github.jelmerk
 )
 
 libraryDependencies ++= {
-  val     procVer = "8.0.3" // Match transitive dependency in Eidos.
   val   luceneVer = "6.6.6" // Match transitive dependency in Eidos.
-  val ulihaoyiVer = "0.7.1"
 
   Seq(
-    "org.clulab"         %% "processors-main"         % procVer,
-    "org.clulab"         %% "processors-corenlp"      % procVer,
-    "org.clulab"         %% "eidos"                   % "1.0.3", // "1.1.0-SNAPSHOT",
-    "ai.lum"             %% "common"                  % "0.0.10",
-    "com.lihaoyi"        %% "ujson"                   % ulihaoyiVer,
-    "com.lihaoyi"        %% "upickle"                 % ulihaoyiVer,
-    "com.lihaoyi"        %% "requests"                % "0.5.1",
-    "org.apache.lucene"   % "lucene-core"             % luceneVer,
-    "org.apache.lucene"   % "lucene-analyzers-common" % luceneVer,
-    "org.apache.lucene"   % "lucene-queryparser"      % luceneVer,
-    "com.github.jelmerk" %% "hnswlib-scala"           % "0.0.45"
+    "ai.lum"                     %% "common"                  % "0.0.8", // match eidos
+    "org.apache.lucene"           % "lucene-core"             % luceneVer,
+    "org.apache.lucene"           % "lucene-analyzers-common" % luceneVer,
+    "org.apache.lucene"           % "lucene-queryparser"      % luceneVer,
+
+    "com.typesafe.scala-logging" %% "scala-logging"           % "3.7.2",
+    "ch.qos.logback"              % "logback-classic"         % "1.0.10",
+    "org.slf4j"                   % "slf4j-api"               % "1.7.10",
+
+    "com.github.jelmerk"         %% "hnswlib-scala"           % "0.0.45"
   )
 }
 
 lazy val core = project in file(".")
 
-/* lazy val webapp = project */
-/*   .enablePlugins(PlayScala) */
-/*   .aggregate(core) */
-/*   .dependsOn(core) */
+lazy val scraper = project
+    .aggregate(core)
+    .dependsOn(core)
+
+lazy val indexer = project
+    .aggregate(core)
+    .dependsOn(core)
+
+lazy val webapp = project
+    .enablePlugins(PlayScala)
+    .aggregate(core)
+    .dependsOn(core)

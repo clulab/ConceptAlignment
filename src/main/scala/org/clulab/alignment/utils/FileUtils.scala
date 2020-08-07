@@ -1,19 +1,9 @@
 package org.clulab.alignment.utils
 
 import java.io._
-import java.net.URL
-import java.nio.file.StandardCopyOption
-import java.nio.file.{Files, Path, Paths}
-import java.util.Collection
-import java.util.zip.ZipFile
 
-import org.clulab.serialization.json.stringify
-import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.alignment.utils.Closer.AutoCloser
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
 
-import scala.collection.JavaConverters._
 import scala.io.Source
 
 object FileUtils {
@@ -26,7 +16,6 @@ object FileUtils {
 
   def printWriterFromFile(path: String): PrintWriter = Sinker.printWriterFromFile(path, append = false)
 
-  //
   def findFiles(collectionDir: String, extension: String): Seq[File] = {
     val dir = new File(collectionDir)
     val filter = new FilenameFilter {
@@ -92,25 +81,6 @@ object FileUtils {
 
         while (transfer) { }
       }
-    }
-  }
-
-  def newClassLoaderObjectInputStream(filename: String, classProvider: Any = this): ClassLoaderObjectInputStream = {
-    val classLoader = classProvider.getClass.getClassLoader
-
-    new ClassLoaderObjectInputStream(classLoader, new FileInputStream(filename))
-  }
-
-  def load[A](filename: String, classProvider: Any): A =
-      newClassLoaderObjectInputStream(filename, classProvider).autoClose { objectInputStream =>
-        objectInputStream.readObject().asInstanceOf[A]
-      }
-
-  def load[A](bytes: Array[Byte], classProvider: Any): A = {
-    val classLoader = classProvider.getClass.getClassLoader
-
-    new ClassLoaderObjectInputStream(classLoader, new ByteArrayInputStream(bytes)).autoClose { objectInputStream =>
-      objectInputStream.readObject().asInstanceOf[A]
     }
   }
 

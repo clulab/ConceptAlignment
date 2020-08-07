@@ -1,6 +1,6 @@
 package org.clulab.alignment.utils
 
-trait Identifier {
+trait Identifier extends Serializable {
 
   def toString(): String
 }

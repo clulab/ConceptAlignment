@@ -1,4 +1,4 @@
-package org.clulab.alignment
+package org.clulab.alignment.evaluator
 
 import org.clulab.alignment.aligner.WeightedParentSimilarityAligner
 import org.clulab.alignment.utils.ConceptUtils

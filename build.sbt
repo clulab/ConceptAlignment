@@ -39,3 +39,9 @@ lazy val webapp = project
     .enablePlugins(PlayScala)
     .aggregate(core)
     .dependsOn(core)
+
+lazy val evaluator = project
+    .aggregate(core)
+    .dependsOn(core)
+    .aggregate(indexer)
+    .dependsOn(indexer)

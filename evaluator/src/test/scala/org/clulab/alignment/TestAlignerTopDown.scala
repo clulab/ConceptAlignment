@@ -88,7 +88,7 @@ class TestAlignerTopDown extends FlatSpec with Matchers {
   val topDownSamplePairSeq = TestAlignerTopDownUtils.generateQueryAnswerPairs(rawEvaluationData)
 
   // load aligner
-  val w2v: CompactWord2Vec = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+  val w2v: CompactWord2Vec = ConceptUtils.word2Vec
   val aligner = WeightedParentSimilarityAligner.fromConfig(w2v)
 
   // load candidate answer embeddings

@@ -7,7 +7,7 @@ import org.clulab.embeddings.word2vec.CompactWord2Vec
 object ExampleApp extends App {
   // Get the WM ontology(ies) being used and convert to the local data structure
   val tdConcepts = ConceptUtils.conceptsFromWMOntology("wm_flattened")
-  val w2v: CompactWord2Vec = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+  val w2v: CompactWord2Vec = ConceptUtils.word2Vec
   val aligner = WeightedParentSimilarityAligner.fromConfig(w2v)
 
   val indicatorExamples = Seq(

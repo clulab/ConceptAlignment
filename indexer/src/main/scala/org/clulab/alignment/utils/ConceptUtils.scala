@@ -6,8 +6,7 @@ import org.clulab.wm.eidos.groundings.{EidosOntologyGrounder, OntologyHandler}
 
 object ConceptUtils {
 
-  // This has to wait for Eidos 1.1.0.
-  lazy val ontologyHandler: OntologyHandler = null // OntologyHandler.fromConfig()
+  lazy val ontologyHandler: OntologyHandler = OntologyHandlerHelper.fromConfig()
 
   def conceptBOWFromString(s: String, w2v: CompactWord2Vec, flat: Boolean): Concept = {
     val tokens = s.split(" ").map(_.trim.toLowerCase())

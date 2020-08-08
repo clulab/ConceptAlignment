@@ -1,0 +1,228 @@
+Abbattoir Construction	build/agriculture_infrastructure/livestock_production	1
+Aerial Crop Spraying for Locust Control	provide/agriculture_inputs/crop_production/weed_pest_control	1
+Building of Crop Irrigation Schemes	build/agriculture_infrastructure/crop_production/irrigation_infrastructure	1
+Crop Disease Surveillance	provide/information_services/surveillance_system	1
+Desert Locust Surveillance	provide/information_services/surveillance_system	1
+Emergency Livestock Destocking	provide/agriculture_inputs/livestock_production	0
+Emergency Livestock Restocking	provide/agriculture_inputs/livestock_production	0
+Emergency Livestock Shelter and Settlement	build/agriculture_infrastructure/livestock_production/livestock_shelter	1
+Emergency Provision of Agricultural Tools	provide/agriculture_inputs/crop_production/farm_equipment	1
+Emergency Provision of Fishing Nets and Boats	provide/livelihood_support/livelihood_assets	1
+Emergency Provision of Livestock Feed	provide/agriculture_inputs/livestock_production/livestock_feed	1
+Emergency Provision of Water for Livestock	provide/agriculture_inputs/livestock_production/livestock_watering	1
+Farmer Training in Animal Health	train/agriculture_training	0
+Farmer Training in Application of Inorganic Fertilizer	train/agriculture_training/production_practices/planting	1
+Farmer Training in Crop Marketing	train/agriculture_training	0
+Farmer Training in Crop Pest Control and Pesticide Use	train/agriculture_training/production_practices/pest_weed_control	1
+Farmer Training in Livestock Breeding	train/agriculture_training	0
+Farmer Training in Livestock Emission Reduction	train/agriculture_training	0
+Farmer Training in Livestock Feed and Nutrition	train/agriculture_training	0
+Farmer Training in Low Cost Irrigation Methods	train/agriculture_training/production_practices/planting	1
+Farmer Training in Rangeland and Pasture Management	train/agriculture_training/production_practices	0
+Farmer Training in Seeding, Use of Improved Seed	train/agriculture_training/production_practices/planting	1
+Farmer Training in Storage Pest Management	train/agriculture_training/production_practices/post_harvest_practices	1
+Farmer Training in Weed Control	train/agriculture_training/production_practices/pest_weed_control	1
+Farmer Weather Information and Location Intelligence Services 	train/agriculture_training/agriculture_information	1
+Fertilizer Price Subsidy 	legislate/subsidize	1
+Fertilizer Voucher Distribution	provide/crop_production/soil_inputs/fertilizer_subsidy	1
+Free Distribution of Fertilizer	provide/crop_production/soil_inputs/fertilizer	1
+Free Distribution of Improved Seeds	provide/agriculture_inputs/crop_production/seed	1
+Livestock Disease Surveillance	provide/information_services/surveillance_system	1
+Livestock Vaccination Services	provide/agriculture_inputs/livestock_production/veterinary_services	1
+Maintenance and Repair of Irrigation Schemes	build/agriculture_infrastructure/crop_production/irrigation_infrastructure	1
+Provision of Veterinary Services	provide/agriculture_inputs/livestock_production/veterinary_services	1
+Seed Voucher Distribution	provide/agriculture_inputs/crop_production/seed	1
+Training of Community Animal Health Workers	provide/agriculture_training/production_practices	1
+Bridge Repair	build/transportation_infrastructure	1
+Building of Primary Roads	build/transportation_infrastructure	1
+Building Railway Lines	build/transportation_infrastructure	1
+Building of Secondary Roads	build/transportation_infrastructure	1
+Rehabilitation of primary roads	build/transportation_infrastructure	1
+Rehabilitation of secondary roads	build/transportation_infrastructure	1
+Capacity building of national authorities on human rights	provide/information_services/human_rights_monitoring	1
+Community awareness campaigns on peacekeeping mandate 	train/public_safety_campaigns	1
+Community level conflict resolution	secure/conflict_resolution	1
+Conflict mediation and political dialogue	secure/conflict_resolution	1
+Disarmament, demobilization and reintegration 	secure/conflict_resolution	1
+Mine risk education	train/public_safety_campaigns	1
+Public information campaigns on explosive hazards	train/public_safety_campaigns	1
+Rehabilitation of child soldiers	secure/conflict_resolution	1
+Building child friendly learning spaces	build/educational_infrastructure	1
+Provision of education kits	provide/livelihood_support/humanitarian_non_food_items	1
+Provision of non-formal education	train/education_systems	1
+Rehabilitation of schools	build/educational_infrastructure	1
+School feeding	provide/livelihood_support/food_aid	1
+Training of community sourced emergency/temporary teachers	train/education_systems	1
+Anaemia: optimal timing of cord clamping for the prevention of iron deficiency anaemia in infants	train/medical_training/capacity_building_of_medical_staff	1
+Anti-retroviral treatment	provide/medical_inputs/medical_treatment	1
+Breastfeeding education for increased breastfeeding duration	train/medical_training	0
+Breastfeeding: continued breastfeeding for healthy growth and development of children	train/medical_training	0
+Breastfeeding: creating an environment in care facilities that supports breastfeeding	train/medical_training	0
+Breastfeeding: early initiation to promote exclusive breastfeeding	train/medical_training	0
+Breastfeeding: exclusive breastfeeding for optimal growth, development and health of infants	train/medical_training	0
+Breastfeeding: feeding of infants unable to breastfeed directly in care facilities	train/medical_training	0
+Breastfeeding: implementation of the Baby-friendly Hospital Initiative	train/medical_training	0
+Breastfeeding: regulation of marketing breast-milk substitutes	legislate	0
+Breastfeeding: support for mothers to initiate and establish breastfeeding after childbirth	train/medical_training	0
+Caffeine: restricting intake during pregnancy	train/medical_training	0
+Calcium supplementation during pregnancy to reduce the risk of pre-eclampsia	provide/livelihood_support/nutrition_support	1
+Clinical management of sexual violence	provide/medical_inputs/psychological	1
+Communicable disease outbreak control	provide/medical_inputs/vaccine	1
+Complementary feeding: appropriate complementary feeding	provide/livelihood_support/nutrition_support	1
+Conditional cash transfer programmes and nutritional status	provide/livelihood_support/financial_assistance	1
+Deployment of field hospitals	build/medical_infrastructure	1
+Deworming in children	provide/medical_inputs/medical_treatment	1
+Deworming in non-pregnant adolescent girls and women of reproductive age	provide/medical_inputs/medical_treatment	1
+Deworming in pregnant women	provide/medical_inputs/medical_treatment	1
+Ebola virus disease: nutritional care of children and adults with Ebola virus disease in treatment centres	provide/livelihood_support/nutrition_suppor	0
+Epidemiological surveillance system                                                                                                                                                                                                                                        	provide/information_services/surveillance_system	1
+Fatty acids: marine oil supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+First aid and and basic medical care	provide/medical_inputs/medical_treatment	1
+Folic acid: periconceptional supplementation to prevent neural tube defects	provide/livelihood_support/nutrition_support	1
+HIV/AIDS: infant feeding for the prevention of mother-to-child transmission of HIV	provide/livelihood_support/nutrition_support	1
+HIV/AIDS: macronutrient supplementation for people living with HIV/AIDS	provide/livelihood_support/nutrition_support	1
+HIV/AIDS: micronutrient supplementation in HIV-infected women during pregnancy	provide/livelihood_support/nutrition_support	1
+HIV/AIDS: nutrition counselling for adolescents and adults with HIV/AIDS	train/medical_training	0
+HIV/AIDS: nutritional care of HIV-infected children	provide/medical_inputs/medical_treatment	1
+Insecticide-treated nets to reduce the risk of malaria in pregnant women	provide/medical_inputs/prevention	1
+Intermittent preventative treatment to reduce the risk of malaria during pregnancy	provide/medical_inputs/medical_treatment OR provide/medical_inputs/prevention	1
+Iodine supplementation in pregnant and lactating women	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: daily supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: daily supplementation during pregnancy in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: intermittent supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: intermittent supplementation during pregnancy in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: intermittent supplementation in adult women and adolescent girls	provide/livelihood_support/nutrition_support	1
+Iron and folic acid: intermittent supplementation in adult women and adolescent girls in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in adult women and adolescent girls	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children 24–59 months of age	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children 24–59 months of age in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children 6-23 months of age	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children 6-23 months of age in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children and adolescents 5–12 years of age	provide/livelihood_support/nutrition_support	1
+Iron: daily supplementation in children and adolescents 5–12 years of age in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron: intermittent supplementation in children in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Iron: intermittent supplementation in preschool and school-age children	provide/livelihood_support/nutrition_support	1
+Iron: supplementation with or without folic acid to reduce the risk of postpartum anaemia	provide/livelihood_support/nutrition_support	1
+Iron: supplementation with or without folic acid to reduce the risk of postpartum anaemia in malaria-endemic areas	provide/livelihood_support/nutrition_support	1
+Low birth weight: breastfeeding of low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: cup-feeding for low-birth-weight infants unable to fully breastfeed	provide/livelihood_support/nutrition_support	1
+Low birth weight: demand feeding for low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: donor human milk for low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: feeding of very-low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: kangaroo mother care to reduce morbidity and mortality in low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: micronutrient supplementation in low-birth-weight and very-low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: mother’s milk for low-birth-weight infants	provide/livelihood_support/nutrition_support	1
+Low birth weight: standard formula for low-birth-weight infants following hospital discharge	provide/livelihood_support/nutrition_support	1
+Malnutrition screening	provide/medical_inputs/prevention	1
+Mass measles vaccination campaign 	provide/medical_inputs/vaccine	1
+Maternal nutrition: balanced energy and protein supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Maternal nutrition: high-protein supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Micro-nutrient supplementation	provide/livelihood_support/nutrition_support	1
+Mine clearance	secure/community_security/mine_clearance	1
+Moderate acute malnutrition: supplementary foods for the management of moderate acute malnutrition in children aged 6 - 59 months	provide/livelihood_support/nutrition_support	1
+Multiple micronutrient powders for point-of-use fortification of foods consumed by children 2-12 years of age	provide/livelihood_support/nutrition_support	1
+Multiple micronutrient powders for point-of-use fortification of foods consumed by children 6–23 months of age	provide/livelihood_support/nutrition_support	1
+Multiple micronutrient powders for point-of-use fortification of foods consumed by pregnant women	provide/livelihood_support/nutrition_support	1
+Multiple micronutrient supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Newborn and childhood essential health care services 	provide/medical_inputs/medical_treatment	1
+Noncommunicable diseases: increasing fruit and vegetable consumption to reduce the risk of noncommunicable diseases	nan	1
+Nutrition counselling during pregnancy	train/medical_training	0
+Obesity: exclusive breastfeeding to reduce the risk of childhood overweight and obesity	provide/livelihood_support/nutrition_support	1
+Obesity: reducing consumption of sugar-sweetened beverages to reduce the risk of childhood overweight and obesity	train/medical_training	0
+Obesity: reducing consumption of sugar-sweetened beverages to reduce the risk of unhealthy weight gain in adults	train/medical_training	0
+Obstetric and newborn care	provide/medical_inputs/medical_treatment	1
+Older people: supplemental nutrition with dietary advice for older people affected by undernutrition	provide/livelihood_support/nutrition_support	1
+Operation of mobile clinics 	provide/medical_inputs/medical_treatment	1
+Potassium: increasing intake to control blood pressure in children	train/medical_training	0
+Potassium: increasing intake to reduce blood pressure and risk of cardiovascular diseases in adults	train/medical_training	0
+Provision of insecticide treated bednets	provide/medical_inputs/prevention	1
+Public health information campaign	train/public_health_campaigns	1
+Rule of law and security sector reform	legislate	0
+Severe acute malnutrition: fluid management in severely malnourished children under 5 years of age with shock	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: fluid management in severely malnourished children under 5 years of age without shock	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: identification of severe acute malnutrition in children 6–59 months of age	provide/medical_inputs/medical_treatmen	0
+Severe acute malnutrition: identification of severe acute malnutrition in infants under 6 months of age	provide/medical_inputs/medical_treatmen	0
+Severe acute malnutrition: identification of severe acute malnutrition requiring inpatient care in children 6–59 months of age	provide/medical_inputs/medical_treatmen	0
+Severe acute malnutrition: management of HIV-infected children under 5 years of age with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: management of infants under 6 months of age with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: management of severe acute malnutrition in children 6–59 months of age with oedema	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: micronutrient intake in children with severe acute malnutrition	provide/livelihood_support/nutrition_support	1
+Severe acute malnutrition: therapeutic feeding of children 6–59 months of age with severe acute malnutrition and acute or persistent diarrhoea	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: transition feeding of children 6–59 months of age with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: treatment of hypoglycaemia in children with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: treatment of hypothermia in children with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: use of antibiotics in the outpatient management of children 6-59 months of age with severe acute malnutrition	provide/medical_inputs/medical_treatment	1
+Severe acute malnutrition: vitamin A supplementation in children 6–59 months of age with severe acute malnutrition	provide/livelihood_support/nutrition_support	1
+Sodium: reducing sodium intake to control blood pressure in children	train/medical_training	0
+Sodium: reducing sodium intake to reduce blood pressure and risk of cardiovascular diseases in adults	train/medical_training	0
+Sugars: reducing free sugars intake in adults to reduce the risk of noncommunicable diseases	train/medical_training	0
+Sugars: reducing free sugars intake in children to reduce the risk of noncommunicable diseases	train/medical_training	0
+Supplementary feeding in community settings for promoting child growth	provide/livelihood_support/nutrition_support	1
+Tetanus vaccination	provide/medical_inputs/vaccine	1
+Therapeutic feeding of children 6–59 months of age with severe acute malnutrition and acute or persistent diarrhoea	provide/medical_inputs/medical_treatment	1
+Trauma and surgical care	provide/medical_inputs/medical_treatment	1
+Trauma injury post-operative rehabilitation	provide/medical_inputs/medical_treatment	1
+Tuberculosis: management of moderate undernutrition in individuals with active tuberculosis	provide/medical_inputs/medical_treatment	1
+Tuberculosis: management of severe acute malnutrition in individuals with active tuberculosis	provide/medical_inputs/medical_treatment	1
+Tuberculosis: micronutrient supplementation in individuals with active tuberculosis	provide/livelihood_support/nutrition_support	1
+Tuberculosis: nutrition assessment and counselling in individuals with active tuberculosis	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in children with respiratory infections	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in HIV-infected adults	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in HIV-infected infants and children 6–59 months of age	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in HIV-infected women during pregnancy	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in infants 1–5 months of age	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in infants and children 6–59 months of age	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in neonates	provide/livelihood_support/nutrition_support	1
+Vitamin A supplementation in postpartum women	provide/livelihood_support/nutrition_support	1
+Vitamin B6 supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Vitamin D supplementation and respiratory infections in children	provide/livelihood_support/nutrition_support	1
+Vitamin D supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Vitamin D supplementation in infants	provide/livelihood_support/nutrition_support	1
+Vitamin E and C supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Vitamin E supplementation for the prevention of morbidity and mortality in preterm infants	provide/livelihood_support/nutrition_support	1
+Zika virus: infant feeding in areas of Zika virus transmission	provide/livelihood_support/nutrition_support	1
+Zinc supplementation and growth in children	provide/livelihood_support/nutrition_support	1
+Zinc supplementation during pregnancy	provide/livelihood_support/nutrition_support	1
+Zinc supplementation in children with respiratory infections	provide/livelihood_support/nutrition_support	1
+Zinc supplementation in the management of diarrhoea	provide/livelihood_support/nutrition_support	1
+Construction of prefabricated buildings for disaster relief	build/shelte	0
+Provision of family tents and shelter kits	provide/livelihood_support/humanitarian_non_food_items/shelter	1
+Rental subsidies for displaced people	provide/livelihood_support/humanitarian_non_food_items/shelte	0
+Temporary communal settlement	provide/livelihood_support/humanitarian_non_food_items/shelter	1
+Assessment and triage of health facilities	train/medical_training/assessment_and_triage_of_health_facilities	1
+Border patrols	secure/community_security/temporary_policing_services	1
+Human rights monitoring, investigation and reporting	provide/information_services/human_rights_monitoring	1
+Reporting and verification of child rights violations 	provide/information_services/human_rights_monitoring/victims	1
+Temporary policing services	secure/community_security/temporary_policing_services	1
+Cash for assets	provide/livelihood_support/financial_assistance	1
+Cash for work 	provide/livelihood_support/financial_assistance	1
+Cash transfer (Conditional)	provide/livelihood_support/financial_assistance	1
+Cash transfer (Unconditional)	provide/livelihood_support/financial_assistance	1
+Clean home delivery kit distribution	provide/livelihood_support/humanitarian_non_food_items	1
+Food for assets	provide/livelihood_support/food_aid	1
+Food for training	provide/livelihood_support/food_aid	1
+Food for work 	provide/livelihood_support/food_aid	1
+Food security or famine early warning system	provide/information_services/surveillance_system	1
+Food vouchers	provide/livelihood_support/food_aid	1
+Free food distribution	provide/livelihood_support/food_aid	1
+Household relief non-food item package	provide/livelihood_support/humanitarian_non_food_items	1
+Infant and young child feeding	provide/livelihood_support/nutrition_support	1
+Once-off cash transfer to facilitate return	provide/livelihood_support/financial_assistance	1
+Provision of credit and training for income generation	train/financial_management	1
+Supplementary feeding	provide/livelihood_support/nutrition_support	1
+Family reunification of separated children	secure/conflict_resolution	1
+Psychological support	provide/medical_inputs/psychological	1
+Basic minimum household hygiene item package 	provide/sanitation_and_hygiene_inputs	1
+Borehole repair	build/WASH_infrastructure	1
+Communal washing and bathing facilities	build/WASH_infrastructure	1
+Creation of temporary water points	build/WASH_infrastructure	1
+Desludging of toilets, septic tanks and excreta containers	provide/sanitation_and_hygiene_inputs	1
+Emergency drinking water trucking	provide/livelihood_support/water	1
+Household solid waste management	provide/sanitation_and_hygiene_inputs	1
+Hygiene promotion campaigns 	train/public_health_campaigns	1
+Latrine construction	build/WASH_infrastructure	1
+Point of use water treatment at household level	provide/sanitation_and_hygiene_inputs	1
+Safe disposal of human excreta	provide/sanitation_and_hygiene_inputs	1
+Water treatment of piped water supply 	provide/sanitation_and_hygiene_inputs	1
+Construction of Government Grain Silos	build/agriculture_infrastructure/crop_production/post_harvest	1

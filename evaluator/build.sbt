@@ -16,6 +16,7 @@ libraryDependencies ++= {
   Seq(
     "org.clulab"         %% "processors-main"         % procVer,
     "org.clulab"         %% "processors-corenlp"      % procVer,
-    "org.clulab"         %% "eidos"                   % "1.0.3" // "1.1.0-SNAPSHOT"
+    "org.clulab"         %% "eidos"                   % "1.0.3", // "1.1.0-SNAPSHOT"
+    "org.scalatest"      %% "scalatest"               % "3.0.4" % "test"
   )
 }

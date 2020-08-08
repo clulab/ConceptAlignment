@@ -62,8 +62,7 @@ class WeightedParentSimilarityAligner(val w2v: CompactWord2Vec, val proc: Proces
 
 object WeightedParentSimilarityAligner {
 
-  def fromConfig(config: Config = ConfigFactory.load()): WeightedParentSimilarityAligner = {
-    val w2v: CompactWord2Vec = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+  def fromConfig(w2v: CompactWord2Vec, config: Config = ConfigFactory.load()): WeightedParentSimilarityAligner = {
     val proc = new FastNLPProcessor()
 
     new WeightedParentSimilarityAligner(w2v, proc)

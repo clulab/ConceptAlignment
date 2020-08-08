@@ -10,7 +10,7 @@ object ConceptUtils {
   lazy val word2Vec: CompactWord2Vec = ontologyHandler.wordToVec.asInstanceOf[RealWordToVec].w2v
 
   def conceptBOWFromString(s: String, w2v: CompactWord2Vec, flat: Boolean): Concept = {
-    val tokens = s.split(" ").map(_.trim.toLowerCase())
+    val tokens = s.split(' ').map(_.trim).filter(_.nonEmpty).map(_.toLowerCase())
     val emb = w2v.makeCompositeVector(tokens)
     val flatConcept = new FlatConcept(s, emb)
     if (flat) {

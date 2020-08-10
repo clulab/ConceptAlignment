@@ -1,4 +1,4 @@
-//This script test the mapping from ontology node to the examples. (from column 2 to column 1)
+//This script test the mapping from examples to the ontology modes. (from column 1 to column 2)
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest._
 import org.clulab.wm.eidos.utils.Sourcer

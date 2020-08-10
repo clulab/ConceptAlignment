@@ -5,3 +5,9 @@
 project/project
 project/target
 target
+
+cache/*
+.cache/*
+
+# For MacOS filesystem
+.DS_Store

@@ -2,7 +2,6 @@ package org.clulab.alignment.indexer.knn.hnswlib
 
 import java.io.File
 
-import org.clulab.alignment.data.datamart.DatamartTokenizer
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.SampleIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
@@ -11,6 +10,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 import com.github.jelmerk.knn.scalalike._
 import com.github.jelmerk.knn.scalalike.hnsw._
+import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.ontology.OntologyIdentifier
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
@@ -70,7 +70,7 @@ object HnswlibIndexerApp extends App {
 
   def indexDatamart(): Unit = {
     val filename = "../hnswlib-datamart.idx"
-    val tokenizer = DatamartTokenizer()
+    val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile("../datamarts.tsv", tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
       val identifier = datamartEntry.identifier
@@ -85,7 +85,7 @@ object HnswlibIndexerApp extends App {
   }
 
 //  indexSample()
-//  indexGlove()
-  indexOntology()
+  indexGlove()
+//  indexOntology()
 //  indexDatamart()
 }

@@ -2,6 +2,7 @@ package org.clulab.alignment.indexer.knn.hnswlib.index
 
 import java.io.File
 
+import com.github.jelmerk.knn.scalalike.SearchResult
 import com.github.jelmerk.knn.scalalike.floatCosineDistance
 import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
@@ -22,5 +23,12 @@ object GloveIndex {
 
     index.addAll(items)
     index
+  }
+
+  def find(index: Index, id: String): Option[Array[Float]] = {
+    val gloveAlignmentItemOpt = index.get(id)
+    val vectorOpt = gloveAlignmentItemOpt.map(_.vector)
+
+    vectorOpt
   }
 }

@@ -6,8 +6,9 @@ import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 
-object ExampleApp extends App {
-  val luceneDir = "../lucene"
+// This app gets the starting vector from the result of a Lucene search.
+object SingleLuceneApp extends App {
+  val luceneDirname = "../lucene-datamart"
   val datamartFilename = "../hnswlib-datamart.idx"
   val ontologyFilename = "../hnswlib-wm_flattened.idx"
 
@@ -15,12 +16,19 @@ object ExampleApp extends App {
   val maxHits = 10
   val queryString = "food"
 
-  val luceneSearcher = new LuceneSearcher(luceneDir, field)
+  val luceneSearcher = new LuceneSearcher(luceneDirname, field)
   val datamartIndex = DatamartIndex.load(datamartFilename)
   val ontologyIndex = OntologyIndex.load(ontologyFilename)
 
   // In this example, just take the single best search result.
-  val datamartDocumentOpt = luceneSearcher.datamartSearch(queryString, 1).headOption.map(_._2)
+  val datamartDocumentOpt = {
+    val results = luceneSearcher.datamartSearch(queryString, 1)
+
+    if (results.hasNext)
+      Some(results.next._2)
+    else
+      None
+  }
   val datamartItemOpt = datamartDocumentOpt.flatMap { datamartDocument =>
     val id = DatamartIdentifier(datamartDocument.datamartId, datamartDocument.datasetId, datamartDocument.variableId)
     val datamartAlignmentItemOpt = datamartIndex.get(id)

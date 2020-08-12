@@ -43,7 +43,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       contentAsString(home) must include ("World Modelers Visualizer")
     }
   }
-
+/*
   "HomeController POST" should {
     "accept request with text parameter and return JSON" in {
 
@@ -96,5 +96,5 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
         }
       }
     }
-  }
+  } */
 }

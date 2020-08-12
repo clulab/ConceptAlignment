@@ -44,10 +44,12 @@ class LuceneSearcher(luceneDirname: String, field: String) {
     }
   }
 
-  def withReader(f: DirectoryReader => Unit): Unit = {
-    newReader().autoClose { reader =>
+  def withReader[T](f: DirectoryReader => T): T = {
+    val result = newReader().autoClose { reader =>
       f(reader)
     }
+
+    result
   }
 
   def find(reader: DirectoryReader, identifier: DatamartIdentifier): Document = {

@@ -85,7 +85,7 @@ object HnswlibIndexerApp extends App {
   }
 
 //  indexSample()
-  indexGlove()
+//  indexGlove()
 //  indexOntology()
-//  indexDatamart()
+  indexDatamart()
 }

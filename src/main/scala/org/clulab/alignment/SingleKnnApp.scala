@@ -15,13 +15,18 @@ import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
 class SingleKnnApp() {
+  println("Got here")
   val datamartFilename = "../hnswlib-datamart.idx"
   val gloveFilename = "../hnswlib-glove.idx"
   val luceneDirname = "../lucene-datamart"
 
-  val datamartIndex = DatamartIndex.load(datamartFilename)
-  val gloveIndex = GloveIndex.load(gloveFilename)
+  println("About to load index")
+  val datamartIndex = DatamartIndex.load(datamartFilename) // This one can't be read
+  println("Finished reading index")
   val luceneSearcher = new LuceneSearcher(luceneDirname, "")
+  println("Finished reading index")
+  val gloveIndex = GloveIndex.load(gloveFilename)
+  println("Finished reading again")
 
   def getVector(queryString: String): Array[Float] = {
     val tokenizer = Tokenizer()

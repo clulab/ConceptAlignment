@@ -6,6 +6,7 @@ import javax.inject._
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.mvc.Action
+import org.clulab.alignment.SingleKnnApp
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -13,15 +14,21 @@ import play.api.mvc.Action
  */
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+//  val singleKnnApp = new SingleKnnApp()
 
-  /**
-   * Create an Action to render an HTML page.
-   *
-   * The configuration in the `routes` file means that this method
-   * will be called when the application receives a `GET` request with
-   * a path of `/`.
-   */
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
+  }
+
+  def search(query: String, maxHits: Int) = Action {
+    val current = new java.io.File( "../hnswlib-datamart.idx" ).getCanonicalPath()
+    println("Current dir:"+current)
+
+    val datamartDocumentsAndScores = new SingleKnnApp().run(query, maxHits)
+    val result: JsValue = JsString(query)
+//    datamartDocumentsAndScores.foreach { case (datamartDocument, score) =>
+//      println(s"$datamartDocument.datamartId\t$datamartDocument.datasetId\t$datamartDocument.variableId\t$datamartDocument.variableDescription\t$score")
+//    }
+    Ok(result)
   }
 }

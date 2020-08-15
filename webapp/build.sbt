@@ -7,5 +7,3 @@ libraryDependencies ++= Seq(
   guice,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
 )
-
-fork in run := false

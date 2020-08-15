@@ -16,12 +16,7 @@ object DatamartIndex {
   type Index = HnswIndex[DatamartIdentifier, Array[Float], DatamartAlignmentItem, Float]
 
   def load(filename: String): Index = {
-    val datamartIdentifier = DatamartIdentifier("adsf", "asdf", "asdf")
-    val index = HnswIndex.load[DatamartIdentifier, Array[Float], DatamartAlignmentItem, Float]({
-      val file = new File(filename)
-      println("at least got the file right")
-      file
-    })
+    val index = HnswIndex.load[DatamartIdentifier, Array[Float], DatamartAlignmentItem, Float](new File(filename))
 
     index.asInstanceOf[Index]
   }

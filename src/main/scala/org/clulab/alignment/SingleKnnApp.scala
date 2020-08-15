@@ -4,6 +4,7 @@ import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.Normalizer
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
@@ -15,18 +16,11 @@ import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
 class SingleKnnApp() {
-  println("Got here")
-  val datamartFilename = "../hnswlib-datamart.idx"
-  val gloveFilename = "../hnswlib-glove.idx"
-  val luceneDirname = "../lucene-datamart"
+  import Locations._
 
-  println("About to load index")
-  val datamartIndex = DatamartIndex.load(datamartFilename) // This one can't be read
-  println("Finished reading index")
+  val datamartIndex: Index = DatamartIndex.load(datamartFilename)
   val luceneSearcher = new LuceneSearcher(luceneDirname, "")
-  println("Finished reading index")
-  val gloveIndex = GloveIndex.load(gloveFilename)
-  println("Finished reading again")
+  val gloveIndex: GloveIndex.Index = GloveIndex.load(gloveFilename)
 
   def getVector(queryString: String): Array[Float] = {
     val tokenizer = Tokenizer()
@@ -71,6 +65,12 @@ class SingleKnnApp() {
 
     datamartDocumentsAndScores
   }
+}
+
+object Locations {
+  val datamartFilename = "../hnswlib-datamart.idx"
+  val gloveFilename = "../hnswlib-glove.idx"
+  val luceneDirname = "../lucene-datamart"
 }
 
 object SingleKnnApp extends App {

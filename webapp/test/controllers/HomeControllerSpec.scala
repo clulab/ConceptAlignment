@@ -13,7 +13,7 @@ import play.api.libs.json._
  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
  */
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
-
+/*
   "HomeController GET" should {
 
     "render the index page from a new instance of controller" in {
@@ -43,13 +43,15 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       contentAsString(home) must include ("Concept Aligner")
     }
   }
-
+*/
   "HomeController search GET" should {
     "accept request with query parameter and maxhits and return JSON" in {
       val request = FakeRequest(GET, "/search?query=food&maxHits=10")
       val result = route(app, request).get
+      val content = contentAsString(result)
 
-      contentAsString(result) must include ("food")
+      println(content)
+      content must include ("food")
     }
   }
 }

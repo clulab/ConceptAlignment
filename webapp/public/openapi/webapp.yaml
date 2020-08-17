@@ -1,64 +1,54 @@
 openapi: 3.0.2
 info:
-  title: eidos
-  version: v1
+  description: University of Arizona linking server
+  title: linking
+  version: 1.0.0
 servers:
-  - url: 'http://localhost:9000'
-    description: Localhost
+  - url: http://linking.cs.arizona.edu
+    description: University of Arizona linking server
 
 components:
   schemas:
-    regroundRequest:
-      type: object
-      required:
-      - ontologyYaml
-      - texts
-      properties:
-        name:
-          type: string
-          default: "Custom"
-        ontologyYaml:
-          type: string
-        texts:
-          type: array
-          items:
-            type: string
-        filter:
-          type: boolean
-          default: true
-        topk:
-          type: integer
-          format: int32
-          default: 10
-        isAlreadyCanonicalized:
-          type: boolean
-          default: true
-          
-    regroundResponse:
+    searchResponse:
       type: array
       items:
-        type: array
-        items:
-          type: object
-          properties:
-            grounding:
-              type: string
-            score:
-              type: number
+        type: object
+        properties:
+          score:
+            type: number
+            format: float
+          datamartId:
+            type: string
+          datasetId:
+            type: string
+          variableId:
+            type: string
+          variableDescription:
+            type: string
             
 paths:
-  /reground:
-    post:
-      summary: Reground using yaml ontology and options provided
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/regroundRequest'
+  /search:
+    get:
+      summary: Link
+      description: ""
+      parameters:
+        - name: query
+          in: query
+          description: a match by example
+          required: true
+          schema:
+            type: string
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/regroundResponse"
+                $ref: "#/components/schemas/searchResponse"

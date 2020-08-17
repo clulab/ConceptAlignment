@@ -84,8 +84,8 @@ object HnswlibIndexerApp extends App {
     index.save(new File(filename))
   }
 
-//  indexSample()
-//  indexGlove()
-//  indexOntology()
+  indexSample()
+  indexGlove()
+  indexOntology()
   indexDatamart()
 }

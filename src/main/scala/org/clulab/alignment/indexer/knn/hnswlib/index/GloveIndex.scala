@@ -13,7 +13,7 @@ object GloveIndex {
   type Index = HnswIndex[String, Array[Float], GloveAlignmentItem, Float]
 
   def load(filename: String): Index = {
-    val index = HnswIndex.load[String, Array[Float], GloveAlignmentItem, Float](new File(filename))
+    val index = HnswIndex.loadFromFile[String, Array[Float], GloveAlignmentItem, Float](new File(filename))
 
     index.asInstanceOf[Index]
   }

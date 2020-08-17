@@ -13,7 +13,7 @@ object OntologyIndex {
   type Index = HnswIndex[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float]
 
   def load(filename: String): Index = {
-    val index = HnswIndex.load[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float](new File(filename))
+    val index = HnswIndex.loadFromFile[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float](new File(filename))
 
     index.asInstanceOf[Index]
   }

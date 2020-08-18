@@ -21,6 +21,8 @@ import play.api.mvc.Action
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   import HomeController.logger
 
+  val maxMaxHits = 500
+
   def configure(filename: String): Unit = {
     val canonicalPath = new java.io.File(filename).getCanonicalPath
     println("Place file here: " + canonicalPath)
@@ -52,7 +54,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
-    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = singleKnnApp.run(query, maxHits)
+    val hits = math.min(maxMaxHits, maxHits) // Cap it off at some reasonable amount.
+    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = singleKnnApp.run(query, hits)
     val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
       Json.obj(
       "score" -> score,

@@ -1,10 +1,13 @@
-package controllers
+package org.clulab.alignment.controllers.v1
 
 import javax.inject._
 
 import org.clulab.alignment.Locations
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import play.api.mvc._
 import play.api.libs.json._
@@ -16,6 +19,7 @@ import play.api.mvc.Action
  */
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+  import HomeController.logger
 
   def configure(filename: String): Unit = {
     val canonicalPath = new java.io.File(filename).getCanonicalPath
@@ -36,7 +40,18 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
+  def ping: Action[AnyContent] = Action {
+    logger.info("Called 'ping' function!")
+    Ok
+  }
+
+  def echo(text: String): Action[AnyContent] = Action {
+    logger.info(s"Called 'echo' function with '$text'!")
+    Ok(text)
+  }
+
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
+    logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
     val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = singleKnnApp.run(query, maxHits)
     val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
       Json.obj(
@@ -51,4 +66,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     Ok(jsValue)
   }
+}
+
+object HomeController {
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }

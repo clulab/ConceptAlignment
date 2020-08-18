@@ -6,6 +6,8 @@ info:
 servers:
   - url: http://linking.cs.arizona.edu
     description: University of Arizona linking server
+  - url: http://localhost:9000
+    description: Local host running the webapp
 
 components:
   schemas:
@@ -27,14 +29,37 @@ components:
             type: string
             
 paths:
-  /search:
+  /v1/ping:
+    get:
+      responses:
+        200:
+          description: OK
+
+  /v1/echo:
+    get:
+      summary: Echo back the input text
+      parameters:
+        - name: text
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A copy of the input
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+
+  /v1/search:
     get:
       summary: Link
       description: ""
       parameters:
         - name: query
           in: query
-          description: a match by example
+          description: example text
           required: true
           schema:
             type: string

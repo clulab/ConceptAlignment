@@ -1,6 +1,6 @@
 openapi: 3.0.2
 info:
-  description: University of Arizona linking server
+  description: University of Arizona Concept Alignment API
   title: linking
   version: 1.0.0
 servers:
@@ -31,6 +31,7 @@ components:
 paths:
   /v1/ping:
     get:
+      summary: Respond with OK
       responses:
         200:
           description: OK
@@ -54,22 +55,23 @@ paths:
 
   /v1/search:
     get:
-      summary: Link
-      description: ""
+      summary: Perform the concept alignment
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
       parameters:
         - name: query
           in: query
-          description: example text
+          description: a query by example
           required: true
           schema:
             type: string
         - name: maxHits
           in: query
           description: maximum number of matches to return
-          required: true
+          required: false
           schema:
             type: integer
             format: int32
+            default: 10
       responses:
         200:
           description: OK

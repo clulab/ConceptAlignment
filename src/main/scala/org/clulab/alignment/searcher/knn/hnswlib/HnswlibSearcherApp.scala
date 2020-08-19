@@ -78,8 +78,22 @@ object HnswlibSearcherApp extends App {
     }
   }
 
+  def infiniteSearchDatamart(): Unit = {
+    val filename = "../hnswlib-datamart.idx"
+    val vector = newVector()
+    val index = DatamartIndex.load(filename)
+    val size = index.size
+
+    // This finds neighbors based on location that doesn't necessarily correspond to any known item.
+    DatamartIndex.findNearest(index, vector).foreach { case SearchResult(item, distance) =>
+      println(s"$item $distance")
+    }
+  }
+
 //  searchSample()
 //  searchGlove()
-  searchOntology()
+//  searchOntology()
 //  searchDatamart()
+
+  infiniteSearchDatamart()
 }

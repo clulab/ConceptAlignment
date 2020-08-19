@@ -1,4 +1,4 @@
-name := """webapp"""
+name := "webapp"
 scalaVersion := "2.12.4"
 
 resolvers += "jitpack" at "https://jitpack.io"

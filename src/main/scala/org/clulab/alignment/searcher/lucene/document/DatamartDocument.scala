@@ -9,4 +9,6 @@ class DatamartDocument(document: Document) {
   def datasetId = document.get("datasetId")
 
   def variableId = document.get("variableId")
+
+  def variableDescription: String = document.get("variableDescription")
 }

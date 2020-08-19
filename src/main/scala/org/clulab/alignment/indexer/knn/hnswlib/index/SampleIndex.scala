@@ -12,7 +12,7 @@ object SampleIndex {
   type Index = HnswIndex[String, Array[Float], SampleAlignmentItem, Float]
 
   def load(filename: String): Index = {
-    val index = HnswIndex.load[String, Array[Float], SampleAlignmentItem, Float](new File(filename))
+    val index = HnswIndex.loadFromFile[String, Array[Float], SampleAlignmentItem, Float](new File(filename))
 
     index.asInstanceOf[Index]
   }

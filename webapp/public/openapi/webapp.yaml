@@ -1,64 +1,81 @@
 openapi: 3.0.2
 info:
-  title: eidos
-  version: v1
+  description: University of Arizona Concept Alignment API
+  title: linking
+  version: 1.0.0
 servers:
-  - url: 'http://localhost:9000'
-    description: Localhost
+  - url: http://linking.cs.arizona.edu
+    description: University of Arizona linking server
+  - url: http://localhost:9000
+    description: Local host running the webapp
 
 components:
   schemas:
-    regroundRequest:
-      type: object
-      required:
-      - ontologyYaml
-      - texts
-      properties:
-        name:
-          type: string
-          default: "Custom"
-        ontologyYaml:
-          type: string
-        texts:
-          type: array
-          items:
-            type: string
-        filter:
-          type: boolean
-          default: true
-        topk:
-          type: integer
-          format: int32
-          default: 10
-        isAlreadyCanonicalized:
-          type: boolean
-          default: true
-          
-    regroundResponse:
+    searchResponse:
       type: array
       items:
-        type: array
-        items:
-          type: object
-          properties:
-            grounding:
-              type: string
-            score:
-              type: number
+        type: object
+        properties:
+          score:
+            type: number
+            format: float
+          datamartId:
+            type: string
+          datasetId:
+            type: string
+          variableId:
+            type: string
+          variableDescription:
+            type: string
             
 paths:
-  /reground:
-    post:
-      summary: Reground using yaml ontology and options provided
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/regroundRequest'
+  /v1/ping:
+    get:
+      summary: Respond with OK
+      responses:
+        200:
+          description: OK
+
+  /v1/echo:
+    get:
+      summary: Echo back the input text
+      parameters:
+        - name: text
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A copy of the input
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+
+  /v1/search:
+    get:
+      summary: Perform the concept alignment
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      parameters:
+        - name: query
+          in: query
+          description: a query by example
+          required: true
+          schema:
+            type: string
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/regroundResponse"
+                $ref: "#/components/schemas/searchResponse"

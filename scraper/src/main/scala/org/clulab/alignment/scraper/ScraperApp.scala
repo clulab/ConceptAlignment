@@ -13,7 +13,7 @@ object ScraperApp extends App {
   val scrapers = scraperNames.map { scraperName => DatamartScraper(config, scraperName) }
   val filename = "../datamarts.tsv" // Get this from command line
 
-  new TsvWriter(FileUtils.printWriterFromFile(filename)).autoClose { tsvWriter =>
+  new TsvWriter(FileUtils.printWriterFromFile(filename), isExcel = false).autoClose { tsvWriter =>
     tsvWriter.println("datamart_id",
       "dataset_id", "dataset_name", "dataset_description", "dataset_url",
       "variable_id", "variable_name", "variable_description"

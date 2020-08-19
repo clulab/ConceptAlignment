@@ -13,7 +13,7 @@ import play.api.libs.json._
  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
  */
 class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
-
+/*
   "HomeController GET" should {
 
     "render the index page from a new instance of controller" in {
@@ -22,7 +22,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("World Modelers Visualizer")
+      contentAsString(home) must include ("Concept Aligner")
     }
 
     "render the index page from the application" in {
@@ -31,7 +31,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("World Modelers Visualizer")
+      contentAsString(home) must include ("Concept Aligner")
     }
 
     "render the index page from the router" in {
@@ -40,61 +40,18 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("World Modelers Visualizer")
+      contentAsString(home) must include ("Concept Aligner")
     }
   }
-
-  "HomeController POST" should {
-    "accept request with text parameter and return JSON" in {
-
-      // Note that the request fails because the JSON does not have key 'text' but instead has key 'text123'
-      // This is because testing an actual run requires initialization which takes too long
-
-      val testJson = Json.parse("""{ "text123": "Drought causes regional instability." }""")
-      val request = FakeRequest(POST, "/process_text").withJsonBody(testJson)
+*/
+  "HomeController search GET" should {
+    "accept request with query parameter and maxhits and return JSON" in {
+      val request = FakeRequest(GET, "/search?query=food&maxHits=10")
       val result = route(app, request).get
+      val content = contentAsString(result)
 
-      contentAsString(result) must include ("Missing parameter [text]")
-    }
-
-    "be able to reground" in {
-      val name = "test"
-      // This was simply chosen because it is the smallest.
-      val ontologyYaml = null // Resourcer.getText("/org/clulab/wm/eidos/english/ontologies/un_properties.yml")
-      val texts = Array(
-        "Rainfall in the summer causes good crop yields in the fall.",
-        "This is another text that should be grounded."
-      )
-      val filter = true
-      val topk = 5
-      val isAlreadyCanonicalized = false
-      val regroundRequest = JsObject { Map(
-        "name" -> JsString(name),
-        "ontologyYaml" -> JsString(ontologyYaml),
-        "texts" -> JsArray(texts.map(JsString)),
-        "filter" -> JsBoolean(filter),
-        "topk" -> JsNumber(topk),
-        "isAlreadyCanonicalized" -> JsBoolean(isAlreadyCanonicalized)
-      ) }
-      val request = FakeRequest(POST, "/reground").withJsonBody(regroundRequest)
-      val regroundResponse = contentAsJson(route(app, request).get)
-
-      val outerJsArray = regroundResponse.as[JsArray]
-      outerJsArray.value.size must be (texts.length)
-
-      outerJsArray.value.foreach { jsValue: JsValue =>
-        val innerJsArray = jsValue.as[JsArray]
-        innerJsArray.value.size must be (topk)
-
-        innerJsArray.value.foreach { jsValue =>
-          val jsObject = jsValue.as[JsObject]
-          val grounding = (jsObject \ "grounding").as[String]
-          val score = (jsObject \ "score").as[Double]
-
-          grounding.nonEmpty mustBe (true)
-          score > 0 mustBe (true)
-        }
-      }
+      println(content)
+      content must include ("food")
     }
   }
 }

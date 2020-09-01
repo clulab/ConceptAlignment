@@ -34,7 +34,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   configure(Locations.gloveFilename)
 
   println("Initializing...")
-  val singleKnnApp = new SingleKnnApp()
+  lazy val singleKnnApp = new SingleKnnApp()
 
   println("Up and running...")
 

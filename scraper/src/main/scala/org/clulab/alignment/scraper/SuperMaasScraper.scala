@@ -18,18 +18,21 @@ class SuperMaasScraper(baseUrl: String) extends DatamartScraper {
       val datasetName = dataset("label").str
       val datasetDescription = dataset("model_description").str
       val datasetUrl = s"$baseUrl/models/$datasetId"
-      // Parameters might be null
-      val parameters = dataset("parameters").arr.map(_.str).toArray
-      val parameterDescriptions = dataset("parameter_descriptions").arr.map(_.str).toArray
+      val parameterSample = dataset("parameters")
 
-      require(parameters.length == parameterDescriptions.length)
+      if (!parameterSample.isNull) {
+        val parameters = parameterSample.arr.map(_.str).toArray
+        val parameterDescriptions = dataset("parameter_descriptions").arr.map(_.str).toArray
 
-      parameters.zip(parameterDescriptions).foreach { case (parameter, parameterDescription) =>
-        val variableId = parameter
-        val variableName = parameter
-        val variableDescription = parameterDescription
+        require(parameters.length == parameterDescriptions.length)
 
-        tsvWriter.println(SuperMaasScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl, variableId, variableName, variableDescription)
+        parameters.zip(parameterDescriptions).foreach { case (parameter, parameterDescription) =>
+          val variableId = parameter
+          val variableName = parameter
+          val variableDescription = parameterDescription
+
+          tsvWriter.println(SuperMaasScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl, variableId, variableName, variableDescription)
+        }
       }
     }
   }

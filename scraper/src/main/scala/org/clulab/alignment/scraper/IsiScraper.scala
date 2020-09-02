@@ -7,6 +7,8 @@ import org.clulab.alignment.utils.PropertiesBuilder
 import org.clulab.alignment.utils.TsvWriter
 import requests.RequestAuth.Basic
 
+import scala.util.control.NonFatal
+
 class IsiScraper(baseUrl: String, username: String, password: String) extends DatamartScraper {
   protected val auth = new Basic(username, password)
 
@@ -21,15 +23,21 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
       val datasetDescription = dataset("description").str
       val datasetUrl = dataset("url").str
       val variablesUrl = s"$baseUrl/metadata/datasets/$datasetId/variables"
-      val variablesText = requests.get(variablesUrl, auth).text(StandardCharsets.UTF_8)
-      val variables = ujson.read(variablesText).arr.toIndexedSeq
+      // Sometimes the variable is not there.
+      try {
+        val variablesText = requests.get(variablesUrl, auth).text(StandardCharsets.UTF_8)
+        val variables = ujson.read(variablesText).arr.toIndexedSeq
 
-      variables.foreach { variable =>
-        val variableId = variable("variable_id").str
-        val variableName = variable("name").str
-        val variableDescription = variable("description").str
+        variables.foreach { variable =>
+          val variableId = variable("variable_id").str
+          val variableName = variable("name").str
+          val variableDescription = variable("description").str
 
-        tsvWriter.println(IsiScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl, variableId, variableName, variableDescription)
+          tsvWriter.println(IsiScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl, variableId, variableName, variableDescription)
+        }
+      }
+      catch {
+        case NonFatal(throwable) => println(throwable.getMessage)
       }
     }
   }

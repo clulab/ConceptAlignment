@@ -1,0 +1,22 @@
+# Shut down the previously running version.
+$ ps -ef | grep kalcock -
+$ kill <pid>
+
+# Stage the webapp in sbt.
+$ sbt
+sbt: ConceptAlignment> project webapp
+[webapp] $ stage
+[webapp] $ exit
+
+# Edit the secret code.
+$ cd webapp/target/universal/stage/conf
+$ vim application.conf
+# Change changeme to something else.
+# Change port to 9001.
+
+# Make sure there is enough memory.
+export _JAVA_OPTIONS=-Xmx12g
+
+# Run the program using the correct port.
+$ cd ../bin
+$ nohup ./webapp -Dhttp.port=9001 &

@@ -1,5 +1,5 @@
 # Shut down the previously running version.
-$ ps -ef | grep kalcock -
+$ ps -ef | grep ConceptAlignment -
 $ kill <pid>
 
 # Stage the webapp in sbt.
@@ -13,6 +13,11 @@ $ cd webapp/target/universal/stage/conf
 $ vim application.conf
 # Change changeme to something else.
 # Change port to 9001.
+
+# Make sure all the documents are in the right places!
+# lucene-datamart in webapp/target/universal
+# hnswlib-datamart.idx in webapp/target/universal/stage
+# hnswlib-glove.idx also in webapp/target/universal/stage
 
 # Make sure there is enough memory.
 export _JAVA_OPTIONS=-Xmx12g

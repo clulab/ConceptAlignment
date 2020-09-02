@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets
 
 import com.typesafe.config.Config
 import org.clulab.alignment.utils.TsvWriter
-import ujson.Value
 
 class SuperMaasScraper(baseUrl: String) extends DatamartScraper {
 
@@ -39,7 +38,8 @@ class SuperMaasScraper(baseUrl: String) extends DatamartScraper {
 }
 
 object SuperMaasScraper {
-  val datamartId = "SuperMaas"
+  // Notice how this differs from other versions with the capital S on the end.
+  val datamartId = "SuperMaaS"
 
   def fromConfig(config: Config): SuperMaasScraper = {
     val baseUrl = config.getString("SuperMaasScraper.url")

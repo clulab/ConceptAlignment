@@ -62,6 +62,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         "datamartId" -> datamartDocument.datamartId,
         "datasetId" -> datamartDocument.datasetId,
         "variableId" -> datamartDocument.variableId,
+        "variableName" -> datamartDocument.variableName,
         "variableDescription" -> datamartDocument.variableDescription
       )
     }

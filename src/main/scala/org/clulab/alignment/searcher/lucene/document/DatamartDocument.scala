@@ -10,5 +10,7 @@ class DatamartDocument(document: Document) {
 
   def variableId = document.get("variableId")
 
+  def variableName: String = document.get("variableName")
+
   def variableDescription: String = document.get("variableDescription")
 }

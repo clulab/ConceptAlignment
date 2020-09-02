@@ -77,6 +77,6 @@ object SingleKnnApp extends App {
   val datamartDocumentsAndScores = new SingleKnnApp().run("food", 10)
 
   datamartDocumentsAndScores.foreach { case (datamartDocument, score) =>
-    println(s"$datamartDocument.datamartId\t$datamartDocument.datasetId\t$datamartDocument.variableId\t$datamartDocument.variableDescription\t$score")
+    println(s"${datamartDocument.datamartId}\t${datamartDocument.datasetId}\t${datamartDocument.variableId}\t${datamartDocument.variableName}\t${datamartDocument.variableDescription}\t$score")
   }
 }

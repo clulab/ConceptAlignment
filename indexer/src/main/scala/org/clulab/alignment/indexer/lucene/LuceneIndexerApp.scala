@@ -41,7 +41,7 @@ object LuceneIndexerApp extends App {
       document.add(new StoredField("datasetId", datasetId))
       document.add(new StoredField("variableId", variableId))
 
-      document.add(new TextField("variableName", variableName, Field.Store.NO))
+      document.add(new TextField("variableName", variableName, Field.Store.YES))
       document.add(new TextField("variableDescription", variableDescription, Field.Store.YES))
 
       document

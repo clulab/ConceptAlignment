@@ -25,6 +25,8 @@ components:
             type: string
           variableId:
             type: string
+          variableName:
+            type: string
           variableDescription:
             type: string
             

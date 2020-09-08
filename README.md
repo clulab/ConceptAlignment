@@ -20,4 +20,4 @@ wm / concept / causal_factor / interventions / provide / agriculture_inputs / li
 It would require minimal change to match against existing ontology nodes along with the
 bottom-up components.
   
-* It only scrapes the ISI datamarts.  NYU is not presently included.
+* It only scrapes the ISI datamarts.  NYU is not presently included.  It also does SuperMaaS models.

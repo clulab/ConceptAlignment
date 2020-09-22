@@ -20,4 +20,21 @@ wm / concept / causal_factor / interventions / provide / agriculture_inputs / li
 It would require minimal change to match against existing ontology nodes along with the
 bottom-up components.
   
-* It only scrapes the ISI datamarts.  NYU is not presently included.
+* It only scrapes the ISI datamarts.  NYU is not presently included.  It also does SuperMaaS models.
+
+## Operation
+
+* Run the scrapers using the ScraperApp, which is configured for the
+  * IsiScraper and
+  * SuperMaasScraper.
+* Run the indexers.
+  * HnswlibIndexerApp is used for the KNN searches.  It should index the data from
+    * ISI
+    * SuperMaaS
+    * Glove
+  * LuceneIndexerApp creates an index to map datamartId, datasetId, and variableId to the
+    * variable names and
+    * variable descriptions.
+* For the alignment run either the
+  * SingleKnnApp directly or access it via the
+  * webapp subproject.

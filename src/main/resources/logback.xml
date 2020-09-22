@@ -8,29 +8,17 @@
         </encoder>
     </appender>
 
-    <appender name="eidos" class="ch.qos.logback.core.FileAppender">
+    <appender name="conceptalignment" class="ch.qos.logback.core.FileAppender">
         <param name="Append" value="true" />
-        <file>${HOSTNAME}-eidos.log</file>
+        <file>${HOSTNAME}-conceptalignment.log</file>
         <encoder>
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
-
-    <appender name="timer" class="ch.qos.logback.core.FileAppender">
-        <param name="Append" value="true" />
-        <file>${HOSTNAME}-timer.log</file>
-        <encoder>
-            <pattern>${pattern}</pattern>
-        </encoder>
-    </appender>
-
-    <logger name="org.clulab.wm.eidos.utils.Timer" level="all" additivity="true">
-        <appender-ref ref="timer" />
-    </logger>
 
     <!-- ALL TRACE DEBUG INFO WARN ERROR FATAL OFF -->
     <root level="all">
         <appender-ref ref="console"/>
-        <appender-ref ref="eidos"/>
+        <appender-ref ref="conceptalignment"/>
     </root>
 </configuration>

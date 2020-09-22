@@ -25,3 +25,11 @@ export _JAVA_OPTIONS=-Xmx12g
 # Run the program using the correct port.
 $ cd ../bin
 $ nohup ./webapp -Dhttp.port=9001 &
+
+# Networking
+
+# Check current configuration
+$ sudo iptables -L --line-numbers # | grep 9001 - # Find right line at which to insert
+$ sudo iptables -I INPUT <line> -p tcp --dport 9001 -j ACCEPT
+# to work again when restart, make extra sure everything is working, then
+$ sudo iptables-save

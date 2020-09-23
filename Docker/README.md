@@ -1,23 +1,22 @@
-# Eidos Docker
-This directory contains several Dockerfiles which generate containers that run the Eidos web application and web service.
+# ConceptAlignment Docker
 
-* DockerfileRun - This runs the webapp through sbt in development mode
-* DockerfileRunProd - This runs the webapp through sbt in production mode
-* DockerfileStage - This runs the webapp directly in production mode
+This directory contains a Dockerfile which generates containers that run the ConceptAlignment web application and web service.
 
-From this directory you can build the container with:
+* DockerfileRun - This runs the webapp through sbt in development mode..
+
+If you have copied the index files to this directory following instructions in the main README.md file,
+you can build the image with:
 
 ```
 docker build -f <Dockerfile> . -t conceptalignment
 ```
 
-You can run the container with:
+You can run the corresponding container with:
 
 ```
-docker run -id -p 9000:9000 eidos-webservice
+docker run -id -p 9000:9000 --name conceptalignment conceptalignment
 ```
 
-This launches the container and exposes port 9000. You can then navigate to `localhost:9000` to access the web application and may submit requests to `localhost:9000/process_text` as described [here](https://github.com/clulab/eidos#web-service).
+This launches the container and exposes port 9000. You can then run a shell in it to
+perform necessary tasks and eventually navigate to `localhost:9000` to access the web application.
 
-### Configuration
-Currently, this container is built with grounding activated (`useW2V = true`) and Google's pre-trained vectors are used, not GloVe.

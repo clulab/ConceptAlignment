@@ -59,26 +59,33 @@ $ sbt webapp/run
 
 ### Preparing the Docker image
 
+If the webapp and other functionality is not to run on the development machine, but somewhere
+else via Docker, create the image with instructions like these:
+
 ```bash
-$ # Copy output files to docker directory.
+$ # Copy the index files to the docker directory so they can be accessed by the docker command.
 $ cp ../hnswlib-datamart.idx ../hnswlib-glove.idx Docker
 $ cp -r ../lucene-datamart Docker
 $ # Create the docker image.
-$ docker build -f DockerfileRun . -t conceptalignment-image
-$ # Make a tar file for exchange.
-$ docker save conceptalignment-image | gzip > conceptalignment-image-1.tar.gz
+$ docker build -f DockerfileRun . -t conceptalignment
+$ # If necessary, send the image to Docker Hub.
+$ docker login
+$ docker push clulab/conceptalignment
 ```
 
 ### Preparing the Docker container
 
+If you are on that machine somewhere else (like perhaps you are Galois) and just need to run
+the webapp, you can go about it like this:
+
 ```bash
-$ # Download the image from gdrive.
-$ # Load it.
-$ docker load < conceptalignment-image-1.tar.gz
+$ # Download the image from Docker Hub if necessary.
+$ docker pull clulab/conceptalignment
 $ # Create the container.
-$ docker run -id -p 9000:9000 --name conceptalignment-container conceptalignment-image
+$ docker run -id -p 9000:9000 --name conceptalignment conceptalignment
 $ # Run a shell in the container.
-$ docker exec -it conceptalignment-container bash
+$ docker exec -it conceptalignment bash
 $ # Start the webapp.
 $ sbt webapp/run
+$ # Access the webapp in a browser at http://localhost:9000.
 ```

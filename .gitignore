@@ -14,3 +14,6 @@ cache/*
 
 # Indexes created by these programs
 *.idx
+Docker/*.tar
+Docker/*.gz
+Docker/lucene-datamart

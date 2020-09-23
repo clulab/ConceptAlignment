@@ -24,12 +24,12 @@ RUN apt-get update && apt-get install sbt=1.2.8 -y
 WORKDIR /conceptalignment-project
 RUN git clone https://github.com/clulab/conceptalignment.git
 
-# Copy files to the image.
+# Copy files to the image
 COPY hnswlib-datamart.idx .
 COPY hnswlib-glove.idx .
 COPY lucene-datamart ./lucene-datamart
 
-# Make sure it works/get a head start.
+# Make sure it works/get a head start
 WORKDIR /conceptalignment-project/conceptalignment
 RUN sbt webapp/compile
 

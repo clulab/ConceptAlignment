@@ -24,6 +24,10 @@ bottom-up components.
 
 ## Preparations
 
+Some of the instructions below use 0.1.0 as a version number.  Change this number as necessary.
+The standard port 9000 may be used for SuperMaaS, so this project has been changed to use 9001
+and that's the reason some port numbers are included in the instructions.
+
 ### Preparing the index files
 
 This instructions are for use on a development machine.  However, once the docker
@@ -66,11 +70,11 @@ else via Docker, create the image with instructions like these:
 $ # Copy the index files to the docker directory so they can be accessed by the docker command.
 $ cp ../hnswlib-datamart.idx ../hnswlib-glove.idx Docker
 $ cp -r ../lucene-datamart Docker
-$ # Create the docker image.
-$ docker build -f DockerfileRun . -t conceptalignment
+$ # Create the docker image, setting the version number from version.sbt.
+$ docker build -f DockerfileRun . -t clulab/conceptalignment:0.1.0
 $ # If necessary, send the image to Docker Hub.
 $ docker login
-$ docker push clulab/conceptalignment
+$ docker push clulab/conceptalignment:0.1.0
 ```
 
 ### Preparing the Docker container
@@ -80,12 +84,10 @@ the webapp, you can go about it like this:
 
 ```bash
 $ # Download the image from Docker Hub if necessary.
-$ docker pull clulab/conceptalignment
-$ # Create the container.
-$ docker run -id -p 9000:9000 --name conceptalignment conceptalignment
-$ # Run a shell in the container.
-$ docker exec -it conceptalignment bash
+$ docker pull clulab/conceptalignment:0.1.0
+$ # Create the container which runs bash right away.
+$ docker run -it -p 9001:9001 --name conceptalignment clulab/conceptalignment:0.1.0
 $ # Start the webapp.
-$ sbt webapp/run
-$ # Access the webapp in a browser at http://localhost:9000.
+$ sbt webapp/run 9001
+$ # Access the webapp in a browser at http://localhost:9001.
 ```

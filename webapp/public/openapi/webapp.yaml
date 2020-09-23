@@ -6,7 +6,7 @@ info:
 servers:
   - url: http://linking.cs.arizona.edu
     description: University of Arizona linking server
-  - url: http://localhost:9000
+  - url: http://localhost:9001
     description: Local host running the webapp
 
 components:

@@ -11,3 +11,6 @@ cache/*
 
 # For MacOS filesystem
 .DS_Store
+
+# Indexes created by these programs
+*.idx

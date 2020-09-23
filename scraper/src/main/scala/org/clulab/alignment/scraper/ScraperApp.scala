@@ -11,7 +11,7 @@ object ScraperApp extends App {
   val config = ConfigFactory.load
   val scraperNames = config.getStringList("Scraper.scrapers").asScala
   val scrapers = scraperNames.map { scraperName => DatamartScraper(config, scraperName) }
-  val filename = "../datamarts.tsv" // Get this from command line
+  val filename = args(0)
 
   new TsvWriter(FileUtils.printWriterFromFile(filename), isExcel = false).autoClose { tsvWriter =>
     tsvWriter.println("datamart_id",

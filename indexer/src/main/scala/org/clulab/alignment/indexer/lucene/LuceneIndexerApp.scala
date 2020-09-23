@@ -17,6 +17,7 @@ import org.clulab.alignment.utils.Sourcer
 import org.clulab.alignment.utils.TsvReader
 
 object LuceneIndexerApp extends App {
+  val filename = args(0)
 
   def newIndexWriter(dir: String): IndexWriter = {
     val analyzer = new StandardAnalyzer()
@@ -28,7 +29,6 @@ object LuceneIndexerApp extends App {
 
   def indexDatamart(): Unit = {
     val luceneDirname = "../lucene-datamart"
-    val filename = "../datamarts.tsv"
     val tsvReader = new TsvReader()
 
     def newDocument(datamartId: String, datasetId: String, variableId: String, variableName: String, variableDescription: String): Document = {

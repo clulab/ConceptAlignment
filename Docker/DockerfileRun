@@ -9,9 +9,6 @@ RUN apt-get update && apt-get install -y \
 # Install Java
 RUN apt-get update
 RUN apt-get -y install openjdk-8-jdk
-RUN export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
-RUN export PATH="$JAVA_HOME/bin:$PATH"
-RUN export _JAVA_OPTIONS="-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
 
 # Install Scala
 WORKDIR /
@@ -29,9 +26,14 @@ COPY hnswlib-datamart.idx .
 COPY hnswlib-glove.idx .
 COPY lucene-datamart ./lucene-datamart
 
+# Prepare runtime environment
+ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
+RUN echo "export _JAVA_OPTIONS=\"-Xmx16g -Xms12g -Dfile.encoding=UTF-8\"" >> /root/.bashrc
+
 # Make sure it works/get a head start
 WORKDIR /conceptalignment-project/conceptalignment
 RUN sbt webapp/compile
 
 # Allow for web service
-EXPOSE 9000
+EXPOSE 9001
+ENTRYPOINT ["/bin/bash"]

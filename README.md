@@ -63,6 +63,11 @@ $ # Start the server in development mode.
 $ sbt webapp/run
 ```
 
+The scraper for SuperMaaS is configured in `scraper/src/main/resources/application.conf`
+to use `localhost:8000`.  If both ConceptAlignment and SuperMaaS are running in Docker
+containers, it can be necessary to reconfigure the scraper to use something like
+ `supermaas_server_1:8000`.
+
 ### Preparing the Docker image
 
 If the webapp and other functionality is not to run on the development machine, but somewhere
@@ -89,6 +94,8 @@ $ # Download the image from Docker Hub if necessary.
 $ docker pull clulab/conceptalignment:0.1.0
 $ # Create the container which runs bash right away.
 $ docker run -it -p 9001:9001 --name conceptalignment clulab/conceptalignment:0.1.0
+$ # In order to connect to SuperMaaS locally, it is necessary to connect to its network.
+$ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas clulab/conceptalignment:0.1.0
 $ # Start the webapp.
 $ sbt webapp/run 9001
 $ # Access the webapp in a browser at http://localhost:9001.

@@ -25,7 +25,7 @@ bottom-up components.
 ## Preparations
 
 Some of the instructions below use 0.1.0 as a version number.  Change this number as necessary.
-The standard port 9000 may be used for SuperMaaS, so this project has been changed to use 9001
+The standard port 9000 may already be used for SuperMaaS, so this project has been changed to use 9001
 and that's the reason some port numbers are included in the instructions.
 
 ### Preparing the index files
@@ -65,7 +65,7 @@ $ sbt webapp/run
 
 The scraper for SuperMaaS is configured in `scraper/src/main/resources/application.conf`
 to use `localhost:8000`.  If both ConceptAlignment and SuperMaaS are running in Docker
-containers, it can be necessary to reconfigure the scraper to use something like
+containers, it may be necessary to reconfigure the scraper to use something like
  `supermaas_server_1:8000`.
 
 ### Preparing the Docker image
@@ -92,9 +92,9 @@ the webapp, you can go about it like this:
 ```bash
 $ # Download the image from Docker Hub if necessary.
 $ docker pull clulab/conceptalignment:0.1.0
-$ # Create the container which runs bash right away.
+$ # Create the container which runs bash right away with the default network _or_
 $ docker run -it -p 9001:9001 --name conceptalignment clulab/conceptalignment:0.1.0
-$ # In order to connect to SuperMaaS locally, it is necessary to connect to its network.
+$ # in order to connect to SuperMaaS locally, it will be necessary to connect to its network.
 $ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas clulab/conceptalignment:0.1.0
 $ # Start the webapp.
 $ sbt webapp/run 9001

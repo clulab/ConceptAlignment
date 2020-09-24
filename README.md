@@ -50,8 +50,10 @@ indexes will be available in the container, so these commands would be used for 
   * webapp subproject.
 
 ```bash
-$ # Scrape the datamarts.
+$ # Scrape the datamarts, all of them if necessary.  Credentials are required.
 $ sbt scraper/runMain org.clulab.alignment.scraper.ScraperApp ../datamarts.tsv
+# $ For testing, sometimes SuperMaaS is only needed.
+$ sbt scraper/runMain org.clulab.alignment.scraper.SuperMaasScraperApp ../datamarts.tsv
 $ # Run this one just once because it takes a long time and glove shouldn't change.
 $ sbt indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp
 $ # Run these each time the datamarts have changed.

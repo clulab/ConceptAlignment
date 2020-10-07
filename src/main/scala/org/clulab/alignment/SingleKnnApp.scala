@@ -22,7 +22,7 @@ class SingleKnnApp() {
   val luceneSearcher = new LuceneSearcher(luceneDirname, "")
   val gloveIndex: GloveIndex.Index = GloveIndex.load(gloveFilename)
 
-  def getVector(queryString: String): Array[Float] = {
+  def getVectorOpt(queryString: String): Option[Array[Float]] = {
     val tokenizer = Tokenizer()
     val normalizer = Normalizer()
     val words = tokenizer.tokenize(queryString)
@@ -38,8 +38,9 @@ class SingleKnnApp() {
           }
         }
       }
-      normalizer.normalize(composite)
-      composite
+      val len = normalizer.length(composite)
+      if (len != 0) Some(normalizer.normalize(composite))
+      else None
     }
 
     vector
@@ -59,8 +60,10 @@ class SingleKnnApp() {
   }
 
   def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)] = {
-    val vector: Array[Float] = getVector(queryString)
-    val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = DatamartIndex.findNearest(datamartIndex, vector, maxHits).toSeq
+    val vectorOpt: Option[Array[Float]] = getVectorOpt(queryString)
+    val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = vectorOpt.map { vector =>
+      DatamartIndex.findNearest(datamartIndex, vector, maxHits).toSeq
+    }.getOrElse(Seq.empty)
     val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = getDatamartDocuments(searchResults)
 
     datamartDocumentsAndScores

@@ -21,7 +21,9 @@ libraryDependencies ++= {
     "ch.qos.logback"              % "logback-classic"         % "1.0.10",
     "org.slf4j"                   % "slf4j-api"               % "1.7.10",
 
-    "com.github.jelmerk"         %% "hnswlib-scala"           % "0.0.46"
+    "com.github.jelmerk"         %% "hnswlib-scala"           % "0.0.46",
+
+    "org.scalatest"              %% "scalatest"                % "3.0.4" % "test"
   )
 }
 

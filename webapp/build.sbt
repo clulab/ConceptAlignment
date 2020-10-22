@@ -1,5 +1,6 @@
 name := "webapp"
-scalaVersion := "2.12.4"
+
+scalaVersion := "2.12.8"
 
 resolvers += "jitpack" at "https://jitpack.io"
 

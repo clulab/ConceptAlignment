@@ -1,8 +1,8 @@
 name := "ConceptAlignment"
 organization := "org.clulab"
 
-scalaVersion := "2.12.4"
-crossScalaVersions := Seq("2.11.11", "2.12.4")
+scalaVersion := "2.12.8"
+crossScalaVersions := Seq("2.11.12", "2.12.8")
 
 resolvers ++= Seq(
   "jitpack" at "https://jitpack.io" // com.github.WorldModelers/Ontologies, com.github.jelmerk
@@ -41,6 +41,16 @@ lazy val webapp = project
     .enablePlugins(PlayScala)
     .aggregate(core)
     .dependsOn(core)
+
+// This will depend on more than core, because it must scrape and index as well
+lazy val jclapp = project
+    .enablePlugins(PlayScala)
+    .aggregate(core)
+    .dependsOn(core)
+    .aggregate(scraper)
+    .dependsOn(scraper)
+    .aggregate(indexer)
+    .dependsOn(indexer)
 
 lazy val evaluator = project
     .aggregate(core)

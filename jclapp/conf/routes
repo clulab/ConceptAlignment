@@ -1,0 +1,18 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+# ~~~~
+
+# An example controller showing a sample home page
+GET     /                           org.clulab.alignment.controllers.v1.HomeController.index
+GET     /v1                         org.clulab.alignment.controllers.v1.HomeController.index
+GET     /v1/ping                    org.clulab.alignment.controllers.v1.HomeController.ping
+GET     /v1/echo                    org.clulab.alignment.controllers.v1.HomeController.echo(text: String)
+GET     /v1/search                  org.clulab.alignment.controllers.v1.HomeController.search(query: String, maxHits: Int ?= 10)
+
+# API spec
+GET     /api                        org.clulab.swagger.controllers.OpenApiController.openAPI
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /favicon.ico                controllers.Assets.at(file="images/favicon.ico")
+GET     /assets/*file               controllers.Assets.at(file)

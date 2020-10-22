@@ -11,6 +11,16 @@ servers:
 
 components:
   schemas:
+    statusResponse:
+      type: object
+      properties:
+        number:
+          description: a numeric value for computers
+          type: number
+          format: int32
+        text:
+          description: a textual value for humans
+          type: string
     searchResponse:
       type: array
       items:
@@ -60,6 +70,17 @@ paths:
             'text/plain; charset=utf-8':
               schema:
                 type: string
+
+  /v1/status:
+    get:
+      summary: Report the status (busy or ready)
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"
 
   /v1/search:
     get:

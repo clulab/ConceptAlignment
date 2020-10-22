@@ -10,12 +10,16 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 
+trait SingleKnnAppTrait {
+  def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)]
+}
+
 // This app gets the starting vector from the result of a Knn search.
 // Lucene isn't involved in that.  In order to avoid using Word2Vec with
 // its startup time and memory overhead, the glove index is used instead.
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
-class SingleKnnApp() {
+class SingleKnnApp() extends SingleKnnAppTrait {
   import Locations._
 
   val datamartIndex: Index = DatamartIndex.load(datamartFilename)

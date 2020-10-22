@@ -4,14 +4,12 @@ info:
   title: linking
   version: 1.0.0
 servers:
-  - url: http://linking.cs.arizona.edu
-    description: University of Arizona linking server
-  - url: http://localhost:9001
-    description: Local host running the webapp
+  - url: http://localhost:9002
+    description: Local host running the jclapp
 
 components:
   schemas:
-    searchResponse:
+    status:
       type: array
       items:
         type: object
@@ -61,29 +59,47 @@ paths:
               schema:
                 type: string
 
-  /v1/search:
+  /v1/status:
     get:
-      summary: Perform the concept alignment
+      summary: Retrieve the current status of both job controller and the concept aligner
       description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
-      parameters:
-        - name: query
-          in: query
-          description: a query by example
-          required: true
-          schema:
-            type: string
-        - name: maxHits
-          in: query
-          description: maximum number of matches to return
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 10
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/searchResponse"
+                $ref: "#/components/schemas/status"
+  /v1/start:
+    get:
+      summary: Start the concept aligner
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"
+  /v1/stop:
+    get:
+      summary: Stop the concept aligner
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"
+  /v1/index:
+    get:
+      summary: Scrape and reindex the datamarts and SuperMaaS // allow parameters so know url of supermaas server
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"

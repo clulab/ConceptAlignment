@@ -21,25 +21,13 @@ import play.api.mvc.Action
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   import HomeController.logger
 
-  val maxMaxHits = 500
-
-  def configure(filename: String): Unit = {
-    val canonicalPath = new java.io.File(filename).getCanonicalPath
-    println("Place file here: " + canonicalPath)
-  }
-
   println("Configuring...")
-  configure(Locations.datamartFilename)
-  configure(Locations.luceneDirname)
-  configure(Locations.gloveFilename)
 
   println("Initializing...")
-  // TODO: Make this a background job?  Future?
-  val singleKnnApp = new SingleKnnApp()
 
   println("Up and running...")
 
-  def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
+  def home(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
 
@@ -53,27 +41,23 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(text)
   }
 
-  def search(query: String, maxHits: Int): Action[AnyContent] = Action {
-    logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
-    val hits = math.min(maxMaxHits, maxHits) // Cap it off at some reasonable amount.
-    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = singleKnnApp.run(query, hits)
-    val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
-      Json.obj(
-      "score" -> score,
-        "datamartId" -> datamartDocument.datamartId,
-        "datasetId" -> datamartDocument.datasetId,
-        "variableId" -> datamartDocument.variableId,
-        "variableName" -> datamartDocument.variableName,
-        "variableDescription" -> datamartDocument.variableDescription
-      )
-    }
-    val jsValue: JsValue = JsArray(jsObjects)
-
-    Ok(jsValue)
+  def status(): Action[AnyContent] = Action {
+    logger.info(s"Called 'status' function!")
+    Ok
   }
 
-  def reindex(query: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    request
+  def start(): Action[AnyContent] = Action {
+    logger.info(s"Called 'status' function!")
+    Ok
+  }
+
+  def stop(): Action[AnyContent] = Action {
+    logger.info(s"Called 'status' function!")
+    Ok
+  }
+
+  def index(): Action[AnyContent] = Action {
+    logger.info(s"Called 'index' function!")
     Ok
   }
 }

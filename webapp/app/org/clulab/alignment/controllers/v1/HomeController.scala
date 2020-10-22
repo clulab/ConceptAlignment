@@ -6,6 +6,9 @@ import javax.inject._
 import org.clulab.alignment.Locations
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
+import org.clulab.alignment.controllers.utils.Busy
+import org.clulab.alignment.controllers.utils.Ready
+import org.clulab.alignment.controllers.utils.StatusHolder
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,36 +20,6 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
-
-class Status(number: Int, text: String) {
-
-  def toJsValue: JsValue = {
-    JsObject(Seq(
-      "number" -> JsNumber(number),
-      "text" -> JsString(text)
-    ))
-  }
-}
-
-case object Ready extends Status(0, "ready")
-case object Busy  extends Status(1, "busy")
-
-class StatusHolder(logger: Logger, protected var status: Status) {
-  logger.info(s"Status is now $status")
-
-  def get: Status = synchronized {
-    status
-  }
-
-  def set(newStatus: Status): Unit = synchronized {
-    status = newStatus
-    logger.info(s"Status is now $status")
-  }
-
-  def toJsValue: JsValue = synchronized {
-    status.toJsValue
-  }
-}
 
 class SingleKnnAppFuture(statusHolder: StatusHolder) extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global

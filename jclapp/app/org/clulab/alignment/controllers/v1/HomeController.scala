@@ -2,30 +2,123 @@ package org.clulab.alignment.controllers.v1
 
 import javax.inject._
 
-import org.clulab.alignment.Locations
-import org.clulab.alignment.SingleKnnApp
+import org.clulab.alignment.controllers.utils.Busy
+import org.clulab.alignment.controllers.utils.ExternalProcess
+import org.clulab.alignment.controllers.utils.Ready
+import org.clulab.alignment.controllers.utils.{Status => LocalStatus}
+import org.clulab.alignment.controllers.utils.StatusHolder
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import play.api.mvc._
-import play.api.libs.json._
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsValue
+import play.api.mvc.AbstractController
 import play.api.mvc.Action
+import play.api.mvc.AnyContent
+import play.api.mvc.ControllerComponents
+import play.api.mvc.Request
 
-/**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
- */
+import scala.concurrent.Future
+
+class Indexer {
+
+  def run(): Unit = {
+    println("Indexer started")
+    Thread.sleep(10000)
+    println("Indexer stopped")
+  }
+}
+
+class IndexerManager(logger: Logger) {
+  protected val statusHolder: StatusHolder = new StatusHolder(logger, Ready)
+
+  def getStatus: LocalStatus = {
+    statusHolder.get
+  }
+
+  def run(): LocalStatus = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val newStatus = {
+      val status = getStatus
+
+      if (status == Ready) {
+        statusHolder.set(Busy)
+        Future {
+          new Indexer().run()
+          statusHolder.set(Ready)
+        }
+        Busy
+      }
+      else
+        status
+    }
+
+    newStatus
+  }
+}
+
+class WebappManager(logger: Logger) extends ExternalProcess(Seq("cmd.exe", "/C", "startWebapp.bat")) {
+  protected val statusHolder: StatusHolder = new StatusHolder(logger, Ready)
+  protected var processOpt: Option[Process] = None
+
+//  environment("_JAVA_OPTIONS", "-Xmx12g")
+//  directory(".")
+
+  def getStatus: LocalStatus = synchronized {
+    statusHolder.get
+  }
+
+  def start(): LocalStatus = synchronized {
+    val newStatus = {
+      val status = getStatus
+
+      if (status == Ready) {
+        processOpt = Some(execute())
+        // Only set if the above did not throw an exception.
+        statusHolder.set(Busy)
+        Busy
+      }
+      else
+        status
+    }
+
+    newStatus
+  }
+
+  // This is not working on Windows.
+  def stop(): LocalStatus = synchronized {
+    val newStatus = {
+      val status = getStatus
+
+      if (status == Busy) {
+        val newProcess = processOpt.get.destroyForcibly()
+        val exitValue = newProcess.exitValue()
+        if (!newProcess.isAlive) {
+          statusHolder.set(Ready)
+          processOpt = None
+          Ready
+        }
+        else {
+          processOpt = Some(newProcess)
+          Busy
+        }
+      }
+      else
+        status
+    }
+
+    newStatus
+  }
+}
+
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   import HomeController.logger
 
-  println("Configuring...")
-
-  println("Initializing...")
-
-  println("Up and running...")
+  val webappManager = new WebappManager(logger)
+  val indexerManager = new IndexerManager(logger)
 
   def home(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
@@ -41,24 +134,45 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(text)
   }
 
+  protected def getStatus(webappStatus: LocalStatus, indexerStatus: LocalStatus): JsValue = {
+    val status = JsObject(Seq(
+      "webapp" -> webappStatus.toJsValue,
+      "indexer" -> indexerStatus.toJsValue
+    ))
+
+    status
+  }
+
+  protected def getStatus: JsValue =
+      getStatus(webappManager.getStatus, indexerManager.getStatus)
+
+  protected def getStatusWithWebapp(webappStatus: LocalStatus): JsValue =
+      getStatus(webappStatus, indexerManager.getStatus)
+
+  protected def getStatusWithIndexer(indexerStatus: LocalStatus): JsValue =
+      getStatus(webappManager.getStatus, indexerStatus)
+
   def status(): Action[AnyContent] = Action {
     logger.info(s"Called 'status' function!")
-    Ok
+    Ok(getStatus)
   }
 
   def start(): Action[AnyContent] = Action {
-    logger.info(s"Called 'status' function!")
-    Ok
+    logger.info(s"Called 'start' function!")
+    val webappStatus = webappManager.start()
+    Ok(getStatusWithWebapp(webappStatus))
   }
 
   def stop(): Action[AnyContent] = Action {
-    logger.info(s"Called 'status' function!")
-    Ok
+    logger.info(s"Called 'stop' function!")
+    val webappStatus = webappManager.stop()
+    Ok(getStatusWithWebapp(webappStatus))
   }
 
   def index(): Action[AnyContent] = Action {
     logger.info(s"Called 'index' function!")
-    Ok
+    val indexerStatus = indexerManager.run()
+    Ok(getStatusWithIndexer(indexerStatus))
   }
 }
 

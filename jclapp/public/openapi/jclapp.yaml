@@ -10,30 +10,27 @@ servers:
 components:
   schemas:
     status:
-      type: array
-      items:
-        type: object
-        properties:
-          score:
-            description: a value in the range [-1, 1] with higher being a better match for the search
-            type: number
-            format: float
-          datamartId:
-            description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
-            type: string
-          datasetId:
-            description: a unique identifer for the dataset of a particular datamart
-            type: string
-          variableId:
-            description: a unique identifier for a variable of a particular dataset
-            type: string
-          variableName:
-            description: a more human readable version of the variableId
-            type: string
-          variableDescription:
-            description: an more thorough explanation of the variable
-            type: string
-            
+      type: object
+      properties:
+        number:
+          description: a numeric value for computers
+          type: number
+          format: int32
+        text:
+          description: a textual value for humans
+          type: string
+    statusResponse:
+      type: object
+      properties:
+        webapp:
+          descrption: status of webapp
+          schema:
+            $ref: "#/components/schemas/status"
+        indexer:
+          description: status of indexer
+          schema:
+            $ref: "#/components/schemas/status"
+
 paths:
   /v1/ping:
     get:
@@ -69,7 +66,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/status"
+                $ref: "#/components/schemas/statusResponse"
+
   /v1/start:
     get:
       summary: Start the concept aligner
@@ -80,7 +78,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/status"
+                $ref: "#/components/schemas/statusResponse"
+
   /v1/stop:
     get:
       summary: Stop the concept aligner
@@ -91,7 +90,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/status"
+                $ref: "#/components/schemas/statusResponse"
+
   /v1/index:
     get:
       summary: Scrape and reindex the datamarts and SuperMaaS // allow parameters so know url of supermaas server
@@ -102,4 +102,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/status"
+                $ref: "#/components/schemas/statusResponse"

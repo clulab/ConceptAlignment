@@ -13,7 +13,9 @@ import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.mvc._
-import play.api.libs.json._
+import play.api.libs.json.Json
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsValue
 import play.api.mvc.Action
 
 import scala.concurrent.Await
@@ -40,10 +42,6 @@ class SingleKnnAppFuture(statusHolder: StatusHolder) extends SingleKnnAppTrait {
   }
 }
 
-/**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
- */
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   import HomeController.logger

@@ -27,6 +27,8 @@ class HomeController @Inject()(cc: ControllerComponents, prevSingleKnnAppFuture:
       println("Place file here: " + canonicalPath)
     }
 
+    configure(".")
+    configure("..")
     configure(Locations.datamartFilename)
     configure(Locations.luceneDirname)
     configure(Locations.gloveFilename)

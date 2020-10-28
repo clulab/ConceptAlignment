@@ -7,6 +7,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
+import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 
 import scala.collection.mutable
@@ -19,7 +20,7 @@ object DoubleApp extends App {
   val maxHits = 10
   val queryString = "food"
 
-  val luceneSearcher = new LuceneSearcher(luceneDirname, field)
+  val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(luceneDirname, field)
   val knnIndex = DatamartIndex.load(datamartFilename)
   val vector = {
     val datamartDocument = luceneSearcher.datamartSearch(queryString, 1).next._2

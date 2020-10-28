@@ -5,6 +5,7 @@ import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
+import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 
 // This app gets the starting vector from the result of a Lucene search.
 object SingleLuceneApp extends App {
@@ -16,7 +17,7 @@ object SingleLuceneApp extends App {
   val maxHits = 10
   val queryString = "food"
 
-  val luceneSearcher = new LuceneSearcher(luceneDirname, field)
+  val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(luceneDirname, field)
   val datamartIndex = DatamartIndex.load(datamartFilename)
   val ontologyIndex = OntologyIndex.load(ontologyFilename)
 

@@ -17,10 +17,15 @@ import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.Closer.AutoCloser
 
-class LuceneSearcher(luceneDirname: String, field: String) {
+class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearcherTrait {
 
   def newReader(): DirectoryReader = {
-    DirectoryReader.open(FSDirectory.open(Paths.get(luceneDirname)))
+    val path = Paths.get(luceneDirname)
+    println(path)
+    val fsDirectory = FSDirectory.open(path)
+    println(fsDirectory.getDirectory)
+
+    DirectoryReader.open(fsDirectory)
   }
 
   def newQuery(query: String): Query = {

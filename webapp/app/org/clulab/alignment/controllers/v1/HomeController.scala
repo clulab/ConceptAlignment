@@ -2,7 +2,6 @@ package org.clulab.alignment.controllers.v1
 
 import javax.inject._
 import org.clulab.alignment.Locations
-import org.clulab.alignment.controllers.utils.ApplicationStart
 import org.clulab.alignment.controllers.utils.SingleKnnAppFuture
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
@@ -14,9 +13,10 @@ import play.api.libs.json.JsValue
 import play.api.mvc.Action
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, singleKnnAppFuture: SingleKnnAppFuture) extends AbstractController(cc) {
+class HomeController @Inject()(cc: ControllerComponents, prevSingleKnnAppFuture: SingleKnnAppFuture) extends AbstractController(cc) {
   import HomeController.logger
 
+  var currentSingleKnnAppFuture: SingleKnnAppFuture = prevSingleKnnAppFuture
   val maxMaxHits = 500
 
   {
@@ -52,13 +52,13 @@ class HomeController @Inject()(cc: ControllerComponents, singleKnnAppFuture: Sin
 
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
-    Ok(singleKnnAppFuture.statusHolder.toJsValue)
+    Ok(currentSingleKnnAppFuture.statusHolder.toJsValue)
   }
 
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
     val hits = math.min(maxMaxHits, maxHits) // Cap it off at some reasonable amount.
-    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = singleKnnAppFuture.run(query, hits)
+    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = currentSingleKnnAppFuture.run(query, hits)
     val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
       Json.obj(
       "score" -> score,

@@ -5,7 +5,7 @@ import org.apache.lucene.index.DirectoryReader
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 
-class MockLuceneSearcher {
+abstract class MockLuceneSearcher {
 
   def search(queryString: String, maxHits: Int): Iterator[(Float, Document)] =
       Seq((1f, new Document)).toIterator

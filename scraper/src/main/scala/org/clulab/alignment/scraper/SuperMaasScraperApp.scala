@@ -7,16 +7,21 @@ import org.clulab.alignment.utils.TsvWriter
 
 import scala.collection.JavaConverters._
 
-object SuperMaasScraperApp extends App {
+class SuperMaasScraperApp(filename: String) {
   val config = ConfigFactory.load
   val scraper = SuperMaasScraper.fromConfig(config)
-  val filename = args(0)
 
-  new TsvWriter(FileUtils.printWriterFromFile(filename), isExcel = false).autoClose { tsvWriter =>
-    tsvWriter.println("datamart_id",
-      "dataset_id", "dataset_name", "dataset_description", "dataset_url",
-      "variable_id", "variable_name", "variable_description"
-    )
-    scraper.scrape(tsvWriter)
+  def run(): Unit = {
+    new TsvWriter(FileUtils.printWriterFromFile(filename), isExcel = false).autoClose { tsvWriter =>
+      tsvWriter.println("datamart_id",
+        "dataset_id", "dataset_name", "dataset_description", "dataset_url",
+        "variable_id", "variable_name", "variable_description"
+      )
+      scraper.scrape(tsvWriter)
+    }
   }
+}
+
+object SuperMaasScraperApp extends App {
+  new SuperMaasScraperApp(args(0)).run()
 }

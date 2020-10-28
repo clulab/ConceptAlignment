@@ -16,8 +16,7 @@ import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.Sourcer
 import org.clulab.alignment.utils.TsvReader
 
-object LuceneIndexerApp extends App {
-  val filename = args(0)
+class LuceneIndexerApp(filename: String) {
 
   def newIndexWriter(dir: String): IndexWriter = {
     val analyzer = new StandardAnalyzer()
@@ -68,5 +67,9 @@ object LuceneIndexerApp extends App {
     }
   }
 
-  indexDatamart()
+  def run(): Unit = indexDatamart()
+}
+
+object LuceneIndexerApp extends App {
+  new LuceneIndexerApp(args(0)).run()
 }

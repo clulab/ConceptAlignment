@@ -1,14 +1,9 @@
 package org.clulab.alignment.controllers.v1
 
-import java.util.concurrent.TimeUnit
-
 import javax.inject._
 import org.clulab.alignment.Locations
-import org.clulab.alignment.SingleKnnApp
-import org.clulab.alignment.SingleKnnAppTrait
-import org.clulab.alignment.controllers.utils.Busy
-import org.clulab.alignment.controllers.utils.Ready
-import org.clulab.alignment.controllers.utils.StatusHolder
+import org.clulab.alignment.controllers.utils.ApplicationStart
+import org.clulab.alignment.controllers.utils.SingleKnnAppFuture
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,35 +13,10 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
 
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.FiniteDuration
-
-class SingleKnnAppFuture(statusHolder: StatusHolder) extends SingleKnnAppTrait {
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  protected val singleKnnAppFuture: Future[SingleKnnApp] = Future {
-    val result = new SingleKnnApp()
-    statusHolder.set(Ready)
-    result
-  }
-
-  override def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)] = {
-    val maxWaitTime: FiniteDuration = Duration(200, TimeUnit.SECONDS)
-    val runFuture = singleKnnAppFuture.map { singleKnnApp =>
-      singleKnnApp.run(queryString, maxHits)
-    }
-
-    Await.result(runFuture, maxWaitTime)
-  }
-}
-
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+class HomeController @Inject()(cc: ControllerComponents, singleKnnAppFuture: SingleKnnAppFuture) extends AbstractController(cc) {
   import HomeController.logger
 
-  val statusHolder: StatusHolder = new StatusHolder(logger, Busy)
   val maxMaxHits = 500
 
   {
@@ -63,7 +33,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   println("Initializing...")
-  val singleKnnAppFuture = new SingleKnnAppFuture(statusHolder)
 
   println("Up and running...")
 
@@ -83,7 +52,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
-    Ok(statusHolder.toJsValue)
+    Ok(singleKnnAppFuture.statusHolder.toJsValue)
   }
 
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {

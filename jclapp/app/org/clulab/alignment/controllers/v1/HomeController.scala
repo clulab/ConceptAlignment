@@ -1,16 +1,18 @@
 package org.clulab.alignment.controllers.v1
 
 import javax.inject._
-
 import org.clulab.alignment.controllers.utils.Busy
 import org.clulab.alignment.controllers.utils.ExternalProcess
 import org.clulab.alignment.controllers.utils.Ready
 import org.clulab.alignment.controllers.utils.{Status => LocalStatus}
 import org.clulab.alignment.controllers.utils.StatusHolder
+import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexer
+import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
+import org.clulab.alignment.scraper.SuperMaasScraper
+import org.clulab.alignment.scraper.SuperMaasScraperApp
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.mvc.AbstractController
@@ -22,10 +24,14 @@ import play.api.mvc.Request
 import scala.concurrent.Future
 
 class Indexer {
+  val filename = "../datamarts.tsv"
 
   def run(): Unit = {
     println("Indexer started")
-    Thread.sleep(10000)
+    new SuperMaasScraperApp(filename).run()
+    new HnswlibIndexer().indexDatamart(filename)
+    new LuceneIndexerApp(filename).run()
+    // Do lots of copying to get the files in the right place?
     println("Indexer stopped")
   }
 }

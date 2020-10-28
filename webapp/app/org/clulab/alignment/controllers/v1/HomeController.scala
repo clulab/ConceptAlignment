@@ -24,7 +24,7 @@ class HomeController @Inject()(cc: ControllerComponents, prevSingleKnnAppFuture:
 
     def configure(filename: String): Unit = {
       val canonicalPath = new java.io.File(filename).getCanonicalPath
-      println("Place file here: " + canonicalPath)
+      println(s"$filename maps to $canonicalPath")
     }
 
     configure(".")

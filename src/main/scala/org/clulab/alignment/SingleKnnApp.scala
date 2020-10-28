@@ -80,9 +80,9 @@ class SingleKnnApp(locations: LocationsTrait = Locations) extends SingleKnnAppTr
 }
 
 object Locations extends LocationsTrait {
-  val datamartFilename = "../hnswlib-datamart.idx"
-  val gloveFilename = "../hnswlib-glove.idx"
-  val luceneDirname = "../lucene-datamart"
+  val datamartFilename = "../index_0/hnswlib-datamart.idx"
+  val    gloveFilename = "../index_0/hnswlib-glove.idx"
+  val    luceneDirname = "../index_0/lucene-datamart"
 }
 
 object SingleKnnApp extends App {

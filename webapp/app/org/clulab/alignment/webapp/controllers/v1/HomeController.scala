@@ -26,7 +26,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
   // This one provides the double buffering.  Only one is provided, first come, first served.
   var nextSingleKnnAppFutureOpt: Option[SingleKnnAppFuture] = None
 
-  protected def receive(reindexSender: ReindexSender, reindexMessage: ReindexMessage): Unit = {
+  def receive(reindexSender: ReindexSender, reindexMessage: ReindexMessage): Unit = {
     println(s"I received the message ${reindexMessage.message}")
     currentSingleKnnAppFuture = nextSingleKnnAppFutureOpt.get
     nextSingleKnnAppFutureOpt = None

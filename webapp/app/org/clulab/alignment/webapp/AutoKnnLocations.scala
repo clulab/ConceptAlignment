@@ -1,14 +1,14 @@
 package org.clulab.alignment.webapp
 
-import org.clulab.alignment.Locations
+import org.clulab.alignment.searcher.knn.KnnLocations
 
-class AutoLocations() extends Locations(AutoLocations.getBaseIndex()) {
+class AutoKnnLocations() extends KnnLocations(AutoKnnLocations.getBaseIndex()) {
 }
 
-object AutoLocations {
+object AutoKnnLocations {
 
   def getBaseIndex(): Int = {
-    val baseLocations = Locations.defaultLocations
+    val baseLocations = KnnLocations.defaultLocations
     val fileAndIndexOpt = FileUtils.findFileAndIndex(baseLocations.baseDir, baseLocations.baseFile)
     require(fileAndIndexOpt.isDefined)
 

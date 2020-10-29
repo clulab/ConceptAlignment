@@ -8,6 +8,7 @@ import org.clulab.alignment.webapp.controllers.utils.{Status => LocalStatus}
 import org.clulab.alignment.webapp.controllers.utils.StatusHolder
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexer
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
+import org.clulab.alignment.indexer.lucene.StaticLuceneLocations
 import org.clulab.alignment.scraper.SuperMaasScraper
 import org.clulab.alignment.scraper.SuperMaasScraperApp
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -24,13 +25,16 @@ import play.api.mvc.Request
 import scala.concurrent.Future
 
 class Indexer {
-  val filename = "../datamarts.tsv"
+  val datamartFilename = "../datamarts.tsv"
+  val datamartIndexFilename = "../hnswlib-datamart.idx"
+  val luceneDirname = "../lucene-datamart"
+  // Glove doesn't need to be reindexed
 
   def run(): Unit = {
     println("Indexer started")
-    new SuperMaasScraperApp(filename).run()
-    new HnswlibIndexer().indexDatamart(filename)
-    new LuceneIndexerApp(filename).run()
+    new SuperMaasScraperApp(datamartFilename).run()
+    new HnswlibIndexer().indexDatamart(datamartFilename, datamartIndexFilename)
+    new LuceneIndexerApp(new StaticLuceneLocations(datamartFilename, luceneDirname)).run()
     // Do lots of copying to get the files in the right place?
     println("Indexer stopped")
   }

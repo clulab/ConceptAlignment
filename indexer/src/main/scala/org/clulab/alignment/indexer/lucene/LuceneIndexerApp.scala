@@ -16,7 +16,7 @@ import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.Sourcer
 import org.clulab.alignment.utils.TsvReader
 
-class LuceneIndexerApp(filename: String) {
+class LuceneIndexerApp(luceneLocations: LuceneLocationsTrait) {
 
   def newIndexWriter(dir: String): IndexWriter = {
     val analyzer = new StandardAnalyzer()
@@ -27,14 +27,13 @@ class LuceneIndexerApp(filename: String) {
   }
 
   def indexDatamart(): Unit = {
-    val luceneDirname = "../lucene-datamart"
     val tsvReader = new TsvReader()
 
     def newDocument(datamartId: String, datasetId: String, variableId: String, variableName: String, variableDescription: String): Document = {
-      val identifier = new DatamartIdentifier(datamartId, datasetId, variableId)
+      val identifier = DatamartIdentifier(datamartId, datasetId, variableId)
       val document = new Document()
 
-      document.add(new StringField("id", identifier.toString, Field.Store.NO))
+      document.add(new StringField("id", identifier.toString(), Field.Store.NO))
 
       document.add(new StoredField("datamartId", datamartId))
       document.add(new StoredField("datasetId", datasetId))
@@ -46,8 +45,8 @@ class LuceneIndexerApp(filename: String) {
       document
     }
 
-    newIndexWriter(luceneDirname).autoClose { indexWriter =>
-      Sourcer.sourceFromFile(filename).autoClose { source =>
+    newIndexWriter(luceneLocations.luceneDirname).autoClose { indexWriter =>
+      Sourcer.sourceFromFile(luceneLocations.datamartFilename).autoClose { source =>
         source.getLines.buffered.drop(1).foreach { line =>
           val Array(
           datamartId,
@@ -70,6 +69,12 @@ class LuceneIndexerApp(filename: String) {
   def run(): Unit = indexDatamart()
 }
 
+class StaticLuceneLocations(val datamartFilename: String, val luceneDirname: String) extends LuceneLocationsTrait {
+}
+
 object LuceneIndexerApp extends App {
-  new LuceneIndexerApp(args(0)).run()
+  val datamartFilename = args(0)
+  val luceneDirname = args(1)
+
+  new LuceneIndexerApp(new StaticLuceneLocations(datamartFilename, luceneDirname)).run()
 }

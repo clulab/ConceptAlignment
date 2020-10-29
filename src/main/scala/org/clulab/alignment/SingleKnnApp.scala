@@ -7,6 +7,8 @@ import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
+import org.clulab.alignment.searcher.knn.KnnLocations
+import org.clulab.alignment.searcher.knn.KnnLocationsTrait
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -20,7 +22,7 @@ trait SingleKnnAppTrait {
 // its startup time and memory overhead, the glove index is used instead.
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
-class SingleKnnApp(locations: LocationsTrait = Locations.defaultLocations) extends SingleKnnAppTrait {
+class SingleKnnApp(locations: KnnLocationsTrait = KnnLocations.defaultLocations) extends SingleKnnAppTrait {
   val datamartIndex: Index = DatamartIndex.load(locations.datamartFilename)
   val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(locations.luceneDirname, "")
   val gloveIndex: GloveIndex.Index = GloveIndex.load(locations.gloveFilename)

@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule
 
 class StartModule extends AbstractModule {
   override def configure() = {
-    bind(classOf[AutoLocations])
+    bind(classOf[AutoKnnLocations])
     bind(classOf[AutoSingleKnnAppFuture]).asEagerSingleton()
   }
 }

@@ -34,14 +34,12 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  // There isn't much call for this.  It is mostly to test the indexer with a large number of entries.
-  def indexGlove(): Unit = {
+  def indexGlove(indexFilename: String): Unit = {
     val keys = w2v.keys
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
     val index = GloveIndex.newIndex(items)
-    val filename = "../hnswlib-glove.idx"
 
-    index.save(new File(filename))
+    index.save(new File(indexFilename))
   }
 
   def indexOntology(): Unit = {
@@ -66,8 +64,7 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  def indexDatamart(datamartFilename: String): Unit = {
-    val filename = "../hnswlib-datamart.idx"
+  def indexDatamart(datamartFilename: String, indexFilename: String): Unit = {
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
@@ -79,7 +76,7 @@ class HnswlibIndexer {
     }
     val index = DatamartIndex.newIndex(items)
 
-    index.save(new File(filename))
+    index.save(new File(indexFilename))
   }
 
 //  indexSample()

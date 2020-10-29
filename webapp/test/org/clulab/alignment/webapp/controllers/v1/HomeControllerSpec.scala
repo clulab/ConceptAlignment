@@ -1,4 +1,4 @@
-package org.clulab.alignment.controllers
+package org.clulab.alignment.webapp.controllers.v1
 
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._

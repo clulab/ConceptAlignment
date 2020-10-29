@@ -75,8 +75,16 @@ class SingleKnnApp(locations: KnnLocationsTrait = KnnLocations.defaultLocations)
   }
 }
 
+class StaticKnnLocations(val datamartFilename: String, val gloveFilename: String, val luceneDirname: String) extends KnnLocationsTrait {
+}
+
 object SingleKnnApp extends App {
-  val datamartDocumentsAndScores = new SingleKnnApp().run("food", 10)
+  val datamartFilename = args(0)
+  val gloveFilename = args(1)
+  val luceneDirname = args(2)
+
+  val knnLocations = new StaticKnnLocations(datamartFilename, gloveFilename, luceneDirname)
+  val datamartDocumentsAndScores = new SingleKnnApp(knnLocations).run("food", 10)
 
   datamartDocumentsAndScores.foreach { case (datamartDocument, score) =>
     println(s"${datamartDocument.datamartId}\t${datamartDocument.datasetId}\t${datamartDocument.variableId}\t${datamartDocument.variableName}\t${datamartDocument.variableDescription}\t$score")

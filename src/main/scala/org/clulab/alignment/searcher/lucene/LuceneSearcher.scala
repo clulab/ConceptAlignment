@@ -21,9 +21,7 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
 
   def newReader(): DirectoryReader = {
     val path = Paths.get(luceneDirname)
-    println(path)
     val fsDirectory = FSDirectory.open(path)
-    println(fsDirectory.getDirectory)
 
     DirectoryReader.open(fsDirectory)
   }

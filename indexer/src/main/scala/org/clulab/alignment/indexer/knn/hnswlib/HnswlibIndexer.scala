@@ -34,12 +34,13 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  def indexGlove(indexFilename: String): Unit = {
+  def indexGlove(indexFilename: String): GloveIndex.Index = {
     val keys = w2v.keys
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
     val index = GloveIndex.newIndex(items)
 
     index.save(new File(indexFilename))
+    index
   }
 
   def indexOntology(): Unit = {
@@ -64,7 +65,7 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  def indexDatamart(datamartFilename: String, indexFilename: String): Unit = {
+  def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
@@ -77,6 +78,7 @@ class HnswlibIndexer {
     val index = DatamartIndex.newIndex(items)
 
     index.save(new File(indexFilename))
+    index
   }
 
 //  indexSample()

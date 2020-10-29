@@ -11,10 +11,7 @@ class ScraperApp(scraperLocations: ScraperLocationsTrait = ScraperLocations.defa
 
   def run(scrapers: Seq[DatamartScraper]): Unit = {
     new TsvWriter(FileUtils.printWriterFromFile(scraperLocations.datamartFilename), isExcel = false).autoClose { tsvWriter =>
-      tsvWriter.println("datamart_id",
-        "dataset_id", "dataset_name", "dataset_description", "dataset_url",
-        "variable_id", "variable_name", "variable_description"
-      )
+      tsvWriter.println(ScraperApp.headers)
       scrapers.foreach(_.scrape(tsvWriter))
     }
   }
@@ -25,6 +22,16 @@ class StaticScraperLocations(filename: String) extends ScraperLocationsTrait {
 }
 
 object ScraperApp extends App {
+  val headers = Seq(
+    "datamart_id",
+    "dataset_id",
+    "dataset_name",
+    "dataset_description",
+    "dataset_url",
+    "variable_id",
+    "variable_name",
+    "variable_description"
+  )
 
   def getScrapers: Seq[DatamartScraper] = {
     val config = ConfigFactory.load

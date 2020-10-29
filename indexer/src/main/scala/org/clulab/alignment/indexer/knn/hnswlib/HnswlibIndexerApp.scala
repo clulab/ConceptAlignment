@@ -20,6 +20,7 @@ object HnswlibIndexerApp extends App {
   val datamartFilename = args(0)
   val datamartIndexFilename = args(1)
   val gloveIndexFilename = args(2)
+  val glove = args(3).toBoolean
 
-  new HnswlibIndexerApp(new StaticHnswlibLocations(datamartFilename, datamartIndexFilename, gloveIndexFilename)).run(glove = true)
+  new HnswlibIndexerApp(new StaticHnswlibLocations(datamartFilename, datamartIndexFilename, gloveIndexFilename)).run(glove)
 }

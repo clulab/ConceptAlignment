@@ -1,4 +1,4 @@
-package org.clulab.alignment.controllers.utils
+package org.clulab.alignment.webapp
 
 import org.clulab.alignment.Test
 
@@ -7,7 +7,8 @@ class TestFileUtils extends Test {
   behavior of "findIndex"
 
   it should "work" in {
-    val result = FileUtils.findIndex("..", "index_")
+    val result = FileUtils.findFileAndIndex("..", "index_")
 
+    println(result)
   }
 }

@@ -108,3 +108,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/searchResponse"
+
+  /v1/reindex:
+    get:
+      summary: Scrape and reindex the datamarts and SuperMaaS
+      description: "The longwinded description goes here."
+      parameters:
+        - name: who
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+        - name: where
+          in: query
+          description: the URL to use for access to SuperMaaS
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"

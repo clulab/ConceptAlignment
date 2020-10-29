@@ -1,4 +1,4 @@
-package org.clulab.alignment.controllers.utils
+package org.clulab.alignment.webapp
 
 import org.slf4j.Logger
 import play.api.libs.json.JsNumber

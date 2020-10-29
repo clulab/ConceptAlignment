@@ -8,8 +8,8 @@ import java.nio.file.Paths
 
 import javax.inject._
 import org.clulab.alignment.Locations
-import org.clulab.alignment.controllers.utils.SingleKnnAppFuture
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.webapp.SingleKnnAppFuture
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.mvc._

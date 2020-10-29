@@ -1,4 +1,4 @@
-package org.clulab.alignment.controllers.utils
+package org.clulab.alignment.webapp.controllers.utils
 
 import java.io.File
 

@@ -15,18 +15,12 @@ trait SingleKnnAppTrait {
   def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)]
 }
 
-trait LocationsTrait {
-  val datamartFilename: String
-  val gloveFilename: String
-  val luceneDirname: String
-}
-
 // This app gets the starting vector from the result of a Knn search.
 // Lucene isn't involved in that.  In order to avoid using Word2Vec with
 // its startup time and memory overhead, the glove index is used instead.
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
-class SingleKnnApp(locations: LocationsTrait = Locations) extends SingleKnnAppTrait {
+class SingleKnnApp(locations: LocationsTrait = Locations.defaultLocations) extends SingleKnnAppTrait {
   val datamartIndex: Index = DatamartIndex.load(locations.datamartFilename)
   val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(locations.luceneDirname, "")
   val gloveIndex: GloveIndex.Index = GloveIndex.load(locations.gloveFilename)
@@ -77,12 +71,6 @@ class SingleKnnApp(locations: LocationsTrait = Locations) extends SingleKnnAppTr
 
     datamartDocumentsAndScores
   }
-}
-
-object Locations extends LocationsTrait {
-  val datamartFilename = "../index_0/hnswlib-datamart.idx"
-  val    gloveFilename = "../index_0/hnswlib-glove.idx"
-  val    luceneDirname = "../index_0/lucene-datamart"
 }
 
 object SingleKnnApp extends App {

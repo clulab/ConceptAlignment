@@ -1,11 +1,11 @@
-package org.clulab.alignment.controllers.v1
+package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
-import org.clulab.alignment.controllers.utils.Busy
-import org.clulab.alignment.controllers.utils.ExternalProcess
-import org.clulab.alignment.controllers.utils.Ready
-import org.clulab.alignment.controllers.utils.{Status => LocalStatus}
-import org.clulab.alignment.controllers.utils.StatusHolder
+import org.clulab.alignment.webapp.controllers.utils.Busy
+import org.clulab.alignment.webapp.controllers.utils.ExternalProcess
+import org.clulab.alignment.webapp.controllers.utils.Ready
+import org.clulab.alignment.webapp.controllers.utils.{Status => LocalStatus}
+import org.clulab.alignment.webapp.controllers.utils.StatusHolder
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexer
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
 import org.clulab.alignment.scraper.SuperMaasScraper

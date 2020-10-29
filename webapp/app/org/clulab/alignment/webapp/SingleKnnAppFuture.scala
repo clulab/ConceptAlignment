@@ -1,10 +1,12 @@
-package org.clulab.alignment.controllers.utils
+package org.clulab.alignment.webapp
 
+import javax.inject._
 import java.util.concurrent.TimeUnit
 
+import org.clulab.alignment.Locations
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
-import org.clulab.alignment.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,8 +16,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 
-class SingleKnnAppFuture extends SingleKnnAppTrait {
-
+class SingleKnnAppFuture(val locations: Locations, callback: Reindex.ReindexCallback = Reindex.muteReindexCallback)
+    extends SingleKnnAppTrait with ReindexSender {
   println("********** the knn started up ***********")
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -24,6 +26,7 @@ class SingleKnnAppFuture extends SingleKnnAppTrait {
   protected val singleKnnAppFuture: Future[SingleKnnApp] = Future {
     val result = new SingleKnnApp()
     statusHolder.set(Ready)
+    callback(this) // Let something know that it finished.
     result
   }
 
@@ -40,3 +43,5 @@ class SingleKnnAppFuture extends SingleKnnAppTrait {
 object SingleKnnAppFuture {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }
+
+class AutoSingleKnnAppFuture @Inject()(locations: AutoLocations) extends SingleKnnAppFuture(locations)

@@ -1,11 +1,12 @@
 package org.clulab.alignment.webapp.indexer
 
+import javax.inject.Inject
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
-import org.clulab.alignment.scraper.DatamartScraper
 import org.clulab.alignment.scraper.ScraperApp
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.utils.AutoLocations
 import org.clulab.alignment.webapp.utils.StatusHolder
 
 import scala.concurrent.Future
@@ -23,37 +24,60 @@ class IndexCallback(indexReceiver: IndexReceiver, indexMessage: IndexMessage) {
   def callback(indexSender: IndexSender): Unit = indexReceiver.receive(indexSender, indexMessage)
 }
 
-class Indexer(indexerLocations: IndexerLocations, callback: Indexer.IndexCallbackType = Indexer.muteIndexCallback) extends IndexSender {
+trait IndexerTrait {
+  def run(indexReceiverOpt: Option[IndexReceiver]): Unit
+}
 
-  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](logger, IndexerIdling)
-
+class IndexerApps(indexerLocations: IndexerLocations) {
   val scraperApp = new ScraperApp(indexerLocations.scraperLocations)
-  // This one can be really slow, so loading might require a future.
-  // The w2v could be gotten from the searcher and reused when it is ready.
-  // Is it able to update its location? or take w2v in constructor?
+  // Try to recover the vectors before moving this.
   val hnswlibIndexerApp = new HnswlibIndexerApp(indexerLocations.hnswlibLocations)
   val luceneIndexerApp = new LuceneIndexerApp(indexerLocations.luceneLocations)
+}
 
-  protected var runFutureOpt: Option[Future[DatamartIndex.Index]] = None
+class Indexer(indexerLocations: IndexerLocations) extends IndexerTrait with IndexSender {
+  import scala.concurrent.ExecutionContext.Implicits.global
 
-  def run(): Unit = run(ScraperApp.getScrapers)
+  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](logger, IndexerStatus.Loading)
+  protected val loadingFuture = Future[IndexerApps] {
+    val result = new IndexerApps(indexerLocations)
+    statusHolder.set(IndexerStatus.Idling)
+    result
+  }
+  val supermaasUrlOpt = Option(System.getenv(Indexer.supermaasUrlKey))
+  val scrapers = supermaasUrlOpt
+      .map { supermaasUrl =>
+        ScraperApp.getScrapers(supermaasUrl)
+      }
+      .getOrElse(ScraperApp.getScrapers)
+  protected var indexingFutureOpt: Option[Future[DatamartIndex.Index]] = None
 
-  def run(supermaasUrl: String): Unit = run(ScraperApp.getScrapers(supermaasUrl))
+  def getStatus: IndexerStatus = statusHolder.get
 
-  def run(scrapers: Seq[DatamartScraper]): Unit = {
-//    runFutureOpt = Some(Future {
-      indexerLocations.mkdirs()
-      scraperApp.run(scrapers)
-      val datamartIndex = hnswlibIndexerApp.run()
-      luceneIndexerApp.run()
-      callback(this)
-      datamartIndex
-//    })
+  // This does need a callback, at least a receiver, possibly None which is default.
+  // We're not waiting for it.
+  // Add the receiver or callback here
+  def run(indexReceiverOpt: Option[IndexReceiver]): Unit = {
+    statusHolder.set(IndexerStatus.Indexing)
+    indexingFutureOpt = Some(
+      loadingFuture.map { indexerApps =>
+        indexerLocations.mkdirs()
+        indexerApps.scraperApp.run(scrapers)
+        val datamartIndex = indexerApps.hnswlibIndexerApp.run()
+        indexerApps.luceneIndexerApp.run()
+//        callback(this)
+        datamartIndex // put this into the message so that it can be reused in the search.
+      }
+    )
   }
 }
 
 object Indexer {
+  val supermaasUrlKey = "supermaas"
   type IndexCallbackType = IndexSender => Unit
 
   val muteIndexCallback: IndexCallbackType = (indexSender: IndexSender) => ()
 }
+
+class AutoIndexer @Inject()(autoLocations: AutoLocations)
+    extends Indexer(new IndexerLocations(autoLocations.index + 1, autoLocations.baseDir, autoLocations.baseFile))

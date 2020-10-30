@@ -118,20 +118,13 @@ paths:
       summary: Scrape and reindex the datamarts and SuperMaaS
       description: "The longwinded description goes here."
       parameters:
-        - name: who
+        - name: secret
           in: query
           description: the secret that allows access to this operation
           required: true
           schema:
             type: string
           example: secret
-        - name: where
-          in: query
-          description: the URL to use for access to SuperMaaS
-          required: true
-          schema:
-            type: string
-          example: http://localhost:8000
       responses:
         200:
           description: Status

@@ -10,7 +10,7 @@ GET     /v1/ping                    org.clulab.alignment.webapp.controllers.v1.H
 GET     /v1/echo                    org.clulab.alignment.webapp.controllers.v1.HomeController.echo(text: String)
 GET     /v1/status                  org.clulab.alignment.webapp.controllers.v1.HomeController.status
 GET     /v1/search                  org.clulab.alignment.webapp.controllers.v1.HomeController.search(query: String, maxHits: Int ?= 10)
-GET     /v1/reindex                 org.clulab.alignment.webapp.controllers.v1.HomeController.reindex(who: String, where: String)
+GET     /v1/reindex                 org.clulab.alignment.webapp.controllers.v1.HomeController.reindex(secret: String)
 
 # API spec
 GET     /api                        org.clulab.swagger.controllers.OpenApiController.openAPI

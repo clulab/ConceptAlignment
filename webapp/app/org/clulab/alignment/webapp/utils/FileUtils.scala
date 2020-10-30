@@ -9,6 +9,8 @@ import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
+import scala.collection.JavaConverters._
+
 object FileUtils {
 
   def findFileAndIndex(baseDir: String, prefix: String): Option[(File, Int)] = {
@@ -24,7 +26,7 @@ object FileUtils {
             Some(suffix.toInt)
           }
           catch {
-            case exception: NumberFormatException => None
+            case _: NumberFormatException => None
           }
           if (indexOpt.isDefined && indexOpt.get.toString == suffix) {
             val index = indexOpt.get

@@ -16,17 +16,16 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 
-class SingleKnnAppFuture(val locations: KnnLocations, callback: Reindex.ReindexCallback = Reindex.muteReindexCallback)
-    extends SingleKnnAppTrait with ReindexSender {
-  println("********** the knn started up ***********")
+// The reason for the trait is that some things want to run straight on the
+// SingleKnnApp rather than on the Future.  This keeps them compatible.
+class Searcher(val locations: KnnLocations) extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val statusHolder: StatusHolder = new StatusHolder(logger, Busy)
+  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](logger, SearcherBusy)
 
   protected val singleKnnAppFuture: Future[SingleKnnApp] = Future {
-    val result = new SingleKnnApp()
-    statusHolder.set(Ready)
-    callback(this) // Let something know that it finished.
+    val result = new SingleKnnApp() // This can take a very long time.
+    statusHolder.set(SearcherReady)
     result
   }
 
@@ -40,8 +39,8 @@ class SingleKnnAppFuture(val locations: KnnLocations, callback: Reindex.ReindexC
   }
 }
 
-object SingleKnnAppFuture {
+object Searcher {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class AutoSingleKnnAppFuture @Inject()(locations: AutoKnnLocations) extends SingleKnnAppFuture(locations)
+class AutoSearcher @Inject()(locations: AutoKnnLocations) extends Searcher(locations)

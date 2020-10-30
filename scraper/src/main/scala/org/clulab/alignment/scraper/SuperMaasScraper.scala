@@ -4,6 +4,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigValueFactory
 import org.clulab.alignment.utils.TsvWriter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -56,11 +57,16 @@ object SuperMaasScraper {
   // Notice how this differs from other versions with the capital S on the end.
   val datamartId = "SuperMaaS"
   val stanza = "SuperMaasScraper"
+  val urlKey = s"$stanza.url"
 
   def fromConfig(config: Config): SuperMaasScraper = {
-    val baseUrl = config.getString(s"$stanza.url")
+    val baseUrl = config.getString(urlKey)
     val createdSince = config.getString(s"$stanza.createdSince")
 
     new SuperMaasScraper(baseUrl, createdSince)
+  }
+
+  def setUrl(config: Config, url: String): Config = {
+    config.withValue(urlKey, ConfigValueFactory.fromAnyRef(url))
   }
 }

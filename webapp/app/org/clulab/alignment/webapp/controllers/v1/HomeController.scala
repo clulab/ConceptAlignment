@@ -2,11 +2,11 @@ package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
-import org.clulab.alignment.webapp.AutoSingleKnnAppFuture
-import org.clulab.alignment.webapp.ReindexMessage
-import org.clulab.alignment.webapp.ReindexReceiver
-import org.clulab.alignment.webapp.ReindexSender
-import org.clulab.alignment.webapp.SingleKnnAppFuture
+import org.clulab.alignment.webapp.AutoSearcher
+import org.clulab.alignment.webapp.IndexMessage
+import org.clulab.alignment.webapp.IndexReceiver
+import org.clulab.alignment.webapp.IndexSender
+import org.clulab.alignment.webapp.Searcher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
@@ -17,16 +17,19 @@ import play.api.mvc.Action
 import play.api.mvc._
 
 @Singleton
-class HomeController @Inject()(controllerComponents: ControllerComponents, prevSingleKnnAppFuture: AutoSingleKnnAppFuture)
-    extends AbstractController(controllerComponents) with ReindexReceiver {
+class HomeController @Inject()(controllerComponents: ControllerComponents, prevSingleKnnAppFuture: AutoSearcher)
+    extends AbstractController(controllerComponents) with IndexReceiver {
   import HomeController.logger
 
-  val maxMaxHits = 500
-  var currentSingleKnnAppFuture: SingleKnnAppFuture = prevSingleKnnAppFuture
-  // This one provides the double buffering.  Only one is provided, first come, first served.
-  var nextSingleKnnAppFutureOpt: Option[SingleKnnAppFuture] = None
+//  (indexSender: IndexSender) => receive(indexSender, new IndexMessage("hello"))
+//  )
 
-  def receive(reindexSender: ReindexSender, reindexMessage: ReindexMessage): Unit = {
+  val maxMaxHits = 500
+  var currentSingleKnnAppFuture: Searcher = prevSingleKnnAppFuture
+  // This one provides the double buffering.  Only one is provided, first come, first served.
+  var nextSingleKnnAppFutureOpt: Option[Searcher] = None
+
+  def receive(reindexSender: IndexSender, reindexMessage: IndexMessage): Unit = {
     println(s"I received the message ${reindexMessage.message}")
     currentSingleKnnAppFuture = nextSingleKnnAppFutureOpt.get
     nextSingleKnnAppFutureOpt = None
@@ -76,10 +79,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
 
   def reindex(who: String, where: String): Action[AnyContent] = Action {
     logger.info("Called 'reindex' function!")
-    nextSingleKnnAppFutureOpt = Some(new SingleKnnAppFuture(
-      currentSingleKnnAppFuture.locations.next,
-      (reindexSender: ReindexSender) => receive(reindexSender, new ReindexMessage("hello"))
-    ))
+    nextSingleKnnAppFutureOpt = Some(new Searcher(currentSingleKnnAppFuture.locations.next))
 
     Ok(currentSingleKnnAppFuture.statusHolder.toJsValue)
   }

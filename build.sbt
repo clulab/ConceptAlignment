@@ -9,7 +9,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= {
-  val   luceneVer = "6.6.6" // Match transitive dependency in Eidos.
+  val luceneVer = "6.6.6" // Match transitive dependency in Eidos.
 
   Seq(
     "ai.lum"                     %% "common"                  % "0.0.8", // match eidos
@@ -30,30 +30,23 @@ libraryDependencies ++= {
 lazy val core = project in file(".")
 
 lazy val scraper = project
-    .aggregate(core)
-    .dependsOn(core)
+    .aggregate(core).dependsOn(core)
 
 lazy val indexer = project
-    .aggregate(core)
-    .dependsOn(core)
+    .aggregate(core).dependsOn(core)
 
 lazy val webapp = project
     .enablePlugins(PlayScala)
-    .aggregate(core)
-    .dependsOn(core)
+    .aggregate(core).dependsOn(core)
+    .aggregate(scraper).dependsOn(scraper)
+    .aggregate(indexer).dependsOn(indexer)
 
-// This will depend on more than core, because it must scrape and index as well
 lazy val jclapp = project
     .enablePlugins(PlayScala)
-    .aggregate(core)
-    .dependsOn(core)
-    .aggregate(scraper)
-    .dependsOn(scraper)
-    .aggregate(indexer)
-    .dependsOn(indexer)
+    .aggregate(core).dependsOn(core)
+    .aggregate(scraper).dependsOn(scraper)
+    .aggregate(indexer).dependsOn(indexer)
 
 lazy val evaluator = project
-    .aggregate(core)
-    .dependsOn(core)
-    .aggregate(indexer)
-    .dependsOn(indexer)
+    .aggregate(core).dependsOn(core)
+    .aggregate(indexer).dependsOn(indexer)

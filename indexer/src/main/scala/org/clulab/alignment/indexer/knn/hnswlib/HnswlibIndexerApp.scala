@@ -1,15 +1,19 @@
 package org.clulab.alignment.indexer.knn.hnswlib
 
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+
 class HnswlibIndexerApp(hnswlibLocations: HnswlibLocationsTrait) {
   val hnswlibIndexer = new HnswlibIndexer()
 
-  def run(glove: Boolean = false): Unit = {
+  def run(glove: Boolean = false): DatamartIndex.Index = {
     // Control these through boolean arguments.
     // hnswlibIndexer.indexSample()
     // hnswlibIndexer.indexOntology()
+    val datamartIndex = hnswlibIndexer.indexDatamart(hnswlibLocations.datamartFilename, hnswlibLocations.datamartIndexFilename)
     if (glove)
       hnswlibIndexer.indexGlove(hnswlibLocations.gloveIndexFilename)
-    hnswlibIndexer.indexDatamart(hnswlibLocations.datamartFilename, hnswlibLocations.datamartIndexFilename)
+
+    datamartIndex
   }
 }
 

@@ -18,7 +18,6 @@ import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
 
 class HnswlibIndexer {
-  lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
   val dimensions = 300
 
   // This is just for testing.
@@ -35,6 +34,7 @@ class HnswlibIndexer {
   }
 
   def indexGlove(indexFilename: String): GloveIndex.Index = {
+    val w2v = HnswlibIndexer.w2v
     val keys = w2v.keys
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
     val index = GloveIndex.newIndex(items)
@@ -66,6 +66,7 @@ class HnswlibIndexer {
   }
 
   def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {
+    val w2v = HnswlibIndexer.w2v
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
@@ -85,4 +86,8 @@ class HnswlibIndexer {
 //  indexOntology()
 //  indexGlove()
 //  indexDatamart()
+}
+
+object HnswlibIndexer {
+  lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
 }

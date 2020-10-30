@@ -60,9 +60,11 @@ paths:
       parameters:
         - name: text
           in: query
+          description: text that should be echoed back
           required: true
           schema:
             type: string
+          example: Kilroy was here.
       responses:
         200:
           description: A copy of the input
@@ -93,6 +95,7 @@ paths:
           required: true
           schema:
             type: string
+          example: corn
         - name: maxHits
           in: query
           description: maximum number of matches to return
@@ -101,6 +104,7 @@ paths:
             type: integer
             format: int32
             default: 10
+          example: 20
       responses:
         200:
           description: OK
@@ -120,12 +124,14 @@ paths:
           required: true
           schema:
             type: string
+          example: secret
         - name: where
           in: query
           description: the URL to use for access to SuperMaaS
           required: true
           schema:
             type: string
+          example: http://localhost:8000
       responses:
         200:
           description: Status

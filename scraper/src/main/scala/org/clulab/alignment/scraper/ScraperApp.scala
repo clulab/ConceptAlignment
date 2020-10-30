@@ -1,5 +1,6 @@
 package org.clulab.alignment.scraper
 
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.FileUtils
@@ -11,7 +12,7 @@ class ScraperApp(scraperLocations: ScraperLocationsTrait = ScraperLocations.defa
 
   def run(scrapers: Seq[DatamartScraper]): Unit = {
     new TsvWriter(FileUtils.printWriterFromFile(scraperLocations.datamartFilename), isExcel = false).autoClose { tsvWriter =>
-      tsvWriter.println(ScraperApp.headers)
+      tsvWriter.println(Scraper.headers)
       scrapers.foreach(_.scrape(tsvWriter))
     }
   }
@@ -21,7 +22,9 @@ class StaticScraperLocations(filename: String) extends ScraperLocationsTrait {
   val datamartFilename: String = filename
 }
 
-object ScraperApp extends App {
+object Scraper {
+  // Since ScraperApp is an App, this won't be initialized automatically.
+
   val headers = Seq(
     "datamart_id",
     "dataset_id",
@@ -32,9 +35,19 @@ object ScraperApp extends App {
     "variable_name",
     "variable_description"
   )
+}
 
-  def getScrapers: Seq[DatamartScraper] = {
-    val config = ConfigFactory.load
+object ScraperApp extends App {
+
+  def getScrapers(supermaasUrl: String): Seq[DatamartScraper] = {
+    val config = SuperMaasScraper.setUrl(ConfigFactory.load, supermaasUrl)
+
+    getScrapers(config)
+  }
+
+  def getScrapers: Seq[DatamartScraper] = getScrapers(ConfigFactory.load)
+
+  def getScrapers(config: Config): Seq[DatamartScraper] = {
     val scraperNames = config.getStringList("Scraper.scrapers").asScala
     val scrapers = scraperNames.map { scraperName => DatamartScraper(config, scraperName) }
 

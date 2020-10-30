@@ -8,7 +8,7 @@ class EmptyScraperApp(scraperLocations: ScraperLocationsTrait = ScraperLocations
 
   def run(): Unit = {
     new TsvWriter(FileUtils.printWriterFromFile(scraperLocations.datamartFilename), isExcel = false).autoClose { tsvWriter =>
-      tsvWriter.println(ScraperApp.headers)
+      tsvWriter.println(Scraper.headers)
     }
   }
 }

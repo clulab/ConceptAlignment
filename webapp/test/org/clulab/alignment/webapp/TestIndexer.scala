@@ -12,5 +12,6 @@ class TestIndexer extends Test {
     val indexer = new Indexer(indexerLocations)
 
     indexer.run()
+    indexerLocations.delete()
   }
 }

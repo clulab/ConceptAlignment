@@ -4,11 +4,15 @@ import org.clulab.alignment.Test
 
 class TestFileUtils extends Test {
 
-  behavior of "findIndex"
+  behavior of "FileUtils"
 
-  it should "work" in {
+  it should "findFileAndIndex" in {
     val result = FileUtils.findFileAndIndex("..", "index_")
 
     println(result)
+  }
+
+  ignore should "delete" in {
+    FileUtils.rmdir("../index_2")
   }
 }

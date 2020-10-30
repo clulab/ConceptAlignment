@@ -1,6 +1,7 @@
 package org.clulab.alignment.webapp
 
 import java.io.File
+import java.nio.file.Files
 
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibLocations
 import org.clulab.alignment.indexer.lucene.LuceneLocations
@@ -17,5 +18,9 @@ class IndexerLocations(val index: Int = 0, val baseDir: String = WebappLocations
     val file = new File(parentDir)
     if (!file.exists)
       file.mkdirs()
+  }
+
+  def delete(): Unit = {
+    FileUtils.rmdir(parentDir)
   }
 }

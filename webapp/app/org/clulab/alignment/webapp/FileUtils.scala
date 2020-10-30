@@ -1,8 +1,13 @@
 package org.clulab.alignment.webapp
 
 import java.io.File
+import java.io.IOException
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 import scala.collection.JavaConverters._
 
@@ -47,5 +52,25 @@ object FileUtils {
     }
 
     configure(".")
+  }
+
+  // See https://mkyong.com/java/how-to-delete-directory-in-java/
+  // and https://alvinalexander.com/scala/search-directory-tree-SimpleFileVisitor-walkFileTree-recursive/.
+  class Deleter extends SimpleFileVisitor[Path] {
+
+    override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+      Files.delete(dir)
+      FileVisitResult.CONTINUE
+    }
+
+    override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+      Files.delete(file)
+      FileVisitResult.CONTINUE
+    }
+  }
+
+  def rmdir(dirname: String): Unit = {
+    val path = Paths.get(dirname)
+    Files.walkFileTree(path, new Deleter())
   }
 }

@@ -1,8 +1,4 @@
-package org.clulab.alignment.webapp
-
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
+package org.clulab.alignment.webapp.indexer
 
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
@@ -10,6 +6,7 @@ import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
 import org.clulab.alignment.scraper.DatamartScraper
 import org.clulab.alignment.scraper.ScraperApp
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.utils.StatusHolder
 
 import scala.concurrent.Future
 
@@ -27,7 +24,6 @@ class IndexCallback(indexReceiver: IndexReceiver, indexMessage: IndexMessage) {
 }
 
 class Indexer(indexerLocations: IndexerLocations, callback: Indexer.IndexCallbackType = Indexer.muteIndexCallback) extends IndexSender {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](logger, IndexerIdling)
 

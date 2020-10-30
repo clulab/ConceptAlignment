@@ -1,13 +1,14 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.searcher
 
-import javax.inject._
 import java.util.concurrent.TimeUnit
 
+import javax.inject._
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
 import org.clulab.alignment.searcher.knn.KnnLocations
-import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.utils.StatusHolder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -43,4 +44,4 @@ object Searcher {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class AutoSearcher @Inject()(locations: AutoKnnLocations) extends Searcher(locations)
+class AutoSearcher @Inject()(locations: AutoSearchLocations) extends Searcher(locations)

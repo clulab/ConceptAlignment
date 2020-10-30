@@ -1,14 +1,16 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.searcher
 
 import org.clulab.alignment.searcher.knn.KnnLocations
+import org.clulab.alignment.webapp.WebappLocations
+import org.clulab.alignment.webapp.utils.FileUtils
 
 class SearchLocations(index: Int = 0, baseDir: String = WebappLocations.baseDir, baseFile: String = WebappLocations.baseFile)
     extends KnnLocations(index, baseDir, baseFile)
 
-class AutoKnnLocations() extends SearchLocations(AutoKnnLocations.getBaseIndex) {
+class AutoSearchLocations() extends SearchLocations(AutoSearchLocations.getBaseIndex) {
 }
 
-object AutoKnnLocations {
+object AutoSearchLocations {
 
   def getBaseIndex: Int = getBaseIndex(WebappLocations.baseDir, WebappLocations.baseFile)
 
@@ -22,7 +24,7 @@ object AutoKnnLocations {
 
   def getNextIndex: Int = {
     try {
-      val locations = new AutoKnnLocations()
+      val locations = new AutoSearchLocations()
       locations.index + 1
     }
     catch {

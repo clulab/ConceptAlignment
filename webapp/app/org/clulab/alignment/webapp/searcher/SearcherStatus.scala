@@ -1,5 +1,6 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.searcher
 
+import org.clulab.alignment.webapp.utils.Status
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString

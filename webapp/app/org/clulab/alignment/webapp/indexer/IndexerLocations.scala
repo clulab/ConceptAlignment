@@ -1,11 +1,12 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.indexer
 
 import java.io.File
-import java.nio.file.Files
 
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibLocations
 import org.clulab.alignment.indexer.lucene.LuceneLocations
 import org.clulab.alignment.scraper.ScraperLocations
+import org.clulab.alignment.webapp.WebappLocations
+import org.clulab.alignment.webapp.utils.FileUtils
 
 class IndexerLocations(val index: Int = 0, val baseDir: String = WebappLocations.baseDir, val baseFile: String = WebappLocations.baseFile) {
   val parentDir: String = s"$baseDir/$baseFile$index"

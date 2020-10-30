@@ -1,6 +1,7 @@
 package org.clulab.alignment.webapp
 
 import org.clulab.alignment.Test
+import org.clulab.alignment.webapp.utils.FileUtils
 
 class TestFileUtils extends Test {
 

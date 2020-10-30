@@ -21,11 +21,11 @@ import scala.concurrent.duration.FiniteDuration
 class Searcher(val locations: KnnLocations) extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](logger, SearcherBusy)
+  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](logger, SearcherLoading)
 
   protected val singleKnnAppFuture: Future[SingleKnnApp] = Future {
     val result = new SingleKnnApp() // This can take a very long time.
-    statusHolder.set(SearcherReady)
+    statusHolder.set(SearcherIdling)
     result
   }
 

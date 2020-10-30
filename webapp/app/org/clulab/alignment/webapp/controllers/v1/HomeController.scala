@@ -2,11 +2,11 @@ package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
-import org.clulab.alignment.webapp.AutoSearcher
-import org.clulab.alignment.webapp.IndexMessage
-import org.clulab.alignment.webapp.IndexReceiver
-import org.clulab.alignment.webapp.IndexSender
-import org.clulab.alignment.webapp.Searcher
+import org.clulab.alignment.webapp.indexer.IndexMessage
+import org.clulab.alignment.webapp.indexer.IndexReceiver
+import org.clulab.alignment.webapp.indexer.IndexSender
+import org.clulab.alignment.webapp.searcher.AutoSearcher
+import org.clulab.alignment.webapp.searcher.Searcher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
@@ -17,7 +17,7 @@ import play.api.mvc.Action
 import play.api.mvc._
 
 @Singleton
-class HomeController @Inject()(controllerComponents: ControllerComponents, prevSingleKnnAppFuture: AutoSearcher)
+class HomeController @Inject()(controllerComponents: ControllerComponents, prevSearcher: AutoSearcher)
     extends AbstractController(controllerComponents) with IndexReceiver {
   import HomeController.logger
 
@@ -25,13 +25,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
 //  )
 
   val maxMaxHits = 500
-  var currentSingleKnnAppFuture: Searcher = prevSingleKnnAppFuture
+  var currentSearcher: Searcher = prevSearcher
   // This one provides the double buffering.  Only one is provided, first come, first served.
   var nextSingleKnnAppFutureOpt: Option[Searcher] = None
 
   def receive(reindexSender: IndexSender, reindexMessage: IndexMessage): Unit = {
     println(s"I received the message ${reindexMessage.message}")
-    currentSingleKnnAppFuture = nextSingleKnnAppFutureOpt.get
+    currentSearcher = nextSingleKnnAppFutureOpt.get
     nextSingleKnnAppFutureOpt = None
   }
 
@@ -51,7 +51,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
 
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
-    Ok(currentSingleKnnAppFuture.statusHolder.toJsValue)
+    Ok(currentSearcher.statusHolder.toJsValue)
   }
 
   protected def toJsObject(datamartDocument: DatamartDocument, score: Float): JsObject = {
@@ -68,7 +68,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
     val hits = math.min(maxMaxHits, maxHits) // Cap it off at some reasonable amount.
-    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = currentSingleKnnAppFuture.run(query, hits)
+    val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = currentSearcher.run(query, hits)
     val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
       toJsObject(datamartDocument, score)
     }
@@ -79,9 +79,9 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevS
 
   def reindex(who: String, where: String): Action[AnyContent] = Action {
     logger.info("Called 'reindex' function!")
-    nextSingleKnnAppFutureOpt = Some(new Searcher(currentSingleKnnAppFuture.locations.next))
+    nextSingleKnnAppFutureOpt = Some(new Searcher(currentSearcher.locations.next))
 
-    Ok(currentSingleKnnAppFuture.statusHolder.toJsValue)
+    Ok(currentSearcher.statusHolder.toJsValue)
   }
 }
 

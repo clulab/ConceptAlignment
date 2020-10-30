@@ -15,5 +15,7 @@ class IndexerStatus(number: Int, text: String) extends Status {
   }
 }
 
-case object IndexerReady extends IndexerStatus(0, "ready")
-case object IndexerBusy  extends IndexerStatus(1, "busy")
+case object IndexerFailing  extends IndexerStatus(-1, "failing")
+case object IndexerIdling   extends IndexerStatus( 0, "idling")
+case object IndexerLoading  extends IndexerStatus( 1, "loading")
+case object IndexerIndexing extends IndexerStatus( 1, "indexing")

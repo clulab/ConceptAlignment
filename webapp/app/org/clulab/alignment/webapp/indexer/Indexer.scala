@@ -29,7 +29,7 @@ class IndexCallback(indexReceiver: IndexReceiver, indexMessage: IndexMessage) {
 class Indexer(indexerLocations: IndexerLocations, callback: Indexer.IndexCallbackType = Indexer.muteIndexCallback) extends IndexSender {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](logger, IndexerReady)
+  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](logger, IndexerIdling)
 
   val scraperApp = new ScraperApp(indexerLocations.scraperLocations)
   // This one can be really slow, so loading might require a future.

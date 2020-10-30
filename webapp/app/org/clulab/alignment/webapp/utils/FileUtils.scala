@@ -1,4 +1,4 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.utils
 
 import java.io.File
 import java.io.IOException
@@ -8,8 +8,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
-
-import scala.collection.JavaConverters._
 
 object FileUtils {
 

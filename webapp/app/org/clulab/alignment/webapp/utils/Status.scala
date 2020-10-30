@@ -1,4 +1,4 @@
-package org.clulab.alignment.webapp
+package org.clulab.alignment.webapp.utils
 
 import play.api.libs.json.JsValue
 

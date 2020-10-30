@@ -2,6 +2,8 @@ package org.clulab.alignment.webapp
 
 import org.clulab.alignment.Test
 import org.clulab.alignment.searcher.knn.KnnLocations
+import org.clulab.alignment.webapp.indexer.IndexerLocations
+import org.clulab.alignment.webapp.searcher.AutoSearchLocations
 
 class TestLocations extends Test {
 
@@ -9,7 +11,7 @@ class TestLocations extends Test {
 
   it should "work" in {
     val searcherLocations = try {
-      new AutoKnnLocations()
+      new AutoSearchLocations()
     }
     catch {
       case _: Throwable => new KnnLocations()

@@ -2,7 +2,10 @@ package org.clulab.alignment.webapp
 
 import org.clulab.alignment.searcher.knn.KnnLocations
 
-class AutoKnnLocations() extends KnnLocations(AutoKnnLocations.getBaseIndex, WebappLocations.baseDir, WebappLocations.baseFile) {
+class SearchLocations(index: Int = 0, baseDir: String = WebappLocations.baseDir, baseFile: String = WebappLocations.baseFile)
+    extends KnnLocations(index, baseDir, baseFile)
+
+class AutoKnnLocations() extends SearchLocations(AutoKnnLocations.getBaseIndex) {
 }
 
 object AutoKnnLocations {

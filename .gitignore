@@ -13,7 +13,6 @@ cache/*
 .DS_Store
 
 # Indexes created by these programs
-*.idx
-Docker/*.tar
-Docker/*.gz
-Docker/lucene-datamart
+Docker/*.idx
+Docker/index_*/
+

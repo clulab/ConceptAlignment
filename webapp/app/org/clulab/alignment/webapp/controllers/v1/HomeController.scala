@@ -37,7 +37,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       .getOrElse(Array.empty)
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
-    println(s"I received the index message")
+    println(s"Called 'receive' function")
 
     val prevIndexer = indexMessage.indexer
     val prevSearcher = currentSearcher

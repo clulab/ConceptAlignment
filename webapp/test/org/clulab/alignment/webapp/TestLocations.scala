@@ -1,25 +1,19 @@
 package org.clulab.alignment.webapp
 
 import org.clulab.alignment.Test
-import org.clulab.alignment.searcher.knn.KnnLocations
 import org.clulab.alignment.webapp.indexer.IndexerLocations
-import org.clulab.alignment.webapp.searcher.AutoSearchLocations
+import org.clulab.alignment.webapp.utils.AutoLocations
 
 class TestLocations extends Test {
 
   behavior of "locations"
 
   it should "work" in {
-    val searcherLocations = try {
-      new AutoSearchLocations()
-    }
-    catch {
-      case _: Throwable => new KnnLocations()
-    }
-    val indexerLocations = new IndexerLocations(searcherLocations.index)
+    val autoLocations = new AutoLocations()
+    val indexerLocations = new IndexerLocations(autoLocations.index, autoLocations.baseDir, autoLocations.baseFile)
 
-    searcherLocations.index should be  (indexerLocations.index)
-    searcherLocations.baseDir should be  (indexerLocations.baseDir)
-    searcherLocations.baseFile should be  (indexerLocations.baseFile)
+    indexerLocations.index should be (autoLocations.index)
+    indexerLocations.baseDir should be (autoLocations.baseDir)
+    indexerLocations.baseFile should be (autoLocations.baseFile)
   }
 }

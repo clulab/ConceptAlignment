@@ -25,25 +25,31 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     extends AbstractController(controllerComponents) with IndexReceiver {
   import HomeController.logger
 
-  // Get prevIndexer
-  // They both probably need the index to use
-  // Get these from environment variables
-
-  val secrets: Array[String] = Option(System.getenv(HomeController.secretsKey))
-      .map { secret =>
-        secret.split('|')
-      }
-      .getOrElse(Array.empty)
   var currentIndexer: Indexer = prevIndexer
   var currentSearcher: Searcher = prevSearcher
   // These provides the double buffering.  Only one is provided, first come, first served.
   var nextIndexer: Option[Indexer] = None
   var nextSearcher: Option[Searcher] = None
+  val secrets: Array[String] = Option(System.getenv(HomeController.secretsKey))
+      .map { secret =>
+        secret.split('|')
+      }
+      .getOrElse(Array.empty)
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
-    println(s"I received the message ${indexMessage.message}")
-    currentSearcher = nextSearcher.get
-    nextSearcher = None
+    println(s"I received the index message")
+
+    val prevIndexer = indexMessage.indexer
+    val prevSearcher = currentSearcher
+
+    val nextIndexer = prevIndexer.next
+    val nextSearcher = currentSearcher.next(prevIndexer.index, indexMessage.datamartIndex)
+
+    currentIndexer = nextIndexer
+    currentSearcher = nextSearcher
+
+    prevIndexer.close()
+    prevSearcher.close()
   }
 
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
@@ -62,7 +68,19 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
-    Ok(currentSearcher.statusHolder.toJsValue)
+    val indexer = currentIndexer
+    val searcher = currentSearcher
+    val jsObject = Json.obj(
+      "searcher" -> Json.obj(
+        "index" -> searcher.index,
+        "status" -> searcher.getStatus.toJsValue
+      ),
+      "indexer" -> Json.obj(
+        "index" -> indexer.index,
+        "status" -> indexer.getStatus.toJsValue
+      )
+    )
+    Ok(jsObject)
   }
 
   protected def toJsObject(datamartDocumentsAndScores: (DatamartDocument, Float)): JsObject = {
@@ -79,12 +97,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
-    val status = currentSearcher.getStatus
+    val searcher = currentSearcher
+    val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
-      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = currentSearcher.run(query, hits)
+      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits)
       val jsObjects = datamartDocumentsAndScores.map(toJsObject)
       val jsValue: JsValue = JsArray(jsObjects)
 
@@ -94,18 +113,20 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def reindex(secret: String): Action[AnyContent] = Action {
     logger.info("Called 'reindex' function with secret!")
-    val status = currentIndexer.getStatus
+    val indexer = currentIndexer
+    val status = indexer.getStatus
     if (!secrets.contains(secret))
       Unauthorized
-    else if (status == IndexerStatus.Failing)
-      InternalServerError
+    // Allow retries by ignoring this state.
+    // else if (status == IndexerStatus.Failing)
+    //   InternalServerError
     else if (status == IndexerStatus.Loading)
       ServiceUnavailable
     else if (status == IndexerStatus.Indexing)
       ServiceUnavailable
     else {
-      currentIndexer.run(Some(this))
-      Ok
+      indexer.run(Some(this))
+      Created
     }
   }
 }

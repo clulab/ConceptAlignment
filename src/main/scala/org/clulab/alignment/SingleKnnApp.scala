@@ -4,7 +4,6 @@ import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.Normalizer
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.searcher.knn.KnnLocations
@@ -22,10 +21,17 @@ trait SingleKnnAppTrait {
 // its startup time and memory overhead, the glove index is used instead.
 // Lucene is involved at the end to retrieve remaining parts of the
 // datamart entry that can't be stored in the Knn index.
-class SingleKnnApp(locations: KnnLocationsTrait = KnnLocations.defaultLocations) extends SingleKnnAppTrait {
-  val datamartIndex: Index = DatamartIndex.load(locations.datamartFilename)
-  val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(locations.luceneDirname, "")
-  val gloveIndex: GloveIndex.Index = GloveIndex.load(locations.gloveFilename)
+class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartIndex.Index,
+    val gloveIndex: GloveIndex.Index) extends SingleKnnAppTrait {
+
+  def this(locations: KnnLocationsTrait = KnnLocations.defaultLocations, datamartIndex: Option[DatamartIndex.Index] = None,
+      gloveIndexOpt: Option[GloveIndex.Index] = None) = this(
+    locations,
+    datamartIndex.getOrElse(DatamartIndex.load(locations.datamartFilename)),
+    gloveIndexOpt.getOrElse(GloveIndex.load(locations.gloveFilename))
+  )
+
+  val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(knnLocations.luceneDirname, "")
 
   def getVectorOpt(queryString: String): Option[Array[Float]] = {
     val tokenizer = Tokenizer()

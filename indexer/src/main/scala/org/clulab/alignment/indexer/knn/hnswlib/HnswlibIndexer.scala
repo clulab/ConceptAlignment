@@ -19,6 +19,7 @@ import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
 
 class HnswlibIndexer {
   val dimensions = 300
+  val w2v = HnswlibIndexer.w2v
 
   // This is just for testing.
   def indexSample(): Unit = {
@@ -34,7 +35,6 @@ class HnswlibIndexer {
   }
 
   def indexGlove(indexFilename: String): GloveIndex.Index = {
-    val w2v = HnswlibIndexer.w2v
     val keys = w2v.keys
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
     val index = GloveIndex.newIndex(items)
@@ -66,7 +66,6 @@ class HnswlibIndexer {
   }
 
   def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {
-    val w2v = HnswlibIndexer.w2v
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>

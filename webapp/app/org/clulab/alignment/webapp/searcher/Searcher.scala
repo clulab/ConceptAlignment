@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject._
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.webapp.utils.AutoLocations
@@ -19,14 +21,25 @@ import scala.concurrent.duration.FiniteDuration
 
 // The reason for the trait is that some things want to run straight on the
 // SingleKnnApp rather than on the Searcher.  This keeps them compatible.
-class Searcher(val locations: SearcherLocations) extends SingleKnnAppTrait {
+class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Option[DatamartIndex.Index] = None,
+    var gloveIndexOpt: Option[GloveIndex.Index] = None) extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](logger, SearcherStatus.Loading)
+  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](getClass.getSimpleName, logger, SearcherStatus.Loading)
+  val index: Int = searcherLocations.index
   protected val loadingFuture: Future[SingleKnnApp] = Future {
-    val result = new SingleKnnApp() // This can take a very long time.
-    statusHolder.set(SearcherStatus.Idling)
-    result
+    try {
+      val singleKnnApp = new SingleKnnApp(searcherLocations, datamartIndexOpt, gloveIndexOpt)
+      gloveIndexOpt = Some(singleKnnApp.gloveIndex)
+      statusHolder.set(SearcherStatus.Waiting)
+      singleKnnApp
+    }
+    catch {
+      case throwable: Throwable =>
+        Searcher.logger.error(s"""Exception caught loading searcher on index $index""", throwable)
+        statusHolder.set(SearcherStatus.Failing)
+        throw throwable // This will cause a crash.  Return a NullSearcher instead.
+    }
   }
 
   def getStatus: SearcherStatus = statusHolder.get
@@ -35,10 +48,29 @@ class Searcher(val locations: SearcherLocations) extends SingleKnnAppTrait {
   override def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)] = {
     val maxWaitTime: FiniteDuration = Duration(200, TimeUnit.SECONDS)
     val searchingFuture = loadingFuture.map { singleKnnApp =>
-      singleKnnApp.run(queryString, maxHits)
+      try {
+        singleKnnApp.run(queryString, maxHits)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught searching for $maxHits hits of "$queryString" on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          Seq.empty
+      }
     }
+    val result = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
 
-    Await.result(searchingFuture, maxWaitTime)
+  def next(index: Int, datamartIndex: DatamartIndex.Index): Searcher = {
+    val nextSearcherLocations = new SearcherLocations(index, searcherLocations.baseDir, searcherLocations.baseFile)
+    val nextSearcher = new Searcher(nextSearcherLocations, Some(datamartIndex), gloveIndexOpt)
+
+    nextSearcher
+  }
+
+  def close(): Unit = {
+    // Change state to closing
   }
 }
 

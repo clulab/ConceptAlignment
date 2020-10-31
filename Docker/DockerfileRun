@@ -20,11 +20,14 @@ RUN apt-get update && apt-get install sbt=1.2.8 -y
 # Clone the ConceptAlignment repo
 WORKDIR /conceptalignment-project
 RUN git clone https://github.com/clulab/conceptalignment.git
+RUN cd conceptalignment
+RUN git checkout docker
+RUN cd ..
 
 # Copy files to the image
-COPY hnswlib-datamart.idx .
+COPY index_0 ./index_0
+COPY index_1 ./index_1
 COPY hnswlib-glove.idx .
-COPY lucene-datamart ./lucene-datamart
 
 # Prepare runtime environment
 ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
@@ -36,4 +39,4 @@ RUN sbt webapp/compile
 
 # Allow for web service
 EXPOSE 9001
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["sbt", "project webapp", "runProd 9001"]

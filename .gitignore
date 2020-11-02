@@ -15,4 +15,5 @@ cache/*
 # Indexes created by these programs
 Docker/*.idx
 Docker/index_*/
+Docker/credentials/
 

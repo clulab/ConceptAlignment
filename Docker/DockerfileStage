@@ -48,4 +48,4 @@ RUN sbt webapp/stage
 # Prepare the entrypoint
 WORKDIR /conceptalignment-project/conceptalignment/webapp/target/universal/stage
 EXPOSE 9001
-ENTRYPOINT ["bin/webapp", "-Dhttp.port=9001"]
+RUN ["bin/webapp", "-Dhttp.port=9001"]

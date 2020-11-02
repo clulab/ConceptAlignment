@@ -45,7 +45,7 @@ RUN sed -i 's/changeme/${secret}/' application.conf
 WORKDIR /conceptalignment-project/conceptalignment
 RUN sbt webapp/stage
 
-# Prepare the entrypoint
+# Prepare to run the image
 WORKDIR /conceptalignment-project/conceptalignment/webapp/target/universal/stage
 EXPOSE 9001
-RUN ["bin/webapp", "-Dhttp.port=9001"]
+CMD ["bin/webapp", "-Dhttp.port=9001"]

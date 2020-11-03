@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   description: University of Arizona Concept Alignment API
   title: linking
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: http://linking.cs.arizona.edu
     description: University of Arizona linking server
@@ -11,6 +11,50 @@ servers:
 
 components:
   schemas:
+    statusResponse:
+      type: object
+      properties:
+        searcher:
+          type: object
+          properties:
+            index:
+              description: an autoincrementing number
+              type: number
+              format: int32
+              example: 1
+            status:
+              type: object
+              properties:
+                number:
+                  description: a numeric value for computers
+                  type: number
+                  format: int32
+                  example: 0
+                text:
+                  description: a textual value for humans
+                  type: string
+                  example: waiting
+        indexer:
+          index:
+          type: object
+          properties:
+            index:
+              description: an autoincrementing number
+              type: number
+              format: int32
+              example: 2
+            status:
+              type: object
+              properties:
+                number:
+                  description: a numeric value for computers
+                  type: number
+                  format: int32
+                  example: 0
+                text:
+                  description: a textual value for humans
+                  type: string
+                  example: idling
     searchResponse:
       type: array
       items:
@@ -50,9 +94,11 @@ paths:
       parameters:
         - name: text
           in: query
+          description: text that should be echoed back
           required: true
           schema:
             type: string
+          example: Kilroy was here.
       responses:
         200:
           description: A copy of the input
@@ -60,6 +106,17 @@ paths:
             'text/plain; charset=utf-8':
               schema:
                 type: string
+
+  /v1/status:
+    get:
+      summary: Report the status (busy or ready)
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"
 
   /v1/search:
     get:
@@ -72,6 +129,7 @@ paths:
           required: true
           schema:
             type: string
+          example: corn
         - name: maxHits
           in: query
           description: maximum number of matches to return
@@ -80,6 +138,7 @@ paths:
             type: integer
             format: int32
             default: 10
+          example: 20
       responses:
         200:
           description: OK
@@ -87,3 +146,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/searchResponse"
+        500:
+          description: The searcher is not working correctly.
+
+  /v1/reindex:
+    put:
+      summary: Scrape and reindex the ISI datamarts and SuperMaaS
+      description: "All the data will be downloaded to a new directory and then reindexed.  Searches conducted after the index is complete will run on the new index."
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+      responses:
+        201:
+          description: The new index is being created.
+        401:
+          description: The request is not authorized by the secret.
+        500:
+          description: The indexer is not working correctly.
+        503:
+          description: The indexer is busy loading or indexing.

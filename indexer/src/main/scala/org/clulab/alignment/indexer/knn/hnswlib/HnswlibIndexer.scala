@@ -18,8 +18,8 @@ import org.clulab.embeddings.word2vec.CompactWord2Vec
 import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
 
 class HnswlibIndexer {
-  lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
   val dimensions = 300
+  val w2v = HnswlibIndexer.w2v
 
   // This is just for testing.
   def indexSample(): Unit = {
@@ -34,14 +34,13 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  // There isn't much call for this.  It is mostly to test the indexer with a large number of entries.
-  def indexGlove(): Unit = {
+  def indexGlove(indexFilename: String): GloveIndex.Index = {
     val keys = w2v.keys
     val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
     val index = GloveIndex.newIndex(items)
-    val filename = "../hnswlib-glove.idx"
 
-    index.save(new File(filename))
+    index.save(new File(indexFilename))
+    index
   }
 
   def indexOntology(): Unit = {
@@ -66,8 +65,7 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  def indexDatamart(datamartFilename: String): Unit = {
-    val filename = "../hnswlib-datamart.idx"
+  def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
@@ -79,11 +77,16 @@ class HnswlibIndexer {
     }
     val index = DatamartIndex.newIndex(items)
 
-    index.save(new File(filename))
+    index.save(new File(indexFilename))
+    index
   }
 
 //  indexSample()
 //  indexOntology()
 //  indexGlove()
 //  indexDatamart()
+}
+
+object HnswlibIndexer {
+  lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
 }

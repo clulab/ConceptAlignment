@@ -1,0 +1,105 @@
+openapi: 3.0.2
+info:
+  description: University of Arizona Concept Alignment API
+  title: linking
+  version: 1.0.0
+servers:
+  - url: http://localhost:9002
+    description: Local host running the jclapp
+
+components:
+  schemas:
+    status:
+      type: object
+      properties:
+        number:
+          description: a numeric value for computers
+          type: number
+          format: int32
+        text:
+          description: a textual value for humans
+          type: string
+    statusResponse:
+      type: object
+      properties:
+        webapp:
+          descrption: status of webapp
+          schema:
+            $ref: "#/components/schemas/status"
+        indexer:
+          description: status of indexer
+          schema:
+            $ref: "#/components/schemas/status"
+
+paths:
+  /v1/ping:
+    get:
+      summary: Respond with OK
+      responses:
+        200:
+          description: OK
+
+  /v1/echo:
+    get:
+      summary: Echo back the input text
+      parameters:
+        - name: text
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A copy of the input
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+
+  /v1/status:
+    get:
+      summary: Retrieve the current status of both job controller and the concept aligner
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"
+
+  /v1/start:
+    get:
+      summary: Start the concept aligner
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"
+
+  /v1/stop:
+    get:
+      summary: Stop the concept aligner
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"
+
+  /v1/index:
+    get:
+      summary: Scrape and reindex the datamarts and SuperMaaS // allow parameters so know url of supermaas server
+      description: "The query term is converted to vectors, the nearest matches from the datamart are found, and then they are returned with descriptions."
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse"

@@ -11,10 +11,11 @@ import scala.util.control.NonFatal
 
 class IsiScraper(baseUrl: String, username: String, password: String) extends DatamartScraper {
   protected val auth = new Basic(username, password)
+  protected val readTimeout = 30000
 
   def scrape(tsvWriter: TsvWriter): Unit = {
     val datasetsUrl = s"$baseUrl/metadata/datasets"
-    val datasetsText = requests.get(datasetsUrl, auth).text(StandardCharsets.UTF_8)
+    val datasetsText = requests.get(datasetsUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
     val datasets = ujson.read(datasetsText).arr.toIndexedSeq
 
     datasets.foreach { dataset =>
@@ -25,7 +26,7 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
       val variablesUrl = s"$baseUrl/metadata/datasets/$datasetId/variables"
       // Sometimes the variable is not there.
       try {
-        val variablesText = requests.get(variablesUrl, auth).text(StandardCharsets.UTF_8)
+        val variablesText = requests.get(variablesUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
         val variables = ujson.read(variablesText).arr.toIndexedSeq
 
         variables.foreach { variable =>

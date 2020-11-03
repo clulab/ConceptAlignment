@@ -1,22 +1,29 @@
 # ConceptAlignment Docker
 
-This directory contains a Dockerfile which generates containers that run the ConceptAlignment web application and web service.
+This directory contains a Dockerfile which generates containers that run the ConceptAlignment web application
+which provides the REST interface.
 
-* DockerfileRun - This runs the webapp through sbt in development mode..
+* DockerfileStage - This runs sbt to stage the webapp.
 
 If you have copied the index files to this directory following instructions in the main README.md file,
 you can build the image with:
 
 ```
-docker build -f <Dockerfile> . -t conceptalignment
+docker build -t conceptalignment --build-arg secret=<secret> -f <Dockerfile> .
 ```
 
 You can run the corresponding container with:
 
 ```
-docker run -id -p 9000:9000 --name conceptalignment conceptalignment
+docker run -p 9001:9001 -e secrets="password1|password2" -e supermaas="http://localhost:8000" conceptalignment
 ```
 
-This launches the container and exposes port 9000. You can then run a shell in it to
-perform necessary tasks and eventually navigate to `localhost:9000` to access the web application.
+This launches the container and exposes port 9001. You can then eventually navigate to
+`localhost:9001` to access the web application.
 
+To see what is inside the image or to run things manually, try
+
+```
+docker run -it -p 9001:9001 -e secrets="password1|password2" -e supermaas="http://localhost:8000" conceptalignment /bin/bash
+
+```

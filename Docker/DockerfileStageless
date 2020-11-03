@@ -1,0 +1,36 @@
+# Use a command like this from the Docker directory
+# docker build -t conceptalignment --build-arg secret="<secret>" -f DockerfileStage .
+
+FROM ubuntu:16.04
+
+# Install base packages
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    vim
+
+# Install Java
+RUN apt-get update
+RUN apt-get -y install openjdk-8-jdk
+
+# Copy files to the image for runProd configuration
+WORKDIR /home/conceptalignment-project/conceptalignment
+COPY webapp ./webapp
+COPY index_0 ./webapp/target/universal/index_0
+COPY index_1 ./webapp/target/universal/index_1
+COPY credentials ./webapp/target/universal/credentials
+COPY hnswlib-glove.idx ./webapp/target/universal
+
+# Prepare runtime environment
+ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
+RUN echo "export _JAVA_OPTIONS=\"-Xmx16g -Xms12g -Dfile.encoding=UTF-8\"" >> /root/.bashrc
+
+# Configure the webapp
+WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage/conf
+ARG secret
+RUN sed -i "s/changeme/${secret}/" application.conf
+
+# Prepare to run the image
+WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage
+EXPOSE 9001
+CMD ["bin/webapp", "-Dhttp.port=9001"]

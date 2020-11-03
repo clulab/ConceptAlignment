@@ -2,6 +2,7 @@ package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
 import org.clulab.alignment.webapp.indexer.IndexReceiver
 import org.clulab.alignment.webapp.indexer.IndexSender
@@ -20,7 +21,7 @@ import play.api.mvc.Action
 import play.api.mvc._
 
 @Singleton
-class HomeController @Inject()(controllerComponents: ControllerComponents, prevIndexer: IndexerTrait, prevSearcher: AutoSearcher)
+class HomeController @Inject()(controllerComponents: ControllerComponents, prevIndexer: AutoIndexer, prevSearcher: AutoSearcher)
     extends AbstractController(controllerComponents) with IndexReceiver {
   import HomeController.logger
 

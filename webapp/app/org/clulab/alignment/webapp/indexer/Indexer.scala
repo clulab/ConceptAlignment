@@ -4,6 +4,7 @@ import javax.inject.Inject
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
+import org.clulab.alignment.scraper.DatamartScraper
 import org.clulab.alignment.scraper.ScraperApp
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.webapp.utils.AutoLocations
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 
-class IndexMessage(val indexer: Indexer, val datamartIndex: DatamartIndex.Index)
+class IndexMessage(val index: Int, val datamartIndex: DatamartIndex.Index)
 
 trait IndexReceiver {
   def receive(indexSender: IndexSender, indexMessage: IndexMessage)
@@ -27,7 +28,13 @@ class IndexCallback(indexReceiver: IndexReceiver, indexMessage: IndexMessage) {
 }
 
 trait IndexerTrait {
-  def run(indexReceiverOpt: Option[IndexReceiver]): Unit
+  val index: Int
+
+  def getStatus: IndexerStatus
+
+  def next(indexReceiverOpt: Option[IndexReceiver]): IndexerTrait
+
+  def close(): Unit
 }
 
 class IndexerApps(indexerLocations: IndexerLocations) {
@@ -36,67 +43,39 @@ class IndexerApps(indexerLocations: IndexerLocations) {
   val luceneIndexerApp = new LuceneIndexerApp(indexerLocations.luceneLocations)
 }
 
-// have options[datamartIndex: DatamartIndex.Index]
-// also index for glove as well, default to Some[(index1, index2)]
-// and use other constructor
-class Indexer(indexerLocations: IndexerLocations) extends IndexerTrait with IndexSender {
+class Indexer(indexerLocations: IndexerLocations, scrapers: Seq[DatamartScraper], indexerApps: IndexerApps, indexReceiverOpt: Option[IndexReceiver]) extends IndexerTrait with IndexSender {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](getClass.getSimpleName, logger, IndexerStatus.Loading)
   val index: Int = indexerLocations.index
-  protected val loadingFuture: Future[IndexerApps] = Future[IndexerApps] {
+  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](getClass.getSimpleName, Indexer.logger, IndexerStatus.Indexing)
+  val indexingFuture: Future[Unit] = Future {
     try {
-      val result = new IndexerApps(indexerLocations)
+      indexerLocations.mkdirs()
+      indexerApps.scraperApp.run(scrapers)
+      val datamartIndex = indexerApps.hnswlibIndexerApp.run()
+      indexerApps.luceneIndexerApp.run()
+      indexReceiverOpt.foreach { indexReceiver =>
+        val indexMessage = new IndexMessage(index, datamartIndex)
+        indexReceiver.receive(this, indexMessage)
+      }
       statusHolder.set(IndexerStatus.Idling)
-      result
     }
     catch {
       case throwable: Throwable =>
-        Indexer.logger.error(s"""Exception caught loading indexer on index $index""", throwable)
+        Indexer.logger.error(s"""Exception caught indexing $index""", throwable)
         statusHolder.set(IndexerStatus.Failing)
-        throw throwable // This will cause a crash.  Return a NullIndexer instead.
+        throw throwable
     }
   }
-  val supermaasUrlOpt = Option(System.getenv(Indexer.supermaasUrlKey))
-  val scrapers = supermaasUrlOpt
-      .map { supermaasUrl =>
-        ScraperApp.getScrapers(supermaasUrl)
-      }
-      .getOrElse(ScraperApp.getScrapers)
-  // This is an attempt to make sure the future isn't garbage collected.
-  protected var indexingFutureOpt: Option[Future[Unit]] = None
 
   def getStatus: IndexerStatus = statusHolder.get
 
-  def run(indexReceiverOpt: Option[IndexReceiver]): Unit = {
-    // This might be a race condition.
-    statusHolder.set(IndexerStatus.Indexing)
-    indexingFutureOpt = Some(
-      loadingFuture.map { indexerApps =>
-        try {
-          indexerLocations.mkdirs()
-          indexerApps.scraperApp.run(scrapers)
-          val datamartIndex = indexerApps.hnswlibIndexerApp.run()
-          indexerApps.luceneIndexerApp.run()
-          indexReceiverOpt.map { indexReceiver =>
-            val indexMessage = new IndexMessage(this, datamartIndex)
-            indexReceiver.receive(this, indexMessage)
-          }
-        }
-        catch {
-          case throwable: Throwable =>
-            Indexer.logger.error(s"""Exception caught indexing $index""", throwable)
-            statusHolder.set(IndexerStatus.Failing)
-            // On fail, return a NullIndexer marked failing but with an increased index.
-            // Searches will continue on the previous index?
-        }
-      }
-    )
-  }
-
-  def next: Indexer = {
+  def next(indexReceiverOpt: Option[IndexReceiver]): Indexer = {
+    require (indexingFuture.isCompleted && statusHolder.get == IndexerStatus.Idling)
     val nextLocation = new IndexerLocations(indexerLocations.index + 1, indexerLocations.baseDir, indexerLocations.baseFile)
-    new Indexer(nextLocation)
+    val result = new Indexer(nextLocation, scrapers, indexerApps, indexReceiverOpt)
+    close()
+    result
   }
 
   def close(): Unit = {
@@ -114,5 +93,43 @@ object Indexer {
   val muteIndexCallback: IndexCallbackType = (indexSender: IndexSender) => ()
 }
 
-class AutoIndexer @Inject()(autoLocations: AutoLocations)
-    extends Indexer(new IndexerLocations(autoLocations.index + 1, autoLocations.baseDir, autoLocations.baseFile))
+class AutoIndexer @Inject()(autoLocations: AutoLocations) extends IndexerTrait {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  val index: Int = autoLocations.index
+  val indexerLocations = new IndexerLocations(index, autoLocations.baseDir, autoLocations.baseFile)
+  val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](getClass.getSimpleName, logger, IndexerStatus.Loading)
+  val supermaasUrlOpt: Option[String] = Option(System.getenv(Indexer.supermaasUrlKey))
+  val scrapers: Seq[DatamartScraper] = supermaasUrlOpt
+      .map { supermaasUrl =>
+        ScraperApp.getScrapers(supermaasUrl)
+      }
+      .getOrElse(ScraperApp.getScrapers)
+  val loadingFuture: Future[IndexerApps] = Future[IndexerApps] {
+    try {
+      val result = new IndexerApps(indexerLocations)
+      statusHolder.set(IndexerStatus.Idling)
+      result
+    }
+    catch {
+      case throwable: Throwable =>
+        Indexer.logger.error(s"""Exception caught loading indexer on index $index""", throwable)
+        statusHolder.set(IndexerStatus.Crashing)
+        throw throwable
+    }
+  }
+
+  def getStatus: IndexerStatus = statusHolder.get
+
+  def next(indexReceiverOpt: Option[IndexReceiver]): IndexerTrait = {
+    require (loadingFuture.isCompleted && statusHolder.get == IndexerStatus.Idling)
+    val nextLocation = new IndexerLocations(indexerLocations.index + 1, indexerLocations.baseDir, indexerLocations.baseFile)
+    val result = new Indexer(nextLocation, scrapers, new IndexerApps(nextLocation), indexReceiverOpt)
+    close()
+
+    result
+  }
+
+  // There wouldn't be any files to delete for this one.
+  def close(): Unit = ()
+}

@@ -115,7 +115,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       ServiceUnavailable
     else if (status == IndexerStatus.Indexing)
       ServiceUnavailable
-    else {
+    else { // likely Idling
       // Do not set the currentSearcher yet because it could fail.
       // Do set the current indexer so that upon fail, a different
       // one can be used with the next index.

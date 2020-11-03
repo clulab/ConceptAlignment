@@ -71,7 +71,7 @@ class Indexer(indexerLocations: IndexerLocations, scrapers: Seq[DatamartScraper]
   def getStatus: IndexerStatus = statusHolder.get
 
   def next(indexReceiverOpt: Option[IndexReceiver]): Indexer = {
-    require (indexingFuture.isCompleted && statusHolder.get == IndexerStatus.Idling)
+    require(indexingFuture.isCompleted)
     val nextLocation = new IndexerLocations(indexerLocations.index + 1, indexerLocations.baseDir, indexerLocations.baseFile)
     val result = new Indexer(nextLocation, scrapers, indexerApps, indexReceiverOpt)
     close()
@@ -122,7 +122,7 @@ class AutoIndexer @Inject()(autoLocations: AutoLocations) extends IndexerTrait {
   def getStatus: IndexerStatus = statusHolder.get
 
   def next(indexReceiverOpt: Option[IndexReceiver]): IndexerTrait = {
-    require (loadingFuture.isCompleted && statusHolder.get == IndexerStatus.Idling)
+    require(loadingFuture.isCompleted)
     val nextLocation = new IndexerLocations(indexerLocations.index + 1, indexerLocations.baseDir, indexerLocations.baseFile)
     val result = new Indexer(nextLocation, scrapers, new IndexerApps(nextLocation), indexReceiverOpt)
     close()

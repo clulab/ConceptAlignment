@@ -1,6 +1,8 @@
 # Use a command like this from the Docker directory
 # docker build -t conceptalignment --build-arg secret=<secret> -f DockerfileStage .
 
+ARG secret
+
 FROM ubuntu:16.04
 
 # Install base packages

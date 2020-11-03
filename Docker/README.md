@@ -15,7 +15,7 @@ docker build -t conceptalignment --build-arg secret=<secret> -f <Dockerfile> .
 You can run the corresponding container with:
 
 ```
-docker run -p 9001:9001 -e secret="password1|password2" -e supermaas="http://localhost:8000" conceptalignment
+docker run -p 9001:9001 -e secrets="password1|password2" -e supermaas="http://localhost:8000" conceptalignment
 ```
 
 This launches the container and exposes port 9001. You can then eventually navigate to
@@ -24,6 +24,6 @@ This launches the container and exposes port 9001. You can then eventually navig
 To see what is inside the image or to run things manually, try
 
 ```
-docker run -it -p 9001:9001 -e secret="password1|password2" -e supermaas="http://localhost:8000" conceptalignment /bin/bash
+docker run -it -p 9001:9001 -e secrets="password1|password2" -e supermaas="http://localhost:8000" conceptalignment /bin/bash
 
 ```

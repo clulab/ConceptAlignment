@@ -27,7 +27,7 @@ WORKDIR /conceptalignment-project/conceptalignment
 RUN git checkout docker
 
 # Copy files to the image for runProd configuration
-WORKDIR /conceptalignment-project
+WORKDIR /conceptalignment-project/conceptalignment
 COPY index_0 ./webapp/target/universal/index_0
 COPY index_1 ./webapp/target/universal/index_1
 COPY credentials ./webapp/target/universal/credentials

@@ -1,9 +1,8 @@
 # Use a command like this from the Docker directory
-# docker build -t conceptalignment --build-arg secret=<secret> -f DockerfileStage .
-
-ARG secret
+# docker build -t conceptalignment --build-arg secret="<secret>" -f DockerfileStage .
 
 FROM ubuntu:16.04
+ARG secret
 
 # Install base packages
 RUN apt-get update && apt-get install -y \
@@ -23,13 +22,13 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B
 RUN apt-get update && apt-get install sbt=1.2.8 -y
 
 # Clone the ConceptAlignment repo
-WORKDIR /conceptalignment-project
+WORKDIR /home/conceptalignment-project
 RUN git clone http://github.com/clulab/conceptalignment
-WORKDIR /conceptalignment-project/conceptalignment
+WORKDIR /home/conceptalignment-project/conceptalignment
 RUN git checkout docker
 
 # Copy files to the image for runProd configuration
-WORKDIR /conceptalignment-project/conceptalignment
+WORKDIR /home/conceptalignment-project/conceptalignment
 COPY index_0 ./webapp/target/universal/index_0
 COPY index_1 ./webapp/target/universal/index_1
 COPY credentials ./webapp/target/universal/credentials
@@ -40,14 +39,17 @@ ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
 RUN echo "export _JAVA_OPTIONS=\"-Xmx16g -Xms12g -Dfile.encoding=UTF-8\"" >> /root/.bashrc
 
 # Configure the webapp
-WORKDIR /conceptalignment-project/conceptalignment/webapp/conf
+WORKDIR /home/conceptalignment-project/conceptalignment/webapp/conf
 RUN sed -i 's/changeme/${secret}/' application.conf
 
 # Stage the webapp
-WORKDIR /conceptalignment-project/conceptalignment
+WORKDIR /home/conceptalignment-project/conceptalignment
 RUN sbt webapp/stage
 
+# Remove now unnecessary .ivy2 files
+RUN rm -r /root/.ivy2
+
 # Prepare to run the image
-WORKDIR /conceptalignment-project/conceptalignment/webapp/target/universal/stage
+WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage
 EXPOSE 9001
 CMD ["bin/webapp", "-Dhttp.port=9001"]

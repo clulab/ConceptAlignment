@@ -1,0 +1,35 @@
+# Shut down the previously running version.
+$ ps -ef | grep ConceptAlignment -
+$ kill <pid>
+
+# Stage the webapp in sbt.
+$ sbt
+sbt: ConceptAlignment> project webapp
+[webapp] $ stage
+[webapp] $ exit
+
+# Edit the secret code.
+$ cd webapp/target/universal/stage/conf
+$ vim application.conf
+# Change changeme to something else.
+# Change port to 9001.
+
+# Make sure all the documents are in the right places!
+# lucene-datamart in webapp/target/universal
+# hnswlib-datamart.idx in webapp/target/universal/stage
+# hnswlib-glove.idx also in webapp/target/universal/stage
+
+# Make sure there is enough memory.
+export _JAVA_OPTIONS=-Xmx12g
+
+# Run the program using the correct port.
+$ cd ../bin
+$ nohup ./webapp -Dhttp.port=9001 &
+
+# Networking
+
+# Check current configuration
+$ sudo iptables -L --line-numbers # | grep 9001 - # Find right line at which to insert
+$ sudo iptables -I INPUT <line> -p tcp --dport 9001 -j ACCEPT
+# to work again when restart, make extra sure everything is working, then
+$ sudo iptables-save

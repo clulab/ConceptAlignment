@@ -5,3 +5,15 @@
 project/project
 project/target
 target
+
+cache/*
+.cache/*
+
+# For MacOS filesystem
+.DS_Store
+
+# Indexes created by these programs
+Docker/*.idx
+Docker/index_*/
+Docker/credentials/
+

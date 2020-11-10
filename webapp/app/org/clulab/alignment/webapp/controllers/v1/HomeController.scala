@@ -6,8 +6,8 @@ import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
 import org.clulab.alignment.webapp.indexer.IndexReceiver
 import org.clulab.alignment.webapp.indexer.IndexSender
-import org.clulab.alignment.webapp.indexer.Indexer
 import org.clulab.alignment.webapp.indexer.IndexerStatus
+import org.clulab.alignment.webapp.indexer.IndexerTrait
 import org.clulab.alignment.webapp.searcher.AutoSearcher
 import org.clulab.alignment.webapp.searcher.Searcher
 import org.clulab.alignment.webapp.searcher.SearcherStatus
@@ -25,11 +25,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     extends AbstractController(controllerComponents) with IndexReceiver {
   import HomeController.logger
 
-  var currentIndexer: Indexer = prevIndexer
+  var currentIndexer: IndexerTrait = prevIndexer
   var currentSearcher: Searcher = prevSearcher
-  // These provides the double buffering.  Only one is provided, first come, first served.
-  var nextIndexer: Option[Indexer] = None
-  var nextSearcher: Option[Searcher] = None
   val secrets: Array[String] = Option(System.getenv(HomeController.secretsKey))
       .map { secret =>
         secret.split('|')
@@ -38,18 +35,11 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
     println(s"Called 'receive' function")
-
-    val prevIndexer = indexMessage.indexer
+    // It will only get here if the reindexing was successful so that the new Searcher
+    // is able to rely on the values coming from the message.
     val prevSearcher = currentSearcher
-
-    val nextIndexer = prevIndexer.next
-    val nextSearcher = currentSearcher.next(prevIndexer.index, indexMessage.datamartIndex)
-
-    currentIndexer = nextIndexer
-    currentSearcher = nextSearcher
-
-    prevIndexer.close()
-    prevSearcher.close()
+    currentSearcher = currentSearcher.next(indexMessage.index, indexMessage.datamartIndex)
+    prevSearcher.close() // if it isn't busy, which is hard to know just now
   }
 
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
@@ -117,6 +107,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     val status = indexer.getStatus
     if (!secrets.contains(secret))
       Unauthorized
+    else if (status == IndexerStatus.Crashing)
+      InternalServerError
     // Allow retries by ignoring this state.
     // else if (status == IndexerStatus.Failing)
     //   InternalServerError
@@ -124,8 +116,11 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       ServiceUnavailable
     else if (status == IndexerStatus.Indexing)
       ServiceUnavailable
-    else {
-      indexer.run(Some(this))
+    else { // likely Idling
+      // Do not set the currentSearcher yet because it could fail.
+      // Do set the current indexer so that upon fail, a different
+      // one can be used with the next index.
+      currentIndexer = indexer.next(Some(this))
       Created
     }
   }

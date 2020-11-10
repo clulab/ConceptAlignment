@@ -51,14 +51,14 @@ indexes will be available in the container, so these commands would be used for 
 
 ```bash
 $ # Scrape the datamarts, all of them if necessary.  Credentials are required.
-$ sbt scraper/runMain org.clulab.alignment.scraper.ScraperApp ../datamarts.tsv
+$ sbt "scraper/runMain org.clulab.alignment.scraper.ScraperApp ../datamarts.tsv"
 # $ For testing, sometimes SuperMaaS is only needed.
-$ sbt scraper/runMain org.clulab.alignment.scraper.SuperMaasScraperApp ../datamarts.tsv
+$ sbt "scraper/runMain org.clulab.alignment.scraper.SuperMaasScraperApp ../datamarts.tsv"
 $ # Run this one just once because it takes a long time and glove shouldn't change.
-$ sbt indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp"
 $ # Run these each time the datamarts have changed.
-$ sbt indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../datamarts.tsv
-$ sbt indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../datamarts.tsv
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../datamarts.tsv"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../datamarts.tsv"
 $ # Start the server in development mode.
 $ sbt webapp/run
 ```

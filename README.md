@@ -1,8 +1,8 @@
 # ConceptAlignment
 
-Library under development for the DARPA WorldModelers program.
+This library under development for the DARPA WorldModelers program.
 
-This library is intended to be used to align concepts from a top-down
+It is intended to be used to align concepts from a top-down
 program ontology to bottom-up concepts/indicators/variables/model components.
 
 The REST API is served from http://linking.cs.arizona.edu which provides
@@ -111,9 +111,9 @@ the webapp, you can go about it like this:
 
 ```bash
 $ # Download the image from Docker Hub if necessary.
-$ docker pull clulab/conceptalignment:0.1.0
+$ docker pull clulab/conceptalignment:1.0.0
 $ # Run the webapp
-$ docker run -it -p 9001:9001 --name conceptalignment  -e secrets="password1|password2" -e supermaas="http://localhost:8000"clulab/conceptalignment:0.1.0
+$ docker run -it -p 9001:9001 --name conceptalignment  -e secrets="password1|password2" -e supermaas="http://localhost:8000"clulab/conceptalignment:1.0.0
 $ # in order to connect to SuperMaaS locally, it will be necessary to connect to its network.
 $ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas  -e secrets="password1|password2" -e supermaas="http://localhost:8000" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.

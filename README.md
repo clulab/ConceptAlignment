@@ -112,9 +112,9 @@ the webapp, you can go about it like this:
 ```bash
 $ # Download the image from Docker Hub if necessary.
 $ docker pull clulab/conceptalignment:1.0.0
-$ # Run the webapp
+$ # Run the webapp.
 $ docker run -it -p 9001:9001 --name conceptalignment  -e secrets="password1|password2" -e supermaas="http://localhost:8000"clulab/conceptalignment:1.0.0
-$ # in order to connect to SuperMaaS locally, it will be necessary to connect to its network.
+$ # In order to connect to SuperMaaS locally, it will be necessary to connect to its network.
 $ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas  -e secrets="password1|password2" -e supermaas="http://localhost:8000" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.
 ```

@@ -9,19 +9,19 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, Ont
 
 class OntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyIndex: OntologyIndex.Index) {
 
-  def ontologyToDatamartMapping(topK: Int = datamartIndex.size): Seq[OntologyToDatamarts] = {
-    val ontologyItems = ontologyIndex.iterator.toList
+  def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size)): Iterator[OntologyToDatamarts] = {
+    val ontologyItems = ontologyIndex.iterator
     val ontologyToDatamarts = ontologyItems.map { ontologyItem =>
-      val searchResults = alignOntologyItemToDatamart(ontologyItem, topK).toList
+      val searchResults = alignOntologyItemToDatamart(ontologyItem, topKOpt.getOrElse(datamartIndex.size))
       OntologyToDatamarts(ontologyItem.id, searchResults)
     }
     ontologyToDatamarts
   }
 
-  def datamartToOntologyMapping(topK: Int = ontologyIndex.size): Seq[DatamartToOntologies] = {
-    val datamartItems = datamartIndex.iterator.toList
+  def datamartToOntologyMapping(topKOpt: Option[Int] = Some(ontologyIndex.size)): Iterator[DatamartToOntologies] = {
+    val datamartItems = datamartIndex.iterator
     val datamartToOntologies = datamartItems.map { datamartItem =>
-      val searchResults = alignDatamartItemToOntology(datamartItem, topK).toList
+      val searchResults = alignDatamartItemToOntology(datamartItem, topKOpt.getOrElse(ontologyIndex.size))
       DatamartToOntologies(datamartItem.id, searchResults)
     }
     datamartToOntologies
@@ -41,8 +41,8 @@ class OntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyIndex: 
 }
 
 object OntologyMapperApp extends App {
-  case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Seq[SearchResult[DatamartAlignmentItem, Float]])
-  case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Seq[SearchResult[OntologyAlignmentItem, Float]])
+  case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Iterator[SearchResult[DatamartAlignmentItem, Float]])
+  case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Iterator[SearchResult[OntologyAlignmentItem, Float]])
 
   val datamartFilename = args.lift(0).getOrElse("../hnswlib-datamart.idx")
   val ontologyFilename = args.lift(1).getOrElse("../hnswlib-wm_flattened.idx")
@@ -51,7 +51,7 @@ object OntologyMapperApp extends App {
   val ontologyIndex = OntologyIndex.load(ontologyFilename)
   val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
 
-  val allOntologyToDatamarts = mapper.ontologyToDatamartMapping(5)
+  val allOntologyToDatamarts = mapper.ontologyToDatamartMapping(Some(5))
   allOntologyToDatamarts.foreach { ontologyToDatamarts =>
     println(ontologyToDatamarts.srcId)
     ontologyToDatamarts.dstResults.foreach { searchResult =>
@@ -59,7 +59,7 @@ object OntologyMapperApp extends App {
     }
   }
 
-  val allDatamartToOntologies = mapper.datamartToOntologyMapping(5)
+  val allDatamartToOntologies = mapper.datamartToOntologyMapping(Some(5))
   allDatamartToOntologies.foreach { datamartToOntologies =>
     println(datamartToOntologies.srcId)
     datamartToOntologies.dstResults.foreach { searchResult =>

@@ -149,6 +149,52 @@ paths:
         500:
           description: The searcher is not working correctly.
 
+  /v1/bulkSearchOntologyToDatamart:
+    get:
+      summary: For each item in the ontology, find the best matches in the datamarts
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per ontology
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 10
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/searchResponse"
+        500:
+          description: The searcher is not working correctly.
+
+  /v1/bulkSearchDatamartToOntology:
+    get:
+      summary: For each item in the datamarts, find the best matches in the ontology
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per datamart
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 10
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/searchResponse"
+        500:
+          description: The searcher is not working correctly.
+
   /v1/reindex:
     put:
       summary: Scrape and reindex the ISI datamarts and SuperMaaS

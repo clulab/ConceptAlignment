@@ -22,9 +22,8 @@ libraryDependencies ++= {
     "org.slf4j"                   % "slf4j-api"               % "1.7.10",
 
     "com.github.jelmerk"         %% "hnswlib-scala"           % "0.0.46",
-    "com.github.WorldModelers"    % "Ontologies"               % "master-SNAPSHOT",
 
-    "org.scalatest"              %% "scalatest"                % "3.0.4" % "test"
+    "org.scalatest"              %% "scalatest"               % "3.0.4" % "test"
   )
 }
 

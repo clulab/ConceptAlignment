@@ -8,8 +8,8 @@ class HnswlibIndexerApp(hnswlibLocations: HnswlibLocationsTrait) {
   def run(glove: Boolean = false): DatamartIndex.Index = {
     // Control these through boolean arguments.
     // hnswlibIndexer.indexSample()
-     hnswlibIndexer.indexOntology()
     val datamartIndex = hnswlibIndexer.indexDatamart(hnswlibLocations.datamartFilename, hnswlibLocations.datamartIndexFilename)
+    val ontologyIndex = hnswlibIndexer.indexOntology(hnswlibLocations.ontologyIndexFilename)
     if (glove)
       hnswlibIndexer.indexGlove(hnswlibLocations.gloveIndexFilename)
 
@@ -17,14 +17,20 @@ class HnswlibIndexerApp(hnswlibLocations: HnswlibLocationsTrait) {
   }
 }
 
-class StaticHnswlibLocations(val datamartFilename: String, val datamartIndexFilename: String, val gloveIndexFilename: String) extends HnswlibLocationsTrait {
+class StaticHnswlibLocations(
+  val datamartFilename: String,
+  val datamartIndexFilename: String,
+  val ontologyIndexFilename: String,
+  val gloveIndexFilename: String
+) extends HnswlibLocationsTrait {
 }
 
 object HnswlibIndexerApp extends App {
   val datamartFilename = args(0)
   val datamartIndexFilename = args(1)
-  val gloveIndexFilename = args(2)
-  val glove = args(3).toBoolean
+  val ontologyIndexFilename = args(2)
+  val gloveIndexFilename = args(3)
+  val glove = args(4).toBoolean
 
-  new HnswlibIndexerApp(new StaticHnswlibLocations(datamartFilename, datamartIndexFilename, gloveIndexFilename)).run(glove)
+  new HnswlibIndexerApp(new StaticHnswlibLocations(datamartFilename, datamartIndexFilename, ontologyIndexFilename, gloveIndexFilename)).run(glove)
 }

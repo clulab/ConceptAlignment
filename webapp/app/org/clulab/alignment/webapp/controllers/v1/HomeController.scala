@@ -2,7 +2,7 @@ package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
 import org.clulab.alignment.OntologyMapper
-import org.clulab.alignment.OntologyMapperApp.OntologyToDatamart
+import org.clulab.alignment.OntologyMapperApp.OntologyToDatamarts
 import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, OntologyIndex}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
@@ -103,7 +103,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     )
   }
 
-  protected def toJsObject(otd: OntologyToDatamart): JsObject = {
+  protected def toJsObject(otd: OntologyToDatamarts): JsObject = {
     val src = otd.srcId.toString()
     val dstItem = otd.dstResult.item()
     val score = otd.dstResult.distance()
@@ -132,43 +132,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int] = None): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearch' function with maxHits='$maxHits' and secret!")
-    logger.info("renewing the datamart index")
-    reindex(secret)
-    logger.info("renewing the ontology index")
-    // todo
-    val datamartIndex = DatamartIndex.load(datamartFilename)
-    val ontologyIndex = OntologyIndex.load(ontologyFilename)
-
-    val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
-
-    val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
-      InternalServerError
-    else {
-      val ontToDatamart = mapper.ontologyToDatamartMapping().toArray
-      val dmToOntology = mapper.datamartToOntologyMapping()
-      val jsObjects = for {
-        rankedAlignments <- ontToDatamart
-        otd <- rankedAlignments
-      } yield toJsObject(otd)
-      val jsValue: JsValue = JsArray(jsObjects)
-
-      Ok(jsValue)
-    }
-  }
-   def bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int] = None): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearch' function with maxHits='$maxHits' and secret!")
-    logger.info("renewing the datamart index")
-    reindex(secret)
-    logger.info("renewing the ontology index")
-    // todo
-    val datamartIndex = DatamartIndex.load(datamartFilename)
-    val ontologyIndex = OntologyIndex.load(ontologyFilename)
-
-    val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
-
+  def bulkSearchOntologyToDatamart(maxHits: Option[Int] = None): Action[AnyContent] = Action {
+    logger.info(s"Called 'bulkSearch' function with maxHits='$maxHits'!")
+//    val datamartIndex = DatamartIndex.load(datamartFilename)
+//    val ontologyIndex = OntologyIndex.load(ontologyFilename)
+//    val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
+    val mapper = new OntologyMapper(null, null)
+    val searcher = currentSearcher
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError

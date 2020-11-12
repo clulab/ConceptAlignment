@@ -94,7 +94,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   protected def toJsObject(datamartDocumentsAndScore: (DatamartDocument, Float)): JsObject = {
     val (datamartDocument, score) = datamartDocumentsAndScore
     Json.obj(
-      "score" -> score,
+      "score" -> safeScore(score),
       "datamartId" -> datamartDocument.datamartId,
       "datasetId" -> datamartDocument.datasetId,
       "variableId" -> datamartDocument.variableId,
@@ -127,11 +127,18 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
+  // This could return an Option[Float] instead.  Alternatively, the values
+  // with NaN could be filtered out from the answers.
+  protected def safeScore(score: Float): Float = if (score.isNaN) 0f else score
+
   protected def toJsObject(ontologyToDatamarts: OntologyToDatamarts): JsObject = {
     val ontologyIdentifier = ontologyToDatamarts.srcId
     val searchResults = ontologyToDatamarts.dstResults.toArray
     val jsDatamartValues = searchResults.map { searchResult =>
-      toJsObject(searchResult.item.id)
+      Json.obj(
+        "score" -> safeScore(searchResult.distance),
+        "datamart" -> toJsObject(searchResult.item.id)
+      )
     }
     Json.obj(
       "ontology" -> ontologyIdentifier.nodeName,
@@ -158,7 +165,10 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     val datamartIdentifier = datamartToOntologies.srcId
     val searchResults = datamartToOntologies.dstResults.toArray
     val jsOntologyValues = searchResults.map { searchResult =>
-      JsString(searchResult.item.id.nodeName)
+      Json.obj(
+        "score" -> safeScore(searchResult.distance),
+        "ontology" -> JsString(searchResult.item.id.nodeName)
+      )
     }
     Json.obj(
       "datamart" -> toJsObject(datamartIdentifier),

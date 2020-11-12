@@ -1,11 +1,6 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
-import org.clulab.alignment.OntologyMapper
-import org.clulab.alignment.OntologyMapperApp.DatamartToOntologies
-import org.clulab.alignment.OntologyMapperApp.OntologyToDatamarts
-import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, OntologyIndex}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -19,8 +14,6 @@ import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -91,26 +84,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     Ok(jsObject)
   }
 
-  protected def toJsObject(datamartDocumentsAndScore: (DatamartDocument, Float)): JsObject = {
-    val (datamartDocument, score) = datamartDocumentsAndScore
-    Json.obj(
-      "score" -> safeScore(score),
-      "datamartId" -> datamartDocument.datamartId,
-      "datasetId" -> datamartDocument.datasetId,
-      "variableId" -> datamartDocument.variableId,
-      "variableName" -> datamartDocument.variableName,
-      "variableDescription" -> datamartDocument.variableDescription
-    )
-  }
-
-  protected def toJsObject(datamartIdentifier: DatamartIdentifier): JsObject = {
-    Json.obj(
-      "datamartId" -> datamartIdentifier.datamartId,
-      "datasetId" -> datamartIdentifier.datasetId,
-      "variableId" -> datamartIdentifier.variableId
-    )
-  }
-
   def search(query: String, maxHits: Int): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
     val searcher = currentSearcher
@@ -120,30 +93,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
       val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits)
-      val jsObjects = datamartDocumentsAndScores.map(toJsObject)
+      val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
+        datamartDocument.toJsObject(score)
+      }
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
-  }
-
-  // This could return an Option[Float] instead.  Alternatively, the values
-  // with NaN could be filtered out from the answers.
-  protected def safeScore(score: Float): Float = if (score.isNaN) 0f else score
-
-  protected def toJsObject(ontologyToDatamarts: OntologyToDatamarts): JsObject = {
-    val ontologyIdentifier = ontologyToDatamarts.srcId
-    val searchResults = ontologyToDatamarts.dstResults.toArray
-    val jsDatamartValues = searchResults.map { searchResult =>
-      Json.obj(
-        "score" -> safeScore(searchResult.distance),
-        "datamart" -> toJsObject(searchResult.item.id)
-      )
-    }
-    Json.obj(
-      "ontology" -> ontologyIdentifier.nodeName,
-      "datamarts" -> JsArray(jsDatamartValues)
-    )
   }
 
   def bulkSearchOntologyToDatamart(maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
@@ -154,26 +110,11 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       InternalServerError
     else {
       val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt)
-      val jsObjects = allOntologyToDatamarts.map(toJsObject).toArray
+      val jsObjects = allOntologyToDatamarts.map(_.toJsObject).toArray
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
-  }
-
-  protected def toJsObject(datamartToOntologies: DatamartToOntologies): JsObject = {
-    val datamartIdentifier = datamartToOntologies.srcId
-    val searchResults = datamartToOntologies.dstResults.toArray
-    val jsOntologyValues = searchResults.map { searchResult =>
-      Json.obj(
-        "score" -> safeScore(searchResult.distance),
-        "ontology" -> JsString(searchResult.item.id.nodeName)
-      )
-    }
-    Json.obj(
-      "datamart" -> toJsObject(datamartIdentifier),
-      "ontologies" -> JsArray(jsOntologyValues)
-    )
   }
 
   def bulkSearchDatamartToOntology(maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
@@ -184,7 +125,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       InternalServerError
     else {
       val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt)
-      val jsObjects = allDatamartToOntologies.map(toJsObject).toArray
+      val jsObjects = allDatamartToOntologies.map(_.toJsObject).toArray
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)

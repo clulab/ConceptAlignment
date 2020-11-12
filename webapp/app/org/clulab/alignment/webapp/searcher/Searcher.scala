@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import javax.inject._
 import org.clulab.alignment.OntologyMapper
-import org.clulab.alignment.OntologyMapperApp.ontologyFilename
+import org.clulab.alignment.OntologyMapperApp.ontologyIndexFilename
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex

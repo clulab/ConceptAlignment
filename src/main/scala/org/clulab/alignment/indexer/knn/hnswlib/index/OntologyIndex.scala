@@ -3,6 +3,7 @@ package org.clulab.alignment.indexer.knn.hnswlib.index
 import java.io.File
 
 import com.github.jelmerk.knn.scalalike.floatCosineDistance
+import com.github.jelmerk.knn.scalalike.SearchResult
 import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
 import org.clulab.alignment.data.ontology.OntologyIdentifier
@@ -23,5 +24,20 @@ object OntologyIndex {
 
     index.addAll(items)
     index
+  }
+
+  def findNearest(index: Index, vector: Array[Float]): Iterator[SearchResult[OntologyAlignmentItem, Float]] = {
+    val maxHits = index.size
+
+    findNearest(index, vector, maxHits)
+  }
+
+  def findNearest(index: Index, vector: Array[Float], maxHits: Int): Iterator[SearchResult[OntologyAlignmentItem, Float]] = {
+    val nearest = index.findNearest(vector, k = maxHits)
+    val largest = nearest.map { case SearchResult(item, value) =>
+      SearchResult(item, 1f - value)
+    }
+
+    largest.iterator
   }
 }

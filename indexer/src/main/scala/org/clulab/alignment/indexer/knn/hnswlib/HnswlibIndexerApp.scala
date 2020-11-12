@@ -8,7 +8,7 @@ class HnswlibIndexerApp(hnswlibLocations: HnswlibLocationsTrait) {
   def run(glove: Boolean = false): DatamartIndex.Index = {
     // Control these through boolean arguments.
     // hnswlibIndexer.indexSample()
-    // hnswlibIndexer.indexOntology()
+     hnswlibIndexer.indexOntology()
     val datamartIndex = hnswlibIndexer.indexDatamart(hnswlibLocations.datamartFilename, hnswlibLocations.datamartIndexFilename)
     if (glove)
       hnswlibIndexer.indexGlove(hnswlibLocations.gloveIndexFilename)

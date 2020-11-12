@@ -216,6 +216,13 @@ paths:
       summary: For each item in the ontology, find the best matches in the datamarts
       description: ""
       parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
         - name: maxHits
           in: query
           description: maximum number of matches to return per ontology
@@ -239,6 +246,13 @@ paths:
       summary: For each item in the datamarts, find the best matches in the ontology
       description: ""
       parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
         - name: maxHits
           in: query
           description: maximum number of matches to return per datamart

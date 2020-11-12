@@ -102,11 +102,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchOntologyToDatamart(maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
+  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
+    if (!secrets.contains(secret))
+      Unauthorized
+    else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
       val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt)
@@ -117,11 +119,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchDatamartToOntology(maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
+  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
+    if (!secrets.contains(secret))
+      Unauthorized
+    else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
       val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt)

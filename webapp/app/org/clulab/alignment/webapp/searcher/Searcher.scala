@@ -52,7 +52,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
 
   // This doesn't need a callback because we'll wait for it.
   override def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)] = {
-    val maxWaitTime: FiniteDuration = Duration(200, TimeUnit.SECONDS)
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
     val searchingFuture = loadingFuture.map { singleKnnApp =>
       try {
         singleKnnApp.run(queryString, maxHits)

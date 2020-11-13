@@ -32,6 +32,7 @@ COPY index_0 ./webapp/target/universal/index_0
 COPY index_1 ./webapp/target/universal/index_1
 COPY credentials ./webapp/target/universal/credentials
 COPY hnswlib-glove.idx ./webapp/target/universal
+COPY hnswlib-wm_flattened.idx ./webapp/target/universal
 
 # Prepare runtime environment
 ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"

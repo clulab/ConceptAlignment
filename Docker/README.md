@@ -10,7 +10,7 @@ If you have copied the index files to this directory following instructions in t
 you can build the image with:
 
 ```
-docker build -t conceptalignment --build-arg secret=<secret> -f <Dockerfile> . #
+docker build -t conceptalignment --build-arg secret=<secret> -f <Dockerfile> .
 ```
 
 You can run the corresponding container with:

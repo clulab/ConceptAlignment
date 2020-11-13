@@ -87,15 +87,16 @@ $ cp -r ../index_0 ../credentials Docker
 Two docker files are provided to make the image.  For `DockerfileStage` use commands
 ```bash
 $ # Create the docker image, setting the version number from version.sbt.
-$ docker build -f DockerfileStage . -t clulab/conceptalignment:1.0.0
+$ docker build -t clulab/conceptalignment:1.0.0 --build-arg secret="<secret for webserver>" -f DockerfileStage .
 ```
 
 `DockerfileStageless` needs a couple of additional files, so use these commands:
 ```bash
 $ sbt webapp/stage
-$ mkdir ../index_0/webapp
-$ mv webapp/target ../index_0/webapp
-$ docker build -f DockerfileStageless . -t clulab/conceptalignment:1.0.0
+$ mkdir Docker/webapp
+$ mv webapp/target Docker/webapp
+$ cd Docker
+$ docker build -t clulab/conceptalignment:1.0.0 --build-arg secret="<secret for webserver>" -f DockerfileStageless .
 ```
 
 To deploy,
@@ -115,8 +116,11 @@ the webapp, you can go about it like this:
 $ # Download the image from Docker Hub if necessary.
 $ docker pull clulab/conceptalignment:1.0.0
 $ # Run the webapp.
-$ docker run -it -p 9001:9001 --name conceptalignment  -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.0.0
-$ # In order to connect to SuperMaaS locally, it will be necessary to connect to its network.
-$ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas  -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
+$ # If SuperMaaS is not available for indexing, skip its environment variable.
+$ docker run -it -p 9001:9001 --name conceptalignment -e secrets="password1|password2" clulab/conceptalignment:1.0.0
+$ # Include it otherwise.
+$ docker run -it -p 9001:9001 --name conceptalignment -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.0.0
+$ # In order to connect to SuperMaaS running in local Docker containers, it will be necessary to connect to their Docker network.
+$ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.
 ```

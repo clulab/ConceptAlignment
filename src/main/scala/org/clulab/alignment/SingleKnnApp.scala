@@ -13,7 +13,7 @@ import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 
 trait SingleKnnAppTrait {
-  def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)]
+  def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)]
 }
 
 // This app gets the starting vector from the result of a Knn search.
@@ -70,10 +70,10 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
     datamartDocuments
   }
 
-  def run(queryString: String, maxHits: Int): Seq[(DatamartDocument, Float)] = {
+  def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)] = {
     val vectorOpt: Option[Array[Float]] = getVectorOpt(queryString)
     val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = vectorOpt.map { vector =>
-      DatamartIndex.findNearest(datamartIndex, vector, maxHits).toSeq
+      DatamartIndex.findNearest(datamartIndex, vector, maxHits, thresholdOpt)
     }.getOrElse(Seq.empty)
     val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = getDatamartDocuments(searchResults)
 
@@ -90,7 +90,7 @@ object SingleKnnApp extends App {
   val luceneDirname = args(2)
 
   val knnLocations = new StaticKnnLocations(datamartFilename, gloveFilename, luceneDirname)
-  val datamartDocumentsAndScores = new SingleKnnApp(knnLocations).run("food", 10)
+  val datamartDocumentsAndScores = new SingleKnnApp(knnLocations).run("food", 10, None)
 
   datamartDocumentsAndScores.foreach { case (datamartDocument, score) =>
     println(s"${datamartDocument.datamartId}\t${datamartDocument.datasetId}\t${datamartDocument.variableId}\t${datamartDocument.variableName}\t${datamartDocument.variableDescription}\t$score")

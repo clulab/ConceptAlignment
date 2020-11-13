@@ -28,18 +28,25 @@ object DatamartIndex {
     index
   }
 
-  def findNearest(index: Index, vector: Array[Float]): Iterator[SearchResult[DatamartAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
     val maxHits = index.size
 
-    findNearest(index, vector, maxHits)
+    findNearest(index, vector, maxHits, None)
   }
 
-  def findNearest(index: Index, vector: Array[Float], maxHits: Int): Iterator[SearchResult[DatamartAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float], maxHits: Int, thresholdOpt: Option[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
     val nearest = index.findNearest(vector, k = maxHits)
     val largest = nearest.map { case SearchResult(item, value) =>
       SearchResult(item, 1f - value)
     }
+    val best = thresholdOpt.map { threshold =>
+      nearest.filter { case SearchResult(_, value) =>
+        // If there is a comparison, then only use real numbers.  NaN satisfies no threshold.
+        !value.isNaN && value >= threshold
+      }
+    }
+    .getOrElse(largest)
 
-    largest.iterator
+    best
   }
 }

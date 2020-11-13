@@ -13,7 +13,7 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
-case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Iterator[SearchResult[DatamartAlignmentItem, Float]]) {
+case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Seq[SearchResult[DatamartAlignmentItem, Float]]) {
 
   def toJsObject: JsObject = {
     val ontologyIdentifier = srcId
@@ -31,7 +31,7 @@ case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Iterator[S
   }
 }
 
-case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Iterator[SearchResult[OntologyAlignmentItem, Float]]) {
+case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Seq[SearchResult[OntologyAlignmentItem, Float]]) {
 
   def toJsObject: JsObject = {
     val datamartIdentifier = srcId
@@ -51,33 +51,33 @@ case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Iterator[
 
 class OntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyIndex: OntologyIndex.Index) {
 
-  def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size)): Iterator[OntologyToDatamarts] = {
+  def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): Iterator[OntologyToDatamarts] = {
     val ontologyItems = ontologyIndex.iterator
     val ontologyToDatamarts = ontologyItems.map { ontologyItem =>
-      val searchResults = alignOntologyItemToDatamart(ontologyItem, topKOpt.getOrElse(datamartIndex.size))
+      val searchResults = alignOntologyItemToDatamart(ontologyItem, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
       OntologyToDatamarts(ontologyItem.id, searchResults)
     }
     ontologyToDatamarts
   }
 
-  def datamartToOntologyMapping(topKOpt: Option[Int] = Some(ontologyIndex.size)): Iterator[DatamartToOntologies] = {
+  def datamartToOntologyMapping(topKOpt: Option[Int] = Some(ontologyIndex.size), thresholdOpt: Option[Float] = None): Iterator[DatamartToOntologies] = {
     val datamartItems = datamartIndex.iterator
     val datamartToOntologies = datamartItems.map { datamartItem =>
-      val searchResults = alignDatamartItemToOntology(datamartItem, topKOpt.getOrElse(ontologyIndex.size))
+      val searchResults = alignDatamartItemToOntology(datamartItem, topKOpt.getOrElse(ontologyIndex.size), thresholdOpt)
       DatamartToOntologies(datamartItem.id, searchResults)
     }
     datamartToOntologies
   }
 
-  def alignOntologyItemToDatamart(ontologyItem: OntologyAlignmentItem, topK: Int = datamartIndex.size): Iterator[SearchResult[DatamartAlignmentItem, Float]] = {
+  def alignOntologyItemToDatamart(ontologyItem: OntologyAlignmentItem, topK: Int = datamartIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
     val ontologyNodeVector = ontologyItem.vector
-    val result = DatamartIndex.findNearest(datamartIndex, ontologyNodeVector, topK)
+    val result = DatamartIndex.findNearest(datamartIndex, ontologyNodeVector, topK, thresholdOpt)
     result
   }
 
-  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size): Iterator[SearchResult[OntologyAlignmentItem, Float]] = {
+  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
     val datamartNodeVector = datamartItem.vector
-    val result = OntologyIndex.findNearest(ontologyIndex, datamartNodeVector, topK)
+    val result = OntologyIndex.findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
     result
   }
 }

@@ -84,7 +84,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     Ok(jsObject)
   }
 
-  def search(query: String, maxHits: Int): Action[AnyContent] = Action {
+  def search(query: String, maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
@@ -92,7 +92,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       InternalServerError
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
-      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits)
+      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits, thresholdOpt)
       val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
         datamartDocument.toJsObject(score)
       }
@@ -102,7 +102,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
+  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
@@ -111,15 +111,15 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt)
-      val jsObjects = allOntologyToDatamarts.map(_.toJsObject).toArray
+      val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
+      val jsObjects = allOntologyToDatamarts.map(_.toJsObject).toSeq
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
   }
 
-  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None): Action[AnyContent] = Action {
+  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
@@ -128,8 +128,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt)
-      val jsObjects = allDatamartToOntologies.map(_.toJsObject).toArray
+      val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt, thresholdOpt)
+      val jsObjects = allDatamartToOntologies.map(_.toJsObject).toSeq
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)

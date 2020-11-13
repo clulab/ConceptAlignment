@@ -201,6 +201,14 @@ paths:
             format: int32
             default: 10
           example: 20
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
       responses:
         200:
           description: OK
@@ -231,6 +239,14 @@ paths:
             type: integer
             format: int32
           example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
       responses:
         200:
           description: OK
@@ -261,6 +277,14 @@ paths:
             type: integer
             format: int32
           example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
       responses:
         200:
           description: OK

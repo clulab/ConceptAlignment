@@ -43,7 +43,7 @@ class HnswlibIndexer {
     index
   }
 
-  def indexOntology(): Unit = {
+  def indexOntology(indexFilename: String): OntologyIndex.Index = {
     val namespace = "wm_flattened"
     val ontologyHandler = OntologyHandler.fromConfig()
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
@@ -51,18 +51,18 @@ class HnswlibIndexer {
         .find { grounder => grounder.name == namespace }
         .get
     val conceptEmbeddings = eidosOntologyGrounder.conceptEmbeddings
-    val filename = s"../hnswlib-$namespace.idx"
     val items = conceptEmbeddings.map { conceptEmbedding =>
       val name = conceptEmbedding.namer.name
       val branch = conceptEmbedding.namer.branch
       val embedding = conceptEmbedding.embedding
-      val identifier = new OntologyIdentifier(namespace, name, branch)
+      val identifier = OntologyIdentifier(namespace, name, branch)
 
       OntologyAlignmentItem(identifier, embedding)
     }
     val index = OntologyIndex.newIndex(items)
 
-    index.save(new File(filename))
+    index.save(new File(indexFilename))
+    index
   }
 
   def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {

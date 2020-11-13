@@ -61,6 +61,7 @@ $ # Run this one just once because it takes a long time and glove shouldn't chan
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
 $ # Run these each time the datamarts have changed.
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibOntologyIndexerApp ../hnswlib-wm_flattened.idx"
 $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
 $ # Start the server in development mode.  It should by default access ../hnswlib-glove.idx and ../index_#.
 $ sbt webapp/run
@@ -79,6 +80,7 @@ else via Docker, create the image with instructions like these:
 ```bash
 $ # Copy the index files to the Docker directory so they can be accessed by the `docker` command.
 $ cp ../hnswlib-glove.idx Docker
+$ cp ../hnswlib-wm_flattened.idx Docker
 $ cp -r ../index_0 ../credentials Docker
 ```
 

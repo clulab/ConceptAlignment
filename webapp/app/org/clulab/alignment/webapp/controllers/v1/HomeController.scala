@@ -85,7 +85,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def search(query: String, maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
+    logger.info(s"Called 'search' function with '$query' and '$maxHits' and '$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
@@ -103,7 +103,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt'!")
+    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))
@@ -120,7 +120,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt'!")
+    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))

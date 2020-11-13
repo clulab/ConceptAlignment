@@ -38,7 +38,7 @@ object OntologyIndex {
       SearchResult(item, 1f - value)
     }
     val best = thresholdOpt.map { threshold =>
-      nearest.filter { case SearchResult(_, value) =>
+      largest.filter { case SearchResult(_, value) =>
         // If there is a comparison, then only use real numbers.  NaN satisfies no threshold.
         !value.isNaN && value >= threshold
       }

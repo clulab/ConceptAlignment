@@ -79,7 +79,69 @@ components:
           variableDescription:
             description: an more thorough explanation of the variable
             type: string
-            
+    bulkSearchOntologyToDatamart:
+      type: array
+      items:
+        type: object
+        properties:
+          ontology:
+            description: the name of the ontology node
+            type: string
+          datamarts:
+            description: score and datamart ID of all matches
+            type: array
+            items:
+              type: object
+              properties:
+                score:
+                  description: a value in the range [-1, 1] with higher being a better match for the search
+                  type: number
+                  format: float
+                datamart:
+                  description: datamart ID of match
+                  type: object
+                  properties:
+                    datamartId:
+                      description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+                      type: string
+                    datasetId:
+                      description: a unique identifer for the dataset of a particular datamart
+                      type: string
+                    variableId:
+                      description: a unique identifier for a variable of a particular dataset
+                      type: string
+    bulkSearchDatamartToOntology:
+      type: array
+      items:
+        type: object
+        properties:
+          datamart:
+            description: the ID of the datamart
+            type: object
+            properties:
+              datamartId:
+                description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+                type: string
+              datasetId:
+                description: a unique identifer for the dataset of a particular datamart
+                type: string
+              variableId:
+                description: a unique identifier for a variable of a particular dataset
+                type: string
+          ontologies:
+            description: score and ontology node of all matches
+            type: array
+            items:
+              type: object
+              properties:
+                score:
+                  description: a value in the range [-1, 1] with higher being a better match for the search
+                  type: number
+                  format: float
+                ontology:
+                  description: the name of the ontology node
+                  type: string
+
 paths:
   /v1/ping:
     get:
@@ -139,6 +201,14 @@ paths:
             format: int32
             default: 10
           example: 20
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
       responses:
         200:
           description: OK
@@ -146,6 +216,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/searchResponse"
+        500:
+          description: The searcher is not working correctly.
+
+  /v1/bulkSearchOntologyToDatamart:
+    get:
+      summary: For each item in the ontology, find the best matches in the datamarts
+      description: ""
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per ontology
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkSearchOntologyToDatamart"
+        500:
+          description: The searcher is not working correctly.
+
+  /v1/bulkSearchDatamartToOntology:
+    get:
+      summary: For each item in the datamarts, find the best matches in the ontology
+      description: ""
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per datamart
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkSearchDatamartToOntology"
         500:
           description: The searcher is not working correctly.
 

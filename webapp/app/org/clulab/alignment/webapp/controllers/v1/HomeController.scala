@@ -1,9 +1,6 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
-import org.clulab.alignment.OntologyMapper
-import org.clulab.alignment.OntologyMapperApp.OntologyToDatamart
-import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, OntologyIndex}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -17,7 +14,6 @@ import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
-import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -38,11 +34,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         secret.split('|')
       }
       .getOrElse(Array.empty)
-  // todo
   val datamartFilename = "../hnswlib-datamart.idx"
   val ontologyFilename = "../hnswlib-wm_flattened.idx"
-
-
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
     println(s"Called 'receive' function")
@@ -91,94 +84,52 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     Ok(jsObject)
   }
 
-  protected def toJsObject(datamartDocumentsAndScores: (DatamartDocument, Float)): JsObject = {
-    val (datamartDocument, score) = datamartDocumentsAndScores
-    Json.obj(
-      "score" -> score,
-      "datamartId" -> datamartDocument.datamartId,
-      "datasetId" -> datamartDocument.datasetId,
-      "variableId" -> datamartDocument.variableId,
-      "variableName" -> datamartDocument.variableName,
-      "variableDescription" -> datamartDocument.variableDescription
-    )
-  }
-
-  protected def toJsObject(otd: OntologyToDatamart): JsObject = {
-    val src = otd.srcId.toString()
-    val dstItem = otd.dstResult.item()
-    val score = otd.dstResult.distance()
-    Json.obj(
-      "ontologyNode" -> src,
-      "datamartId" -> dstItem.id.datamartId,
-      "datasetId" -> dstItem.id.datasetId,
-      "variableId" -> dstItem.id.variableId,
-      "score" -> score
-    )
-  }
-
-  def search(query: String, maxHits: Int): Action[AnyContent] = Action {
-    logger.info(s"Called 'search' function with '$query' and '$maxHits'!")
+  def search(query: String, maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
+    logger.info(s"Called 'search' function with '$query' and '$maxHits' and '$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
-      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits)
-      val jsObjects = datamartDocumentsAndScores.map(toJsObject)
+      val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits, thresholdOpt)
+      val jsObjects = datamartDocumentsAndScores.map { case (datamartDocument, score) =>
+        datamartDocument.toJsObject(score)
+      }
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
   }
 
-  def bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int] = None): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearch' function with maxHits='$maxHits' and secret!")
-    logger.info("renewing the datamart index")
-    reindex(secret)
-    logger.info("renewing the ontology index")
-    // todo
-    val datamartIndex = DatamartIndex.load(datamartFilename)
-    val ontologyIndex = OntologyIndex.load(ontologyFilename)
-
-    val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
-
+  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
+    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
+    val searcher = currentSearcher
     val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
+    if (!secrets.contains(secret))
+      Unauthorized
+    else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val ontToDatamart = mapper.ontologyToDatamartMapping().toArray
-      val dmToOntology = mapper.datamartToOntologyMapping()
-      val jsObjects = for {
-        rankedAlignments <- ontToDatamart
-        otd <- rankedAlignments
-      } yield toJsObject(otd)
+      val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
+      val jsObjects = allOntologyToDatamarts.map(_.toJsObject).toSeq
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
   }
-   def bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int] = None): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearch' function with maxHits='$maxHits' and secret!")
-    logger.info("renewing the datamart index")
-    reindex(secret)
-    logger.info("renewing the ontology index")
-    // todo
-    val datamartIndex = DatamartIndex.load(datamartFilename)
-    val ontologyIndex = OntologyIndex.load(ontologyFilename)
 
-    val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
-
+  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
+    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
+    val searcher = currentSearcher
     val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
+    if (!secrets.contains(secret))
+      Unauthorized
+    else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val ontToDatamart = mapper.ontologyToDatamartMapping().toArray
-      val dmToOntology = mapper.datamartToOntologyMapping()
-      val jsObjects = for {
-        rankedAlignments <- ontToDatamart
-        otd <- rankedAlignments
-      } yield toJsObject(otd)
+      val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt, thresholdOpt)
+      val jsObjects = allDatamartToOntologies.map(_.toJsObject).toSeq
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)

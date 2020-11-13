@@ -26,18 +26,25 @@ object OntologyIndex {
     index
   }
 
-  def findNearest(index: Index, vector: Array[Float]): Iterator[SearchResult[OntologyAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
     val maxHits = index.size
 
-    findNearest(index, vector, maxHits)
+    findNearest(index, vector, maxHits, None)
   }
 
-  def findNearest(index: Index, vector: Array[Float], maxHits: Int): Iterator[SearchResult[OntologyAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float], maxHits: Int, thresholdOpt: Option[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
     val nearest = index.findNearest(vector, k = maxHits)
     val largest = nearest.map { case SearchResult(item, value) =>
       SearchResult(item, 1f - value)
     }
+    val best = thresholdOpt.map { threshold =>
+      largest.filter { case SearchResult(_, value) =>
+        // If there is a comparison, then only use real numbers.  NaN satisfies no threshold.
+        !value.isNaN && value >= threshold
+      }
+    }
+    .getOrElse(largest)
 
-    largest.iterator
+    best
   }
 }

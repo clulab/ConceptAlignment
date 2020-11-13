@@ -5,6 +5,7 @@ class KnnLocations(val index: Int = 0, val baseDir: String = KnnLocations.baseDi
   def mkFilename(name: String): String = s"$baseDir/$baseFile$index/$name"
 
   val datamartFilename: String = mkFilename(KnnLocations.datamartName)
+  val ontologyFilename: String = s"$baseDir/${KnnLocations.ontologyName}"
   val    gloveFilename: String = s"$baseDir/${KnnLocations.gloveName}"
   val    luceneDirname: String = mkFilename(KnnLocations.luceneName)
 
@@ -16,6 +17,7 @@ object KnnLocations {
   val baseFile = "index_"
 
   val datamartName = "hnswlib-datamart.idx"
+  val ontologyName = "hnswlib-wm_flattened.idx"
   val    gloveName = "hnswlib-glove.idx"
   val   luceneName = "lucene-datamart"
 

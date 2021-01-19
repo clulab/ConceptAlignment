@@ -9,9 +9,7 @@ import org.clulab.alignment.webapp.controllers.utils.StatusHolder
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexer
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
 import org.clulab.alignment.indexer.lucene.StaticLuceneLocations
-import org.clulab.alignment.scraper.SuperMaasScraper
 import org.clulab.alignment.scraper.SuperMaasScraperApp
-import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject

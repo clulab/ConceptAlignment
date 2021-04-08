@@ -52,3 +52,8 @@ lazy val jclapp = project
 lazy val evaluator = project
     .aggregate(core).dependsOn(core)
     .aggregate(indexer).dependsOn(indexer)
+
+lazy val experiment = project
+    .aggregate(core).dependsOn(core)
+    .aggregate(scraper).dependsOn(scraper)
+    .aggregate(indexer).dependsOn(indexer)

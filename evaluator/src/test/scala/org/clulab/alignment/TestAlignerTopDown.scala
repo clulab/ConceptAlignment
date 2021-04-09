@@ -1,17 +1,14 @@
+package org.clulab.alignment
+
 //This script test the mapping from ontology node to the examples. (from column 2 to column 1)
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest._
-import org.clulab.wm.eidos.utils.Sourcer
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import ai.lum.common.ConfigUtils._
-import org.clulab.alignment.evaluator.ExampleApp.{aligner, tdConcepts}
-import org.clulab.alignment.utils.ConceptUtils
-import org.clulab.alignment.utils.ConceptUtils.ontologyHandler
-import org.clulab.alignment._
+import com.typesafe.config.ConfigFactory
 import org.clulab.alignment.aligner.ScoredPair
 import org.clulab.alignment.aligner.WeightedParentSimilarityAligner
-import org.clulab.embeddings.word2vec.CompactWord2Vec
-import org.clulab.wm.eidos.groundings.EidosWordToVec
+import org.clulab.alignment.utils.ConceptUtils
+import org.clulab.embeddings.WordEmbeddingMap
+import org.clulab.wm.eidoscommon.utils.Closer.AutoCloser
+import org.clulab.wm.eidoscommon.utils.Sourcer
+import org.scalatest._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -55,7 +52,7 @@ object TestAlignerTopDownUtils {
     queryAnswerSeq
   }
 
-  def constructCandidateAnswerExampleEmbeddings(w2v: CompactWord2Vec, queryAnswerSeq:Seq[(String, Seq[String])]):ConceptSequence = {
+  def constructCandidateAnswerExampleEmbeddings(w2v: WordEmbeddingMap, queryAnswerSeq:Seq[(String, Seq[String])]):ConceptSequence = {
 
     val allAnswers = ArrayBuffer[String]()
     queryAnswerSeq.foreach{x => allAnswers++=x._2}
@@ -64,7 +61,7 @@ object TestAlignerTopDownUtils {
     ConceptSequence(uniqueAnswers.map(answerString => new FlatConcept(answerString, w2v.makeCompositeVector(answerString.split(" ")))))
   }
 
-  def ymlTextToConcept(ymlText: String, w2v:CompactWord2Vec):Concept = {
+  def ymlTextToConcept(ymlText: String, w2v:WordEmbeddingMap):Concept = {
     val normalizedText = ymlText.replace("/","_")
     new FlatConcept(normalizedText, w2v.makeCompositeVector(normalizedText.split("_")))
   }
@@ -88,7 +85,7 @@ class TestAlignerTopDown extends FlatSpec with Matchers {
   val topDownSamplePairSeq = TestAlignerTopDownUtils.generateQueryAnswerPairs(rawEvaluationData)
 
   // load aligner
-  val w2v: CompactWord2Vec = ConceptUtils.word2Vec
+  val w2v: WordEmbeddingMap = ConceptUtils.word2Vec
   val aligner = WeightedParentSimilarityAligner.fromConfig(w2v)
 
   // load candidate answer embeddings

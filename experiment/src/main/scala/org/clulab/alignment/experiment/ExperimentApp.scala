@@ -7,12 +7,14 @@ import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.utils.OntologyHandlerHelper
 import org.clulab.wm.eidos.EidosSystem
 import org.clulab.wm.eidos.groundings.ConceptEmbedding
-import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
+import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
 import org.clulab.wm.eidos.groundings.OntologyHandler
 
 import scala.collection.JavaConverters._
 
 object ExperimentApp extends App {
+  val flattenedKey = "wm_flattened"
+  val compositionalKey = "wm_compositional"
 
   def getConcepts(ontologyHandler: OntologyHandler, namespace: String): Seq[ConceptEmbedding] = {
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
@@ -27,7 +29,7 @@ object ExperimentApp extends App {
       .empty
       .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
         // Both of these are needed and Eidos isn't configured that way by default.
-        Seq("wm_flattened").asJava // , "wm_compositional").asJava // coming soon
+        Seq(flattenedKey, compositionalKey).asJava
       ))
       .withFallback(EidosSystem.defaultConfig)
   // This happens to have the embeddings along with the ontologies.
@@ -48,8 +50,8 @@ object ExperimentApp extends App {
   }
 
   // Top-down things
-  val flatConceptEmbeddings = getConcepts(ontologyHandler, "wm_flattened")
-  val compositionalConceptEmbeddings = Seq.empty // getConcepts(ontologyHandler, "wm_compositional") // coming soon
+  val flatConceptEmbeddings = getConcepts(ontologyHandler, flattenedKey)
+  val compositionalConceptEmbeddings = getConcepts(ontologyHandler, compositionalKey)
 
   (flatConceptEmbeddings ++ compositionalConceptEmbeddings).foreach { conceptEmbedding =>
     // These happen to come with embeddings already.

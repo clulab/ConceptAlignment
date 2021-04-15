@@ -14,22 +14,35 @@ class DatamartOntology(val datamartEntries: Seq[DatamartEntry]) {
 
 object DatamartOntology {
 
+  def tagsToStrings(json: String, tokenizer: Tokenizer): Seq[String] = {
+    val allTags = ujson.read(json).arr.toIndexedSeq.map(_.str)
+    val niceTags = allTags.filter(!_.contains("::"))
+    val tokenizedTags = niceTags.flatMap(tokenizer.tokenize)
+
+    tokenizedTags
+  }
+
   def fromFile(filename: String, tokenizer: Tokenizer): DatamartOntology = {
     val tsvReader = new TsvReader()
     val datamartEntries = Sourcer.sourceFromFile(filename).autoClose { source =>
       source.getLines.buffered.drop(1).map { line =>
+          println(line)
         val Array(
           datamartId,
           datasetId,
-          _,
-          _,
-          _,
+          _, // dataset_name
+          datasetTagsJson,
+          _, // dataset_description
+          _, // dataset_url
           variableId,
-          _,
+          _, // variable_name
+          variableTagsJson,
           variableDescription
-        ) = tsvReader.readln(line, length = 8)
+        ) = tsvReader.readln(line, length = 10)
         val datamartIdentifier = new DatamartIdentifier(datamartId, datasetId, variableId)
-        val words = tokenizer.tokenize(variableDescription)
+        val datasetTags = tagsToStrings(datasetTagsJson, tokenizer)
+        val variableTags = tagsToStrings(variableTagsJson, tokenizer)
+        val words = tokenizer.tokenize(variableDescription) ++ datasetTags ++ variableTags
 
         DatamartEntry(datamartIdentifier, words)
       }.toVector

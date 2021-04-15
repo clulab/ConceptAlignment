@@ -43,12 +43,12 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
             IsiScraper.datamartId,
             datasetId,
             datasetName,
-            "", // tags
+            "[]", // tags
             datasetDescription,
             datasetUrl,
             variableId,
             variableName,
-            "", // tags
+            "[]", // tags
             variableDescription
           )
         }

@@ -24,12 +24,20 @@ class SuperMaasModelScraper(baseUrl: String, createdSince: String = "") extends 
       SuperMaasModelScraper.logger.info(s"Scraping SuperMaaS_Model datasetId $datasetId created $created")
 
       val datasetName = stringElse(dataset, "name", "") // Optional
+      val datasetTags = arrElseEmpty(dataset, "tags").map(_.str)
       val datasetDescription = dataset("description").str // Compulsory
       val datasetUrl = s"$baseUrl/models/$datasetId"
       val parameters = arrElseEmpty(dataset, "parameters") // Compulsory, but null if empty
       val cubesOutputs = arrElseEmpty(dataset, "outputs") // Compulsory, but null if empty
 
-      val variableContext = VariableContext(SuperMaasModelScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl)
+      val variableContext = VariableContext(
+        SuperMaasModelScraper.datamartId,
+        datasetId,
+        datasetName,
+        datasetTags,
+        datasetDescription,
+        datasetUrl
+      )
 
       scrapeLongVariables(tsvWriter, variableContext, parameters)
       cubesOutputs.foreach { cubeOutputs =>

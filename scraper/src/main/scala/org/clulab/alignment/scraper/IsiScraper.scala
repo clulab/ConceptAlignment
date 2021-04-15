@@ -1,17 +1,18 @@
 package org.clulab.alignment.scraper
 
 import java.nio.charset.StandardCharsets
-
 import com.typesafe.config.Config
 import org.clulab.alignment.utils.PropertiesBuilder
 import org.clulab.alignment.utils.TsvWriter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import requests.RequestAuth.Basic
 
 import scala.util.control.NonFatal
 
 class IsiScraper(baseUrl: String, username: String, password: String) extends DatamartScraper {
   protected val auth = new Basic(username, password)
-  protected val readTimeout = 30000
+  protected val readTimeout = 60000
 
   def scrape(tsvWriter: TsvWriter): Unit = {
     val datasetsUrl = s"$baseUrl/metadata/datasets"
@@ -20,6 +21,9 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
 
     datasets.foreach { dataset =>
       val datasetId = dataset("dataset_id").str
+
+      IsiScraper.logger.info(s"Scriaping ISI datasetId $datasetId")
+
       val datasetName = dataset("name").str
       val datasetDescription = dataset("description").str
       val datasetUrl = dataset("url").str
@@ -31,10 +35,22 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
 
         variables.foreach { variable =>
           val variableId = variable("variable_id").str
-          val variableName = variable("name").str
+          // The name is sometimes missing.
+          val variableName = variable.obj.getOrElse("name", IsiScraper.blankJson).str
           val variableDescription = variable("description").str
 
-          tsvWriter.println(IsiScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl, variableId, variableName, variableDescription)
+          tsvWriter.println(
+            IsiScraper.datamartId,
+            datasetId,
+            datasetName,
+            "", // tags
+            datasetDescription,
+            datasetUrl,
+            variableId,
+            variableName,
+            "", // tags
+            variableDescription
+          )
         }
       }
       catch {
@@ -45,7 +61,10 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
 }
 
 object IsiScraper {
+  protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  // Notice how this differs from other versions with the capital S on the end.
   val datamartId = "ISI"
+  val blankJson = ujson.Str("")
 
   def fromConfig(config: Config): IsiScraper = {
     val baseUrl = config.getString("IsiScraper.url")

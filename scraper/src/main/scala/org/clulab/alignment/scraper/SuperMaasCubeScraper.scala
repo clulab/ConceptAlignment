@@ -24,13 +24,21 @@ class SuperMaasCubeScraper(baseUrl: String, createdSince: String = "") extends S
       SuperMaasCubeScraper.logger.info(s"Scraping SuperMaaS_Cube datasetId $datasetId created $created")
 
       val datasetName = stringElse(dataset, "name", "") // Optional
+      val datasetTags = arrElseEmpty(dataset, "tags").map(_.str)
       val datasetDescription = dataset("description").str // Compulsory
       val datasetUrl = s"$baseUrl/cubes/$datasetId"
       val parameters = arrElseEmpty(dataset, "parameters") // Compulsory, but null if empty
       val independentVars = arrElseEmpty(dataset, "independent_vars") // Compulsory, but null if empty
       val dependentVars = arrElseEmpty(dataset, "dependent_vars") // Compulsory, but null if empty
 
-      val variableContext = VariableContext(SuperMaasCubeScraper.datamartId, datasetId, datasetName, datasetDescription, datasetUrl)
+      val variableContext = VariableContext(
+        SuperMaasCubeScraper.datamartId,
+        datasetId,
+        datasetName,
+        datasetTags,
+        datasetDescription,
+        datasetUrl
+      )
 
       scrapeLongVariables(tsvWriter, variableContext, parameters)
       scrapeShortVariables(tsvWriter, variableContext, independentVars)

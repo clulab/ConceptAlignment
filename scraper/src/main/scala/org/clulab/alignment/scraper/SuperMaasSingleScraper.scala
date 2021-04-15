@@ -27,33 +27,71 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
       IndexedSeq.empty[Value]
   }
 
-  case class VariableContext(datamartId: String, datasetId: String, datasetName: String, datasetDescription: String, datasetUrl: String)
+  def tagsToJson(tags: IndexedSeq[String]): String = {
+    val value = upickle.default.writeJs(tags)
+    val json = ujson.write(value)
+
+    json
+  }
+
+  case class VariableContext(
+    datamartId: String,
+    datasetId: String,
+    datasetName: String,
+    datasetTags: IndexedSeq[String],
+    datasetDescription: String,
+    datasetUrl: String
+  )
 
   protected def scrapeLongVariables(tsvWriter: TsvWriter, variableContext: VariableContext, variables: IndexedSeq[Value]): Unit = {
     variables.foreach { variable =>
       val parameterName = variable("name").str // Compulsory if exposed
       val parameterDescription = stringElse(variable, "description", "") // Optional
+      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
 
-      val variableId = parameterName
+      val variableId = parameterName // It doesn't have an ID otherwise.
       val variableName = parameterName
+      val variableTags = parameterTags
       val variableDescription = parameterDescription
 
-      tsvWriter.println(variableContext.datamartId, variableContext.datasetId, variableContext.datasetName,
-          variableContext.datasetDescription, variableContext.datasetUrl, variableId, variableName, variableDescription)
+      tsvWriter.println(
+        variableContext.datamartId,
+        variableContext.datasetId,
+        variableContext.datasetName,
+        tagsToJson(variableContext.datasetTags),
+        variableContext.datasetDescription,
+        variableContext.datasetUrl,
+        variableId,
+        variableName,
+        tagsToJson(variableTags),
+        variableDescription
+      )
     }
   }
 
   protected def scrapeShortVariables(tsvWriter: TsvWriter, variableContext: VariableContext, variables: IndexedSeq[Value]): Unit = {
     variables.foreach { variable =>
-      val parameterName = variable.str
-      val parameterDescription = ""
+      val parameterName = variable("name").str
+      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
+      val parameterDescription = stringElse(variable, "description", "")
 
-      val variableId = parameterName
+      val variableId = parameterName // It doesn't have an ID otherwise.
       val variableName = parameterName
+      val variableTags = parameterTags
       val variableDescription = parameterDescription
 
-      tsvWriter.println(SuperMaasModelScraper.datamartId, variableContext.datasetId, variableContext.datasetName,
-        variableContext.datasetDescription, variableContext.datasetUrl, variableId, variableName, variableDescription)
+      tsvWriter.println(
+        variableContext.datamartId,
+        variableContext.datasetId,
+        variableContext.datasetName,
+        tagsToJson(variableContext.datasetTags),
+        variableContext.datasetDescription,
+        variableContext.datasetUrl,
+        variableId,
+        variableName,
+        tagsToJson(variableTags),
+        variableDescription
+      )
     }
   }
 }

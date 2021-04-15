@@ -6,15 +6,15 @@ class TestSingleKnnApp extends Test {
   behavior of "SingleKnnApp"
 
   it should "not crash with results" in {
-    val datamartDocumentsAndScores = singleKnnApp.run("food", 10)
+    val datamartDocumentsAndScores = singleKnnApp.run("food", 10, None)
   }
 
   it should "not crash if without results" in {
-    val datamartDocumentsAndScores = singleKnnApp.run("Oromia", 10)
+    val datamartDocumentsAndScores = singleKnnApp.run("Oromia", 10, None)
   }
 
   def countHits(fromTerm: String, toTerm: String): Int = {
-    val datamartDocumentsAndScores = singleKnnApp.run(fromTerm, 100)
+    val datamartDocumentsAndScores = singleKnnApp.run(fromTerm, 100, None)
     val hits = datamartDocumentsAndScores.count { case (datamartDocument, _) =>
       datamartDocument.variableName.toLowerCase.contains(toTerm) ||
           datamartDocument.variableDescription.toLowerCase.contains(toTerm)

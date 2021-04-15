@@ -10,10 +10,10 @@ class TestIndexer extends Test {
   it should "work" in {
     val index = AutoLocations.getBaseIndexOpt.get
     val indexerLocations = new IndexerLocations(index)
-    val indexer = new Indexer(indexerLocations)
+//    val indexer = new Indexer(indexerLocations, Seq.empty, null, None)
 
     // Add callback and delete when receive
-    indexer.run(None)
+//    indexer.run(None)
 //    indexerLocations.delete()
   }
 }

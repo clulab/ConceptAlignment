@@ -29,10 +29,12 @@ object Scraper {
     "datamart_id",
     "dataset_id",
     "dataset_name",
+    "dataset_tags",
     "dataset_description",
     "dataset_url",
     "variable_id",
     "variable_name",
+    "variable_tags",
     "variable_description"
   )
 }

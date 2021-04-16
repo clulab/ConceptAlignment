@@ -32,23 +32,21 @@ libraryDependencies ++= {
 lazy val core = project in file(".")
 
 lazy val scraper = project
-    .aggregate(core).dependsOn(core)
+    .dependsOn(core)
 
 lazy val indexer = project
-    .aggregate(core).dependsOn(core)
+    .dependsOn(core)
 
 lazy val webapp = project
     .enablePlugins(PlayScala)
-    .aggregate(core).dependsOn(core)
-    .aggregate(scraper).dependsOn(scraper)
-    .aggregate(indexer).dependsOn(indexer)
+    .aggregate(core).dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
 lazy val jclapp = project
     .enablePlugins(PlayScala)
-    .aggregate(core).dependsOn(core)
-    .aggregate(scraper).dependsOn(scraper)
-    .aggregate(indexer).dependsOn(indexer)
+    .dependsOn(core, scraper, indexer)
 
 lazy val evaluator = project
-    .aggregate(core).dependsOn(core)
-    .aggregate(indexer).dependsOn(indexer)
+    .dependsOn(core, indexer)
+
+lazy val experiment = project
+    .dependsOn(core % "compile -> compile; test -> test", scraper, indexer)

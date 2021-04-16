@@ -11,12 +11,12 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= {
-  val procVer = "8.0.3" // Match transitive dependency in Eidos.
+  val procVer = "8.2.1" // Match transitive dependency in Eidos.
 
   Seq(
     "org.clulab"              %% "processors-main"    % procVer,
     "org.clulab"              %% "processors-corenlp" % procVer,
-    "org.clulab"              %% "eidos"              % "1.0.3", // "1.1.0-SNAPSHOT"
+    "org.clulab"              %% "eidos"              % "1.2.0", // "1.1.0-SNAPSHOT"
     "com.github.WorldModelers" % "Ontologies"         % "master-SNAPSHOT"
   )
 }

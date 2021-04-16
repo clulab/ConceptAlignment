@@ -14,12 +14,12 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 import org.clulab.alignment.utils.{OntologyHandlerHelper => OntologyHandler}
-import org.clulab.embeddings.word2vec.CompactWord2Vec
-import org.clulab.wm.eidos.groundings.EidosOntologyGrounder
+import org.clulab.embeddings.CompactWordEmbeddingMap
+import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
 
 class HnswlibIndexer {
   val dimensions = 300
-  val w2v = HnswlibIndexer.w2v
+  val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
 
   // This is just for testing.
   def indexSample(): Unit = {
@@ -36,7 +36,7 @@ class HnswlibIndexer {
 
   def indexGlove(indexFilename: String): GloveIndex.Index = {
     val keys = w2v.keys
-    val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get) }
+    val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get.toArray) }
     val index = GloveIndex.newIndex(items)
 
     index.save(new File(indexFilename))
@@ -88,5 +88,6 @@ class HnswlibIndexer {
 }
 
 object HnswlibIndexer {
-  lazy val w2v = CompactWord2Vec("/org/clulab/glove/glove.840B.300d.txt", resource = true, cached = false)
+  lazy val w2v: CompactWordEmbeddingMap = CompactWordEmbeddingMap("/org/clulab/glove/glove.840B.300d.txt",
+      resource = true, cached = false)
 }

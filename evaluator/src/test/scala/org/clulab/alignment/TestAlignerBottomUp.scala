@@ -1,17 +1,14 @@
+package org.clulab.alignment
+
 //This script test the mapping from ontology node to the examples. (from column 2 to column 1)
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest._
-import org.clulab.wm.eidos.utils.Sourcer
-import org.clulab.wm.eidos.utils.Closer.AutoCloser
-import ai.lum.common.ConfigUtils._
-import org.clulab.alignment.evaluator.ExampleApp.{aligner, tdConcepts}
-import org.clulab.alignment.utils.ConceptUtils
-import org.clulab.alignment.utils.ConceptUtils.ontologyHandler
-import org.clulab.alignment._
+import com.typesafe.config.ConfigFactory
 import org.clulab.alignment.aligner.ScoredPair
 import org.clulab.alignment.aligner.WeightedParentSimilarityAligner
-import org.clulab.embeddings.word2vec.CompactWord2Vec
-import org.clulab.wm.eidos.groundings.EidosWordToVec
+import org.clulab.alignment.utils.ConceptUtils
+import org.clulab.embeddings.WordEmbeddingMap
+import org.clulab.wm.eidoscommon.utils.Closer.AutoCloser
+import org.clulab.wm.eidoscommon.utils.Sourcer
+import org.scalatest._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -55,7 +52,7 @@ object TestAlignerBottomUpUtils {
     queryAnswerSeq
   }
 
-  def textToConcept(text:String, w2v: CompactWord2Vec):Concept = {
+  def textToConcept(text:String, w2v: WordEmbeddingMap):Concept = {
     new FlatConcept(text, w2v.makeCompositeVector(text.split(" ")))
   }
 
@@ -86,7 +83,7 @@ class TestAlignerBottomUp extends FlatSpec with Matchers {
 
   // load aligner
   val tdConcepts = ConceptUtils.conceptsFromWMOntology("wm_flattened")
-  val w2v: CompactWord2Vec = ConceptUtils.word2Vec
+  val w2v: WordEmbeddingMap = ConceptUtils.word2Vec
   val aligner = WeightedParentSimilarityAligner.fromConfig(w2v)
 
   // actual testing

@@ -4,7 +4,7 @@ import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.SingleLuceneApp.datamartFilename
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait

@@ -5,34 +5,34 @@ import java.io.File
 import com.github.jelmerk.knn.scalalike.floatCosineDistance
 import com.github.jelmerk.knn.scalalike.SearchResult
 import com.github.jelmerk.knn.scalalike.hnsw.HnswIndex
-import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
-import org.clulab.alignment.data.ontology.OntologyIdentifier
+import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 
-object OntologyIndex {
+object FlatOntologyIndex {
   val dimensions = 300
 
-  type Index = HnswIndex[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float]
+  type Index = HnswIndex[FlatOntologyIdentifier, Array[Float], FlatOntologyAlignmentItem, Float]
 
   def load(filename: String): Index = {
-    val index = HnswIndex.loadFromFile[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float](new File(filename))
+    val index = HnswIndex.loadFromFile[FlatOntologyIdentifier, Array[Float], FlatOntologyAlignmentItem, Float](new File(filename))
 
     index.asInstanceOf[Index]
   }
 
-  def newIndex(items: Iterable[OntologyAlignmentItem]): Index = {
-    val index = HnswIndex[OntologyIdentifier, Array[Float], OntologyAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
+  def newIndex(items: Iterable[FlatOntologyAlignmentItem]): Index = {
+    val index = HnswIndex[FlatOntologyIdentifier, Array[Float], FlatOntologyAlignmentItem, Float](dimensions, floatCosineDistance, items.size)
 
     index.addAll(items)
     index
   }
 
-  def findNearest(index: Index, vector: Array[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
     val maxHits = index.size
 
     findNearest(index, vector, maxHits, None)
   }
 
-  def findNearest(index: Index, vector: Array[Float], maxHits: Int, thresholdOpt: Option[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
+  def findNearest(index: Index, vector: Array[Float], maxHits: Int, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
     val nearest = index.findNearest(vector, k = maxHits)
     val largest = nearest.map { case SearchResult(item, value) =>
       SearchResult(item, 1f - value)

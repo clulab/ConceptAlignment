@@ -3,11 +3,11 @@ package org.clulab.alignment.searcher.knn.hnswlib
 import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.SampleIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
-import org.clulab.alignment.indexer.knn.hnswlib.item.OntologyAlignmentItem
+import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 
 import scala.util.Random
@@ -56,14 +56,32 @@ object HnswlibSearcherApp extends App {
     }
   }
 
-  def searchOntology(): Unit = {
+  def searchFlatOntology(): Unit = {
     val filename = "../hnswlib-wm_flattened.idx"
     val vector = newVector()
-    val index = OntologyIndex.load(filename)
+    val index = FlatOntologyIndex.load(filename)
 
     // This finds neighbors based on location that doesn't necessarily correspond to any known item.
     index.findNearest(vector, k = 10).foreach { case SearchResult(item, distance) =>
       println(s"$item $distance")
+    }
+  }
+
+  def searchCompositionalOntology(): Unit = {
+    val filenames = Seq(
+      "../hnswlib-concept.idx",
+      "../hnswlib-process.idx",
+      "../hnswlib-property.idx"
+    )
+
+    filenames.foreach { filename =>
+      val vector = newVector()
+      val index = FlatOntologyIndex.load(filename)
+
+      // This finds neighbors based on location that doesn't necessarily correspond to any known item.
+      index.findNearest(vector, k = 10).foreach { case SearchResult(item, distance) =>
+        println(s"$item $distance")
+      }
     }
   }
 
@@ -92,8 +110,9 @@ object HnswlibSearcherApp extends App {
 
 //  searchSample()
 //  searchGlove()
-//  searchOntology()
+//  searchFlatOntology()
+  searchCompositionalOntology()
 //  searchDatamart()
 
-  infiniteSearchDatamart()
+//  infiniteSearchDatamart()
 }

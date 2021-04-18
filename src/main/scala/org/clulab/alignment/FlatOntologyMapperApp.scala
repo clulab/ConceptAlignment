@@ -4,16 +4,16 @@ import java.io.PrintWriter
 
 import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.data.ontology.OntologyIdentifier
-import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, OntologyIndex}
-import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, OntologyAlignmentItem}
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
+import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, FlatOntologyIndex}
+import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, FlatOntologyAlignmentItem}
 import org.clulab.alignment.utils.FileUtils
 import org.clulab.alignment.utils.SafeScore
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
-case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Seq[SearchResult[DatamartAlignmentItem, Float]]) {
+case class FlatOntologyToDatamarts(srcId: FlatOntologyIdentifier, dstResults: Seq[SearchResult[DatamartAlignmentItem, Float]]) {
 
   def toJsObject: JsObject = {
     val ontologyIdentifier = srcId
@@ -31,7 +31,7 @@ case class OntologyToDatamarts(srcId: OntologyIdentifier, dstResults: Seq[Search
   }
 }
 
-case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Seq[SearchResult[OntologyAlignmentItem, Float]]) {
+case class DatamartToFlatOntologies(srcId: DatamartIdentifier, dstResults: Seq[SearchResult[FlatOntologyAlignmentItem, Float]]) {
 
   def toJsObject: JsObject = {
     val datamartIdentifier = srcId
@@ -49,50 +49,50 @@ case class DatamartToOntologies(srcId: DatamartIdentifier, dstResults: Seq[Searc
   }
 }
 
-class OntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyIndex: OntologyIndex.Index) {
+class FlatOntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyIndex: FlatOntologyIndex.Index) {
 
-  def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): Iterator[OntologyToDatamarts] = {
+  def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): Iterator[FlatOntologyToDatamarts] = {
     val ontologyItems = ontologyIndex.iterator
     val ontologyToDatamarts = ontologyItems.map { ontologyItem =>
       val searchResults = alignOntologyItemToDatamart(ontologyItem, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
-      OntologyToDatamarts(ontologyItem.id, searchResults)
+      FlatOntologyToDatamarts(ontologyItem.id, searchResults)
     }
     ontologyToDatamarts
   }
 
-  def datamartToOntologyMapping(topKOpt: Option[Int] = Some(ontologyIndex.size), thresholdOpt: Option[Float] = None): Iterator[DatamartToOntologies] = {
+  def datamartToOntologyMapping(topKOpt: Option[Int] = Some(ontologyIndex.size), thresholdOpt: Option[Float] = None): Iterator[DatamartToFlatOntologies] = {
     val datamartItems = datamartIndex.iterator
     val datamartToOntologies = datamartItems.map { datamartItem =>
       val searchResults = alignDatamartItemToOntology(datamartItem, topKOpt.getOrElse(ontologyIndex.size), thresholdOpt)
-      DatamartToOntologies(datamartItem.id, searchResults)
+      DatamartToFlatOntologies(datamartItem.id, searchResults)
     }
     datamartToOntologies
   }
 
-  def alignOntologyItemToDatamart(ontologyItem: OntologyAlignmentItem, topK: Int = datamartIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
+  def alignOntologyItemToDatamart(ontologyItem: FlatOntologyAlignmentItem, topK: Int = datamartIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
     val ontologyNodeVector = ontologyItem.vector
     val result = DatamartIndex.findNearest(datamartIndex, ontologyNodeVector, topK, thresholdOpt)
     result
   }
 
-  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[OntologyAlignmentItem, Float]] = {
+  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
     val datamartNodeVector = datamartItem.vector
-    val result = OntologyIndex.findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
+    val result = FlatOntologyIndex.findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
     result
   }
 }
 
-object OntologyMapperApp extends App {
+object FlatOntologyMapperApp extends App {
   val datamartIndexFilename = args.lift(0).getOrElse("../hnswlib-datamart.idx")
   val ontologyIndexFilename = args.lift(1).getOrElse("../hnswlib-wm_flattened.idx")
-  val datamartMappingFilename = args.lift(2).getOrElse("../datamartMapping.json")
-  val ontologyMappingFilename = args.lift(3).getOrElse("../ontologyMapping.json")
+  val datamartMappingFilename = args.lift(2).getOrElse("../flatDatamartMapping.json")
+  val ontologyMappingFilename = args.lift(3).getOrElse("../flatOntologyMapping.json")
   val limitOpt = args.lift(4).map(_.toInt)
 
   val startTime = System.currentTimeMillis
   val datamartIndex = DatamartIndex.load(datamartIndexFilename)
-  val ontologyIndex = OntologyIndex.load(ontologyIndexFilename)
-  val mapper = new OntologyMapper(datamartIndex, ontologyIndex)
+  val ontologyIndex = FlatOntologyIndex.load(ontologyIndexFilename)
+  val mapper = new FlatOntologyMapper(datamartIndex, ontologyIndex)
 
   {
     val allDatamartToOntologies = mapper.datamartToOntologyMapping(limitOpt)

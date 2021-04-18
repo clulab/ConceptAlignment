@@ -247,6 +247,14 @@ paths:
             type: number
             format: float
           example: 0.7
+        - name: compositional
+          in: query
+          description: whether to use compositional grounding rather than the default flat grounding
+          required: false
+          schema:
+            type: boolean
+            default: false
+          example: false
       responses:
         200:
           description: OK
@@ -285,6 +293,14 @@ paths:
             type: number
             format: float
           example: 0.7
+        - name: compositional
+          in: query
+          description: whether to use compositional grounding rather than the default flat grounding
+          required: false
+          schema:
+            type: boolean
+            default: false
+          example: false
       responses:
         200:
           description: OK

@@ -92,34 +92,50 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
+  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositionalOpt: Option[Boolean]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
+    val compositional = compositionalOpt.getOrElse(false)
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized
     else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val allOntologyToDatamarts = searcher.ontologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
-      val jsObjects = allOntologyToDatamarts.map(_.toJsObject).toSeq
+      val jsObjects =
+          if (!compositional) {
+            val allOntologyToDatamarts = searcher.flatOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
+            allOntologyToDatamarts.map(_.toJsObject).toSeq
+          }
+          else {
+            val allOntologyToDatamarts = searcher.compositionalOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
+            allOntologyToDatamarts.map(_.toJsObject)
+          }
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
   }
 
-  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
+  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositionalOpt: Option[Boolean]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
+    val compositional = compositionalOpt.getOrElse(false)
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized
     else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val allDatamartToOntologies = searcher.ontologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt, thresholdOpt)
-      val jsObjects = allDatamartToOntologies.map(_.toJsObject).toSeq
+      val jsObjects =
+          if (!compositional) {
+            val allDatamartToOntologies = searcher.flatOntologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt, thresholdOpt)
+            allDatamartToOntologies.map(_.toJsObject).toSeq
+          }
+          else {
+            val allDatamartToOntologies = searcher.compositionalOntologyMapperOpt.get.datamartToOntologyMapping(maxHitsOpt, thresholdOpt)
+            allDatamartToOntologies.map(_.toJsObject)
+          }
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)

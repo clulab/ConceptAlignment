@@ -51,13 +51,15 @@ class LuceneIndexerApp(luceneLocations: LuceneLocationsTrait) {
           val Array(
           datamartId,
           datasetId,
-          _,
-          _,
-          _,
+          _, // datasetName
+          _, // datasetTags
+          _, // datasetDescription
+          _, // datasetUrl
           variableId,
           variableName,
+          _, // variableTags
           variableDescription
-          ) = tsvReader.readln(line, length = 8)
+          ) = tsvReader.readln(line, length = 10)
           val document = newDocument(datamartId, datasetId, variableId, variableName, variableDescription)
 
           indexWriter.addDocument(document)

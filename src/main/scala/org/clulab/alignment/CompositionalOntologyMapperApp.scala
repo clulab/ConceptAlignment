@@ -62,28 +62,22 @@ case class DatamartToCompositionalOntologies(srcId: DatamartIdentifier, conceptS
       ("processes",  processSearchResults),
       ("properties", propertySearchResults)
     )
-    val searchScores = labelsAndSearchResultses.map { case (label, searchResults) =>
-      try {
-        val namesAndScores = searchResults.map { searchResult =>
-          Json.obj(
-            "name" -> searchResult._1.toString,
-            "score" -> searchResult._2
-          )
-        }
-        val jsonNamesAndScores = Json.arr(namesAndScores)
-
-        Json.obj(label -> jsonNamesAndScores)
-      }
-      catch {
-        case exception: Throwable =>
-          println("What is wrong?")
-          throw exception
+    val searchScores = Array(conceptSearchResults, processSearchResults, propertySearchResults).map { searchResults =>
+      searchResults.map { searchResult =>
+        Json.obj(
+          "name" -> searchResult._1.toString,
+          "score" -> searchResult._2
+        )
       }
     }
 
     Json.obj(
       "datamart" -> datamartIdentifier.toJsObject,
-      "ontologies" -> searchScores
+      "ontologies" -> Json.obj(
+        "concepts" -> searchScores(0),
+        "processes" -> searchScores(1),
+        "properties" -> searchScores(2)
+      )
     )
   }
 }

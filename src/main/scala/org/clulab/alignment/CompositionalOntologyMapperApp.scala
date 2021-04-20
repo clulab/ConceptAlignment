@@ -25,6 +25,7 @@ case class CompositionalOntologyToDatamarts(srcId: CompositionalOntologyIdentifi
         "datamart" -> searchResult._1.toJsObject
       )
     }
+
     Json.obj(
       "ontology" -> ontologyIdentifier.toJsObject,
       "datamarts" -> JsArray(jsDatamartValues)
@@ -32,7 +33,7 @@ case class CompositionalOntologyToDatamarts(srcId: CompositionalOntologyIdentifi
   }
 }
 
-case class DatamartToCompositionalOntologies(srcId: DatamartIdentifier, dstResults: Seq[(CompositionalOntologyIdentifier, Float)]) {
+case class DatamartToCompositionalOntologiesCombined(srcId: DatamartIdentifier, dstResults: Seq[(CompositionalOntologyIdentifier, Float)]) {
 
   def toJsObject: JsObject = {
     val datamartIdentifier = srcId
@@ -43,9 +44,46 @@ case class DatamartToCompositionalOntologies(srcId: DatamartIdentifier, dstResul
         "ontology" -> searchResult._1.toJsObject
       )
     }
+
     Json.obj(
       "datamart" -> datamartIdentifier.toJsObject,
       "ontologies" -> JsArray(jsOntologyValues)
+    )
+  }
+}
+
+case class DatamartToCompositionalOntologies(srcId: DatamartIdentifier, conceptSearchResults: Seq[(FlatOntologyIdentifier, Float)],
+    processSearchResults: Seq[(FlatOntologyIdentifier, Float)], propertySearchResults: Seq[(FlatOntologyIdentifier, Float)]) {
+
+  def toJsObject: JsObject = {
+    val datamartIdentifier = srcId
+    val labelsAndSearchResultses = Array(
+      ("concepts",   conceptSearchResults),
+      ("processes",  processSearchResults),
+      ("properties", propertySearchResults)
+    )
+    val searchScores = labelsAndSearchResultses.map { case (label, searchResults) =>
+      try {
+        val namesAndScores = searchResults.map { searchResult =>
+          Json.obj(
+            "name" -> searchResult._1.toString,
+            "score" -> searchResult._2
+          )
+        }
+        val jsonNamesAndScores = Json.arr(namesAndScores)
+
+        Json.obj(label -> jsonNamesAndScores)
+      }
+      catch {
+        case exception: Throwable =>
+          println("What is wrong?")
+          throw exception
+      }
+    }
+
+    Json.obj(
+      "datamart" -> datamartIdentifier.toJsObject,
+      "ontologies" -> searchScores
     )
   }
 }
@@ -193,7 +231,7 @@ println(s"elapsed = $elapsed ms")
   }
 
   // For each datamart item, find the ranked ontology items.
-  def datamartToOntologyMapping(topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[DatamartToCompositionalOntologies] = {
+  def datamartToOntologyMappingCombined(topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[DatamartToCompositionalOntologiesCombined] = {
     // Something scores the ontology items found, and (almost) all will be found here.  A found ontology item will have
     // values for how well it matches each dimension of compositional grounding.  The scoring might involve weights.
     val scorer = new OntologyScorer(5f, 2f, 3f, 2.5f)
@@ -228,7 +266,29 @@ val stop = System.currentTimeMillis()
 val elapsed = (stop - start) / 1000
 println(s"elapsed = $elapsed sec")
       // Summarize the finding.
-      DatamartToCompositionalOntologies(datamartItem.id, cappedIdsAndScores)
+      DatamartToCompositionalOntologiesCombined(datamartItem.id, cappedIdsAndScores)
+    }.toVector
+
+    datamartToOntologies
+  }
+
+  // For each datamart item, find the ranked ontology items.
+  def datamartToOntologyMapping(topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[DatamartToCompositionalOntologies] = {
+    // Iterate through the entire datamart.
+    val datamartIterator = datamartIndex.iterator
+    val datamartToOntologies = datamartIterator.map { datamartItem => // TODO: Separate this out to work on a single item.
+println(datamartItem.id)
+val start = System.currentTimeMillis()
+      // Find separately the matches along each of the dimensions.
+      val  conceptSearchResults = alignDatamartItemToOntology(datamartItem,  conceptIndex, topKOpt.getOrElse( conceptIndex.size), thresholdOpt)
+      val  processSearchResults = alignDatamartItemToOntology(datamartItem,  processIndex, topKOpt.getOrElse( processIndex.size), thresholdOpt)
+      val propertySearchResults = alignDatamartItemToOntology(datamartItem, propertyIndex, topKOpt.getOrElse(propertyIndex.size), thresholdOpt)
+
+      val stop = System.currentTimeMillis()
+      val elapsed = (stop - start) / 1000
+//      println(s"elapsed = $elapsed sec")
+      // Summarize the finding.
+      DatamartToCompositionalOntologies(datamartItem.id, conceptSearchResults, processSearchResults, propertySearchResults)
     }.toVector
 
     datamartToOntologies
@@ -245,7 +305,8 @@ println(s"elapsed = $elapsed sec")
     val result = FlatOntologyIndex
         .findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
         .map { searchResult: SearchResult[FlatOntologyAlignmentItem, Float] =>
-          (searchResult.item.id, searchResult.distance)
+          // TODO: This shouldn't happen.
+          (searchResult.item.id, if (searchResult.distance.isNaN) 0f else searchResult.distance)
         }
     result.toVector
   }

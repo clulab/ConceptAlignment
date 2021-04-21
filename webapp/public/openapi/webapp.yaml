@@ -139,8 +139,8 @@ components:
             type: array
             items:
               oneOf:
-                - $ref: '#/components/schemas/scoredFlatOntologyNode'
-                - $ref: '#/components/schemas/scoredCompositionalOntologyNode'
+                - $ref: "#/components/schemas/scoredFlatOntologyNode"
+                - $ref: "#/components/schemas/scoredCompositionalOntologyNode"
 
 paths:
   /v1/ping:
@@ -229,8 +229,12 @@ paths:
           description: "4-tuple specification of compositional ontology grounding"
           required: true
           schema:
-            $ref: '#/components/schemas/compositionalOntologyNode'
-#          example: ""
+            $ref: "#/components/schemas/compositionalOntologyNode"
+          example:
+            concept: "wm/concept/population/age"
+            conceptProperty: "wm/property/stability"
+            process: "wm/process/train/agriculture_training"
+            processProperty: "wm/property/diversity"
         - name: awayIds
           in: query
           description: "an array of zero or more 4-tuple specifications of compositional ontology groundings"
@@ -238,8 +242,16 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/compositionalOntologyNode'
-#          example: ""
+              $ref: "#/components/schemas/compositionalOntologyNode"
+          example:
+            - concept: "wm/concept/health/life"
+              conceptProperty: "wm/property/insecurity"
+              process: "wm/process/intake"
+              processProperty: "wm/property/preference"
+            - concept: "wm/concept/health/life"
+              conceptProperty: "wm/property/insecurity"
+              process: "wm/process/intake"
+              processProperty: "wm/property/preference"
         - name: maxHits
           in: query
           description: maximum number of matches to return per ontology

@@ -207,17 +207,16 @@ class HomeAndAwayOntologyScorer(homeWeight: Float, awayWeight: Float,
   }
 }
 
-class HomeAndAwayVectorCombiner(homeWeight: Float, awayWeight: Float,
-  conceptWeight: Float, conceptPropertyWeight: Float, processWeight: Float, processPropertyWeight: Float) {
+class HomeAndAwayVectorCombiner(val homeWeight: Float, val awayWeight: Float,
+    val conceptWeight: Float, val conceptPropertyWeight: Float, val processWeight: Float, val processPropertyWeight: Float) {
+  require(homeWeight > 0)
+  require(conceptWeight > 0)
+
   val homeAwaySum: Float = homeWeight + awayWeight
   val homeFactor: Float = homeWeight / homeAwaySum
+  // This will be further divided by the number of away values so that they don't overwhelm the home value.
   val awayFactor: Float = awayWeight / homeAwaySum
-
-  val sum: Float = conceptWeight + conceptPropertyWeight + processWeight + processPropertyWeight
-  val conceptFactor: Float = conceptWeight / sum
-  val conceptPropertyFactor: Float = conceptPropertyWeight / sum
-  val processFactor: Float = processWeight / sum
-  val processPropertyFactor: Float = processPropertyWeight / sum
+  val weightSum: Float = conceptWeight + conceptPropertyWeight + processWeight + processPropertyWeight
 
   def norm(array: Array[Float]): Array[Float] = {
     val len = mul(array, array).sum
@@ -231,6 +230,9 @@ class HomeAndAwayVectorCombiner(homeWeight: Float, awayWeight: Float,
 
   def mul(array: Array[Float], factor: Float): Array[Float] = array.map(_ * factor)
 
+  def mulOpt(arrayOpt: Option[Array[Float]], factor: Float): Option[Array[Float]] =
+    arrayOpt.map(array => mul(array, factor))
+
   def mul(left: Array[Float], right: Array[Float]): Array[Float] =
     left.zip(right).map {
       case (left, right) => left * right
@@ -241,17 +243,27 @@ class HomeAndAwayVectorCombiner(homeWeight: Float, awayWeight: Float,
         case (left, right) => left + right
       }
 
-  def combine(conceptVector: Array[Float], conceptPropertyVector: Array[Float], processVector: Array[Float], processPropertyVector: Array[Float]): Array[Float] = {
-    val combined = add(
-      add(
-        mul(conceptVector, conceptWeight),
-        mul(conceptPropertyVector, conceptPropertyWeight)
-      ),
-      add(
-        mul(processVector, processWeight),
-        mul(processPropertyVector, processPropertyWeight)
-      )
-    )
+  def addOpt(left: Array[Float], rightOpt: Option[Array[Float]]): Array[Float] = {
+    rightOpt.map { right =>
+      left.zip(right).map {
+        case (left, right) => left + right
+      }
+    }.getOrElse(left)
+  }
+
+  def combine(conceptVector: Array[Float], conceptPropertyVectorOpt: Option[Array[Float]],
+      processVectorOpt: Option[Array[Float]], processPropertyVectorOpt: Option[Array[Float]]): Array[Float] = {
+    val weightSum1 = conceptWeight
+    val weightSum2 = weightSum1 + conceptPropertyVectorOpt.map(_ => conceptPropertyWeight).getOrElse(0f)
+    val weightSum3 = weightSum2 +         processVectorOpt.map(_ =>         processWeight).getOrElse(0f)
+    val weightSum4 = weightSum3 + processPropertyVectorOpt.map(_ => processPropertyWeight).getOrElse(0f)
+    val weightSum = weightSum4
+
+    val step1 = mul(conceptVector, conceptWeight / weightSum)
+    val step2 = addOpt(step1, mulOpt(conceptPropertyVectorOpt, conceptPropertyWeight / weightSum))
+    val step3 = addOpt(step2, mulOpt(        processVectorOpt,         processWeight / weightSum))
+    val step4 = addOpt(step3, mulOpt(processPropertyVectorOpt, processPropertyWeight / weightSum))
+    val combined = step4
     val normalized = norm(combined)
 
     normalized
@@ -312,16 +324,30 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
 
     val combiner = new HomeAndAwayVectorCombiner(1f, 1f, 1f, 1f, 1f, 1f)
 
-    def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Array[Float] = {
-      val conceptVectorOpt = conceptIndex.get(compositionalOntologyId.conceptOntologyIdentifier).map(_.vector)
-      val conceptPropertyVectorOpt = propertyIndex.get(compositionalOntologyId.conceptPropertyOntologyIdentifier).map(_.vector)
-      val processVectorOpt = processIndex.get(compositionalOntologyId.processOntologyIdentifier).map(_.vector)
-      val processPropertyVectorOpt = propertyIndex.get(compositionalOntologyId.processPropertyOntologyIdentifier).map(_.vector)
+    def toVectorOpt(flatOntologyIdentifierOpt: Option[FlatOntologyIdentifier], index: FlatOntologyIndex.Index): Option[Array[Float]] = {
+      if (flatOntologyIdentifierOpt.isDefined) {
+        val flatOntologyIdentifier = flatOntologyIdentifierOpt.get
+        val flatOntologyAlignmentItemOpt = index.get(flatOntologyIdentifier)
 
-      if (conceptVectorOpt.isEmpty || conceptPropertyVectorOpt.isEmpty || processVectorOpt.isEmpty || processPropertyVectorOpt.isEmpty)
+        // If it was specified but not found, then throw an exception.
+        if (flatOntologyAlignmentItemOpt.isEmpty)
+          throw new RuntimeException("")
+        Some(flatOntologyAlignmentItemOpt.get.vector)
+      }
+      // If it wasn't specified to start with, that's OK.
+      else None
+    }
+
+    def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Array[Float] = {
+      val         conceptVectorOpt = toVectorOpt(Some(compositionalOntologyId.conceptOntologyIdentifier),      conceptIndex)
+      val conceptPropertyVectorOpt = toVectorOpt(compositionalOntologyId.conceptPropertyOntologyIdentifierOpt, propertyIndex)
+      val         processVectorOpt = toVectorOpt(compositionalOntologyId.        processOntologyIdentifierOpt, processIndex)
+      val processPropertyVectorOpt = toVectorOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, propertyIndex)
+
+      if (conceptVectorOpt.isEmpty)
         throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
       else
-        combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt.get, processVectorOpt.get, processPropertyVectorOpt.get)
+        combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
     }
 
     val homeVector = toVector(homeId)
@@ -391,7 +417,7 @@ println(s"elapsed = $elapsed ms")
   def idSearchResults(identifiersAndScores: mutable.Seq[(FlatOntologyIdentifier, Float)]): CompositionalOntologyIdentifier = {
     val ids = identifiersAndScores.map(_._1)
 
-    CompositionalOntologyIdentifier(ids(0), ids(1), ids(2), ids(3))
+    CompositionalOntologyIdentifier(ids(0), Some(ids(1)), Some(ids(2)), Some(ids(3)))
   }
 
   // NOTE: This is not being used in production.  It is an example of how it might be done.
@@ -506,24 +532,22 @@ object CompositionalOntologyMapperApp extends App {
   }
 
   {
-    val homeId = CompositionalOntologyIdentifier(
-      FlatOntologyIdentifier("wm_compositional", "wm/concept/entity/people/", Some("concept")),
-      FlatOntologyIdentifier("wm_compositional", "wm/property/condition", Some("property")),
-      FlatOntologyIdentifier("wm_compositional", "wm/process/research", Some("process")),
-      FlatOntologyIdentifier("wm_compositional", "wm/property/preference", Some("property"))
-    )
+    val homeId = {
+      val ontology = CompositionalOntologyIdentifier.ontology
+
+      new CompositionalOntologyIdentifier(
+        "wm/concept/entity/people/",
+        "wm/property/condition",
+        "wm/process/research",
+        "wm/property/preference"
+      )
+    }
     val awayIds = Array.empty[CompositionalOntologyIdentifier]
-    val ontologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] = mapper.ontologyItemToDatamartMapping(homeId, awayIds)
+    val ontologyToDatamarts: CompositionalOntologyToDatamarts = mapper.ontologyItemToDatamartMapping(homeId, awayIds)
+    val jsValue = ontologyToDatamarts.resultsToJsArray()
+    val json = jsValue.toString
 
-    if (ontologyToDatamartsOpt.isEmpty) {
-      "null" // alternative to empty array
-    }
-    else {
-      val jsValue = ontologyToDatamartsOpt.get.resultsToJsArray()
-      val json = jsValue.toString
-
-      println(json)
-    }
+    println(json)
   }
 
   if (false) {

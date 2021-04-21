@@ -3,7 +3,6 @@ package org.clulab.alignment.webapp.controllers.v1
 import javax.inject._
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
-import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -18,8 +17,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsLookupResult
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -99,25 +96,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def compositionalSearch(maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action { request =>
-
-    def getCompositionalOntologyIdentifier(jsValue: JsValue): CompositionalOntologyIdentifier = {
-      val jsObject = jsValue.asInstanceOf[JsObject]
-      val conceptOpt = (jsObject \ "concept").asOpt[String]
-      val conceptPropertyOpt = (jsObject \ "conceptProperty").asOpt[String]
-      val processOpt = (jsObject \ "process").asOpt[String]
-      val processPropertyOpt = (jsObject \ "processProperty").asOpt[String]
-
-      val conceptIdentifier         = FlatOntologyIdentifier("wm_compositional", conceptOpt.get,         Some("concept"))
-      val conceptPropertyIdentifier = FlatOntologyIdentifier("wm_compositional", conceptPropertyOpt.get, Some("property"))
-      val processIdentifier         = FlatOntologyIdentifier("wm_compositional", processOpt.get,         Some("process"))
-      val processPropertyIdentifier = FlatOntologyIdentifier("wm_compositional", processPropertyOpt.get, Some("property"))
-
-      CompositionalOntologyIdentifier(
-        conceptIdentifier, conceptPropertyIdentifier,
-        processIdentifier, processPropertyIdentifier
-      )
-    }
-
     val body: AnyContent = request.body
     logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and '$threshold'!")
     try {
@@ -129,33 +107,30 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         val jsonBodyOpt: Option[JsValue] = body.asJson
         val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
         val jsonHomeId = (jsonBody \ "homeId").get
-        val homeId = getCompositionalOntologyIdentifier(jsonHomeId)
-        val awayIdsLookupResult: JsLookupResult = (jsonBody \ "awayIds")
+        val homeId = CompositionalOntologyIdentifier.fromJsValue(jsonHomeId)
+        val awayIdsLookupResult: JsLookupResult = jsonBody \ "awayIds"
         val awayIds =
             if (awayIdsLookupResult.isEmpty)
               Array.empty[CompositionalOntologyIdentifier]
             else {
               val jsonAwayIds = awayIdsLookupResult.get.asInstanceOf[JsArray]
               jsonAwayIds.value.map { jsValue =>
-                getCompositionalOntologyIdentifier(jsValue)
+                CompositionalOntologyIdentifier.fromJsValue(jsValue)
               }.toArray
             }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
 
-        // TODO throw an exception?
-        val compositionalOntologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] =
+        val compositionalOntologyToDatamarts: CompositionalOntologyToDatamarts =
             searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
-        val jsObjectsOpt = compositionalOntologyToDatamartsOpt.map { compositionalOntologyToDatamarts =>
-          compositionalOntologyToDatamarts.resultsToJsArray
-        }
-        val jsValue: JsValue = jsObjectsOpt.getOrElse(JsString("Hello"))
+        val jsObjects = compositionalOntologyToDatamarts.resultsToJsArray()
 
-        Ok(jsValue)
+        Ok(jsObjects)
       }
     }
     catch {
       case throwable: Throwable =>
-        logger.error("An exception was thrown:", throwable)
+        logger.error("An exception was thrown in compositionalSearch:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
         BadRequest
     }
   }

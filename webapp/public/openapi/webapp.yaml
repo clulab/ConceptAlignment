@@ -223,41 +223,53 @@ paths:
           description: The searcher is not working correctly.
 
   /v1/compositionalSearch:
-    get:
+    post:
       summary: For a home item in the compositional ontology and zero or more away items, find the best matches in the datamarts.
       description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                homeId:
+                  $ref: "#/components/schemas/compositionalOntologyNode"
+                awayIds:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/compositionalOntologyNode"
       parameters:
-        - name: homeId
-          in: query
-          description: "4-tuple specification of compositional ontology grounding"
-          required: true
-          schema:
-            $ref: "#/components/schemas/compositionalOntologyNode"
-          example:
-            concept: "wm/concept/population/age"
-            conceptProperty: "wm/property/stability"
-            process: "wm/process/train/agriculture_training"
-            processProperty: "wm/property/diversity"
-        - name: awayIds
-          in: query
-          description: "an array of zero or more 4-tuple specifications of compositional ontology groundings"
-          required: false
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/compositionalOntologyNode"
-          example:
-            - concept: "wm/concept/health/life"
-              conceptProperty: "wm/property/insecurity"
-              process: "wm/process/intake"
-              processProperty: "wm/property/preference"
-            - concept: "wm/concept/health/life"
-              conceptProperty: "wm/property/insecurity"
-              process: "wm/process/intake"
-              processProperty: "wm/property/preference"
+#        - name: homeId
+#          in: body
+#          description: "4-tuple specification of compositional ontology grounding"
+#          required: true
+#          schema:
+#            $ref: "#/components/schemas/compositionalOntologyNode"
+#          example:
+#            concept: "wm/concept/population/age"
+#            conceptProperty: "wm/property/stability"
+#            process: "wm/process/train/agriculture_training"
+#            processProperty: "wm/property/diversity"
+#        - name: awayIds
+#          in: body
+#          description: "an array of zero or more 4-tuple specifications of compositional ontology groundings"
+#          required: false
+#          schema:
+#            type: array
+#            items:
+#              $ref: "#/components/schemas/compositionalOntologyNode"
+#          example:
+#            - concept: "wm/concept/health/life"
+#              conceptProperty: "wm/property/insecurity"
+#              process: "wm/process/intake"
+#              processProperty: "wm/property/preference"
+#            - concept: "wm/concept/health/life"
+#              conceptProperty: "wm/property/insecurity"
+#              process: "wm/process/intake"
+#              processProperty: "wm/property/preference"
         - name: maxHits
           in: query
-          description: maximum number of matches to return per ontology
+          description: maximum number of matches to return
           required: false
           schema:
             type: integer

@@ -1,7 +1,6 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
-
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -96,26 +95,41 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def compositionalSearch(homeIdJson: String, awayIdsJson: String, maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'compositionalSearch' function with $homeIdJson and $awayIdsJson with maxHits='$maxHits' and '$threshold'!")
-    val searcher = currentSearcher
-    val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
-      InternalServerError
-    else {
-      val hits = math.min(HomeController.maxMaxHits, maxHits)
-      val homeId: CompositionalOntologyIdentifier = null
-      val awayIds: Array[CompositionalOntologyIdentifier] = Array.empty
+  def compositionalSearch(maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action { request =>
+    val body: AnyContent = request.body
+    val maxHits = 10
+    val threshold = Some(1f)
 
-      // TODO throw an exception?
-      val compositionalOntologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] =
+    logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and '$threshold'!")
+//homeIdJson: String, awayIdsJson: Option[String],
+    try {
+      val jsonBodyOpt: Option[JsValue] = body.asJson
+      val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+
+
+      //homeId: String, awayIds: Option[String],
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else {
+        val hits = math.min(HomeController.maxMaxHits, maxHits)
+        val homeId: CompositionalOntologyIdentifier = null
+        val awayIds: Array[CompositionalOntologyIdentifier] = Array.empty
+
+        // TODO throw an exception?
+        val compositionalOntologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] =
           searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
-      val jsObjectsOpt = compositionalOntologyToDatamartsOpt.map { compositionalOntologyToDatamarts =>
-        compositionalOntologyToDatamarts.toJsObject
-      }
-      val jsValue: JsValue = jsObjectsOpt.getOrElse(JsString("Hello"))
+        val jsObjectsOpt = compositionalOntologyToDatamartsOpt.map { compositionalOntologyToDatamarts =>
+          compositionalOntologyToDatamarts.toJsObject
+        }
+        val jsValue: JsValue = jsObjectsOpt.getOrElse(JsString("Hello"))
 
-      Ok(jsValue)
+        Ok(jsValue)
+      }
+    }
+    catch {
+      case _: Throwable => BadRequest
     }
   }
 

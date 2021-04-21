@@ -10,7 +10,7 @@ GET     /v1/ping                         org.clulab.alignment.webapp.controllers
 GET     /v1/echo                         org.clulab.alignment.webapp.controllers.v1.HomeController.echo(text: String)
 GET     /v1/status                       org.clulab.alignment.webapp.controllers.v1.HomeController.status
 GET     /v1/search                       org.clulab.alignment.webapp.controllers.v1.HomeController.search(query: String, maxHits: Int ?= 10, threshold: Option[Float])
-GET     /v1/compositionalSearch          org.clulab.alignment.webapp.controllers.v1.HomeController.compositionalSearch(homeId: String, awayIds: String, maxHits: Int ?= 10, threshold: Option[Float])
+POST    /v1/compositionalSearch          org.clulab.alignment.webapp.controllers.v1.HomeController.compositionalSearch(maxHits: Int ?= 10, threshold: Option[Float])
 PUT     /v1/reindex                      org.clulab.alignment.webapp.controllers.v1.HomeController.reindex(secret: String)
 GET     /v1/bulkSearchOntologyToDatamart org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int], threshold: Option[Float])
 GET     /v1/bulkSearchDatamartToOntology org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchDatamartToOntology(secret: String, maxHits: Option[Int], threshold: Option[Float], compositional: Boolean ?= false)

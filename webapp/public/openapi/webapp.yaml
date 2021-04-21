@@ -50,10 +50,10 @@ components:
           description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
           type: string
         datasetId:
-          description: a unique identifer for the dataset of a particular datamart
+          description: a unique identifer for the dataset within a particular datamart
           type: string
         variableId:
-          description: a unique identifier for a variable of a particular dataset
+          description: a unique identifier for a variable within a particular dataset
           type: string
     # TODO: This score should really be separate.
     scoredDatamart:
@@ -65,11 +65,12 @@ components:
           description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
           type: string
         datasetId:
-          description: a unique identifer for the dataset of a particular datamart
+          description: a unique identifer for the dataset within a particular datamart
           type: string
         variableId:
-          description: a unique identifier for a variable of a particular dataset
+          description: a unique identifier for a variable within a particular dataset
           type: string
+        # The next two are just extra information for the reader.
         variableName:
           description: a more human readable version of the variableId
           type: string
@@ -111,6 +112,8 @@ components:
         processProperty:
           description: the name of an ontology node within the property subtree of the compositional ontology to be associated with the process
           type: string
+      required:
+        - concept
     scoredCompositionalOntologyNode:
       type: object
       properties:
@@ -259,6 +262,7 @@ paths:
           schema:
             type: integer
             format: int32
+            default: 10
           example: 1
         - name: threshold
           in: query

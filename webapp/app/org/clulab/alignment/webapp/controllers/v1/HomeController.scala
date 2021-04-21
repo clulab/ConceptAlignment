@@ -1,6 +1,9 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
+
+import org.clulab.alignment.CompositionalOntologyToDatamarts
+import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -14,6 +17,7 @@ import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
+import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -92,6 +96,29 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
+  def compositionalSearch(homeIdJson: String, awayIdsJson: String, maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action {
+    logger.info(s"Called 'compositionalSearch' function with $homeIdJson and $awayIdsJson with maxHits='$maxHits' and '$threshold'!")
+    val searcher = currentSearcher
+    val status = searcher.getStatus
+    if (status == SearcherStatus.Failing)
+      InternalServerError
+    else {
+      val hits = math.min(HomeController.maxMaxHits, maxHits)
+      val homeId: CompositionalOntologyIdentifier = null
+      val awayIds: Array[CompositionalOntologyIdentifier] = Array.empty
+
+      // TODO throw an exception?
+      val compositionalOntologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] =
+          searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
+      val jsObjectsOpt = compositionalOntologyToDatamartsOpt.map { compositionalOntologyToDatamarts =>
+        compositionalOntologyToDatamarts.toJsObject
+      }
+      val jsValue: JsValue = jsObjectsOpt.getOrElse(JsString("Hello"))
+
+      Ok(jsValue)
+    }
+  }
+
   def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
@@ -109,11 +136,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
       Ok(jsValue)
     }
-  }
-
-  def compositionalSearch(homeIdJson: String, awayIdsJson: String, maxHits: Option[Int], threshold: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'compositionalSearch' function with $homeIdJson and $awayIdsJson with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
-
   }
 
   def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {

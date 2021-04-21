@@ -92,35 +92,33 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositionalOpt: Option[Boolean]): Action[AnyContent] = Action {
+  def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
     val searcher = currentSearcher
-    val compositional = compositionalOpt.getOrElse(false)
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized
     else if (status == SearcherStatus.Failing)
       InternalServerError
     else {
-      val jsObjects =
-          if (!compositional) {
-            val allOntologyToDatamarts = searcher.flatOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
-            allOntologyToDatamarts.map(_.toJsObject).toSeq
-          }
-          else {
-            val allOntologyToDatamarts = searcher.compositionalOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
-            allOntologyToDatamarts.map(_.toJsObject)
-          }
+      val jsObjects = {
+        val allOntologyToDatamarts = searcher.flatOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
+        allOntologyToDatamarts.map(_.toJsObject).toSeq
+      }
       val jsValue: JsValue = JsArray(jsObjects)
 
       Ok(jsValue)
     }
   }
 
-  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositionalOpt: Option[Boolean]): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
+  def compositionalSearch(homeIdJson: String, awayIdsJson: String, maxHits: Option[Int], threshold: Option[Float]): Action[AnyContent] = Action {
+    logger.info(s"Called 'compositionalSearch' function with $homeIdJson and $awayIdsJson with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
+
+  }
+
+  def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {
+    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt' and '$compositional'!")
     val searcher = currentSearcher
-    val compositional = compositionalOpt.getOrElse(false)
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized

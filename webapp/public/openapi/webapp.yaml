@@ -110,7 +110,58 @@ components:
                     variableId:
                       description: a unique identifier for a variable of a particular dataset
                       type: string
-    bulkSearchDatamartToOntology:
+    compositionalOntologyNode:
+      type: object
+      properties:
+        concept:
+          description: the name of an ontology node within the concept subtree of the compositional ontology
+          type: string
+        conceptProperty:
+          description: the name of an ontology node within the property subtree of the compositional ontology to be associated with the concept
+          type: string
+        process:
+          description: the name of an ontology node within the process subtree of the compositional ontology
+          type: string
+        processProperty:
+          description: the name of an ontology node within the property subtree of the compositional ontology to be associated with the process
+          type: string
+    compositionalOntologyNodes:
+      type: array
+      items:
+        - $ref: '#/componenes/compositionalOntologyNode'
+
+    flatBulkSearchDatamartToOntology:
+      type: array
+      items:
+        type: object
+        properties:
+          datamart:
+            description: the ID of the datamart
+            type: object
+            properties:
+              datamartId:
+                description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+                type: string
+              datasetId:
+                description: a unique identifer for the dataset of a particular datamart
+                type: string
+              variableId:
+                description: a unique identifier for a variable of a particular dataset
+                type: string
+          ontologies:
+            description: score and ontology node of all matches
+            type: array
+            items:
+              type: object
+              properties:
+                score:
+                  description: a value in the range [-1, 1] with higher being a better match for the search
+                  type: number
+                  format: float
+                ontology:
+                  description: the name of the ontology node
+                  type: string
+    compositionalBulkSearchDatamartToOntology:
       type: array
       items:
         type: object
@@ -219,6 +270,50 @@ paths:
         500:
           description: The searcher is not working correctly.
 
+  /v1/compositionalSearch:
+    get:
+      summary: For a home item in the compositional ontology and zero or more away items, find the best matches in the datamarts.
+      description: ""
+      parameters:
+        - name: homeId
+          in: "where"
+          description: "4-tuple specification of compositional ontology grounding"
+          required: true
+          schema:
+            $ref: '#/components/schemas/compositionalOntologyNode'
+          example: ""
+        - name: awayIds'
+          in: "where"
+          description: "an array of zero or more 4-tuple specifications of compositional ontology groundings"
+          required: false
+          schema:
+            type: '#/components/schemas/compositionalOntologyNodes'
+          example: ""
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per ontology
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/compositionalSearch"
+        500:
+          description: The searcher is not working correctly.
+
   /v1/bulkSearchOntologyToDatamart:
     get:
       summary: For each item in the ontology, find the best matches in the datamarts
@@ -247,14 +342,6 @@ paths:
             type: number
             format: float
           example: 0.7
-        - name: compositional
-          in: query
-          description: whether to use compositional grounding rather than the default flat grounding
-          required: false
-          schema:
-            type: boolean
-            default: false
-          example: false
       responses:
         200:
           description: OK
@@ -307,7 +394,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/bulkSearchDatamartToOntology"
+                oneOf:
+                  $ref: "#/components/schemas/flatBulkSearchDatamartToOntology"
+                  $ref: "#/components/schemas/compositionalBulkSearchDatamartToOntology"
         500:
           description: The searcher is not working correctly.
 

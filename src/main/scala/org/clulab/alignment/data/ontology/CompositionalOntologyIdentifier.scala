@@ -16,10 +16,10 @@ case class CompositionalOntologyIdentifier(
 
   def toJsObject: JsObject = {
     Json.obj(
-      "conceptId" -> conceptOntologyIdentifier.toString,
-      "conceptPropertyId" -> conceptPropertyOntologyIdentifier.toString,
-      "processId" -> processOntologyIdentifier.toString,
-      "processPropertyId" -> processPropertyOntologyIdentifier.toString
+      "conceptId" -> conceptOntologyIdentifier.nodeName,
+      "conceptPropertyId" -> conceptPropertyOntologyIdentifier.nodeName,
+      "processId" -> processOntologyIdentifier.nodeName,
+      "processPropertyId" -> processPropertyOntologyIdentifier.nodeName
     )
   }
 }

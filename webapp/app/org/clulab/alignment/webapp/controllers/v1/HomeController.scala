@@ -3,6 +3,7 @@ package org.clulab.alignment.webapp.controllers.v1
 import javax.inject._
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -16,6 +17,8 @@ import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsArray
+import play.api.libs.json.JsLookupResult
+import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
@@ -96,32 +99,54 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def compositionalSearch(maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action { request =>
+
+    def getCompositionalOntologyIdentifier(jsValue: JsValue): CompositionalOntologyIdentifier = {
+      val jsObject = jsValue.asInstanceOf[JsObject]
+      val conceptOpt = (jsObject \ "concept").asOpt[String]
+      val conceptPropertyOpt = (jsObject \ "conceptProperty").asOpt[String]
+      val processOpt = (jsObject \ "process").asOpt[String]
+      val processPropertyOpt = (jsObject \ "processProperty").asOpt[String]
+
+      val conceptIdentifier         = FlatOntologyIdentifier("wm_compositional", conceptOpt.get,         Some("concept"))
+      val conceptPropertyIdentifier = FlatOntologyIdentifier("wm_compositional", conceptPropertyOpt.get, Some("property"))
+      val processIdentifier         = FlatOntologyIdentifier("wm_compositional", processOpt.get,         Some("process"))
+      val processPropertyIdentifier = FlatOntologyIdentifier("wm_compositional", processPropertyOpt.get, Some("property"))
+
+      CompositionalOntologyIdentifier(
+        conceptIdentifier, conceptPropertyIdentifier,
+        processIdentifier, processPropertyIdentifier
+      )
+    }
+
     val body: AnyContent = request.body
-    val maxHits = 10
-    val threshold = Some(1f)
-
     logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and '$threshold'!")
-//homeIdJson: String, awayIdsJson: Option[String],
     try {
-      val jsonBodyOpt: Option[JsValue] = body.asJson
-      val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
-
-
-      //homeId: String, awayIds: Option[String],
       val searcher = currentSearcher
       val status = searcher.getStatus
       if (status == SearcherStatus.Failing)
         InternalServerError
       else {
+        val jsonBodyOpt: Option[JsValue] = body.asJson
+        val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+        val jsonHomeId = (jsonBody \ "homeId").get
+        val homeId = getCompositionalOntologyIdentifier(jsonHomeId)
+        val awayIdsLookupResult: JsLookupResult = (jsonBody \ "awayIds")
+        val awayIds =
+            if (awayIdsLookupResult.isEmpty)
+              Array.empty[CompositionalOntologyIdentifier]
+            else {
+              val jsonAwayIds = awayIdsLookupResult.get.asInstanceOf[JsArray]
+              jsonAwayIds.value.map { jsValue =>
+                getCompositionalOntologyIdentifier(jsValue)
+              }.toArray
+            }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
-        val homeId: CompositionalOntologyIdentifier = null
-        val awayIds: Array[CompositionalOntologyIdentifier] = Array.empty
 
         // TODO throw an exception?
         val compositionalOntologyToDatamartsOpt: Option[CompositionalOntologyToDatamarts] =
-          searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
+            searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
         val jsObjectsOpt = compositionalOntologyToDatamartsOpt.map { compositionalOntologyToDatamarts =>
-          compositionalOntologyToDatamarts.toJsObject
+          compositionalOntologyToDatamarts.resultsToJsArray
         }
         val jsValue: JsValue = jsObjectsOpt.getOrElse(JsString("Hello"))
 
@@ -129,7 +154,9 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       }
     }
     catch {
-      case _: Throwable => BadRequest
+      case throwable: Throwable =>
+        logger.error("An exception was thrown:", throwable)
+        BadRequest
     }
   }
 

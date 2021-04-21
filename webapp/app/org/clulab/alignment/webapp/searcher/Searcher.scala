@@ -39,6 +39,10 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       gloveIndexOpt = Some(singleKnnApp.gloveIndex)
       val ontologyIndex = FlatOntologyIndex.load(searcherLocations.ontologyFilename)
       flatOntologyMapperOpt = Some(new FlatOntologyMapper(singleKnnApp.datamartIndex, ontologyIndex))
+      val conceptIndex = FlatOntologyIndex.load(searcherLocations.conceptFilename)
+      val processIndex = FlatOntologyIndex.load(searcherLocations.processFilename)
+      val propertyIndex = FlatOntologyIndex.load(searcherLocations.propertyFilename)
+      compositionalOntologyMapperOpt = Some(new CompositionalOntologyMapper(singleKnnApp.datamartIndex, conceptIndex, processIndex, propertyIndex))
       statusHolder.set(SearcherStatus.Waiting)
       singleKnnApp
     }

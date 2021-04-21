@@ -87,7 +87,7 @@ object FlatOntologyMapperApp extends App {
   val ontologyIndexFilename = args.lift(1).getOrElse("../hnswlib-wm_flattened.idx")
   val datamartMappingFilename = args.lift(2).getOrElse("../flatDatamartMapping.json")
   val ontologyMappingFilename = args.lift(3).getOrElse("../flatOntologyMapping.json")
-  val limitOpt = args.lift(4).map(_.toInt)
+  val limitOpt = Some(args.lift(4).map(_.toInt).getOrElse(10))
 
   val startTime = System.currentTimeMillis
   val datamartIndex = DatamartIndex.load(datamartIndexFilename)

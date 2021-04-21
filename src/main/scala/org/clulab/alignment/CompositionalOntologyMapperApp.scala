@@ -271,7 +271,7 @@ class HomeAndAwayVectorCombiner(homeWeight: Float, awayWeight: Float,
   }
 }
 
-// See SeqOdometer in Eidos.  TODO: Add this there.
+// See SeqOdometer in Eidos.  This is here in part to avoid the dependency.
 class NestedIterator[T <: AnyRef](iterables: Array[Iterable[T]]) extends Iterator[mutable.ArraySeq[T]] {
   require(iterables.nonEmpty)
   require(iterables.forall(_.nonEmpty))
@@ -308,38 +308,34 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
     val processIndex: FlatOntologyIndex.Index, val propertyIndex: FlatOntologyIndex.Index) {
 
   def ontologyItemToDatamartMapping(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
-      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): Option[CompositionalOntologyToDatamarts] = {
+      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): CompositionalOntologyToDatamarts = {
 
     val combiner = new HomeAndAwayVectorCombiner(1f, 1f, 1f, 1f, 1f, 1f)
 
-    def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Option[Array[Float]] = {
+    def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Array[Float] = {
       val conceptVectorOpt = conceptIndex.get(compositionalOntologyId.conceptOntologyIdentifier).map(_.vector)
       val conceptPropertyVectorOpt = propertyIndex.get(compositionalOntologyId.conceptPropertyOntologyIdentifier).map(_.vector)
       val processVectorOpt = processIndex.get(compositionalOntologyId.processOntologyIdentifier).map(_.vector)
       val processPropertyVectorOpt = propertyIndex.get(compositionalOntologyId.processPropertyOntologyIdentifier).map(_.vector)
 
       if (conceptVectorOpt.isEmpty || conceptPropertyVectorOpt.isEmpty || processVectorOpt.isEmpty || processPropertyVectorOpt.isEmpty)
-        None
+        throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
       else
-        Some(combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt.get, processVectorOpt.get, processPropertyVectorOpt.get))
+        combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt.get, processVectorOpt.get, processPropertyVectorOpt.get)
     }
 
-    val homeVectorOpt = toVector(homeId)
-    val awayVectorOpts = awayIds.map(toVector)
-
-    if (homeVectorOpt.isEmpty || awayVectorOpts.exists(_.isEmpty))
-      None
-    else {
-      val combinedVector = combiner.combine(homeVectorOpt.get, awayVectorOpts.map(_.get))
-      val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
-      val results = searchResults.map { searchResult =>
-        (searchResult.item.id, searchResult.distance)
-      }
-
-      Some(CompositionalOntologyToDatamarts(homeId, results))
+    val homeVector = toVector(homeId)
+    val awayVector = awayIds.map(toVector)
+    val combinedVector = combiner.combine(homeVector, awayVector)
+    val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
+    val results = searchResults.map { searchResult =>
+      (searchResult.item.id, searchResult.distance)
     }
+
+    CompositionalOntologyToDatamarts(homeId, results)
   }
 
+  // NOTE: This is not being used in production.  It is an example of how it might be done.
   // For each ontology item, find the ranked datamart items, which we don't have to produce in bulk.
   def ontologyToDatamartMapping(topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): Seq[CompositionalOntologyToDatamarts] = {
     // Something scores the datamart items found, and (almost) all will be found here.  A found datamart item will have
@@ -347,7 +343,7 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
     val scorer = new DatamartScorer(5f, 2f, 3f, 2.5f)
     // Iterate through all combinations of values in each of the four dimensions of compositional grounding.
     val nestedIterator = new NestedIterator(Array(conceptIndex.toIterable, propertyIndex.toIterable, processIndex.toIterable, propertyIndex.toIterable))
-// TODO: remove the take
+    // TODO: Remove the take if this is ever used in production.  It is not currently.
     val ontologyToDatamarts = nestedIterator.take(100).map { ontologyItems: mutable.Seq[FlatOntologyAlignmentItem] =>
 val start = System.currentTimeMillis()
       // The identifier describes the entire grounding.
@@ -398,6 +394,7 @@ println(s"elapsed = $elapsed ms")
     CompositionalOntologyIdentifier(ids(0), ids(1), ids(2), ids(3))
   }
 
+  // NOTE: This is not being used in production.  It is an example of how it might be done.
   // For each datamart item, find the ranked ontology items.
   def datamartToOntologyMappingCombined(topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[DatamartToCompositionalOntologiesCombined] = {
     // Something scores the ontology items found, and (almost) all will be found here.  A found ontology item will have
@@ -405,7 +402,7 @@ println(s"elapsed = $elapsed ms")
     val scorer = new OntologyScorer(5f, 2f, 3f, 2.5f)
     // Iterate through the entire datamart.
     val datamartIterator = datamartIndex.iterator
-// TODO: remove the take
+    // TODO: Remove the take for production use.
     val datamartToOntologies = datamartIterator.take(5).map { datamartItem => // TODO: Separate this out to work on a single item.
 println(datamartItem.id)
 val start = System.currentTimeMillis()
@@ -444,7 +441,7 @@ println(s"elapsed = $elapsed sec")
   def datamartToOntologyMapping(topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[DatamartToCompositionalOntologies] = {
     // Iterate through the entire datamart.
     val datamartIterator = datamartIndex.iterator
-    val datamartToOntologies = datamartIterator.map { datamartItem => // TODO: Separate this out to work on a single item.
+    val datamartToOntologies = datamartIterator.map { datamartItem =>
       // Find separately the matches along each of the dimensions.
       val  conceptSearchResults = alignDatamartItemToOntology(datamartItem,  conceptIndex, topKOpt.getOrElse( conceptIndex.size), thresholdOpt)
       val  processSearchResults = alignDatamartItemToOntology(datamartItem,  processIndex, topKOpt.getOrElse( processIndex.size), thresholdOpt)

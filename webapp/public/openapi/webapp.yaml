@@ -86,6 +86,15 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/scoredDatamart"
+    compositionalSearchResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          score:
+            $ref: "#/components/schemas/score"
+          datamart:
+            $ref: "#/components/schemas/datamart"
     flatOntologyNode:
       description: the specification of the ontology node
       type: string
@@ -117,11 +126,22 @@ components:
     scoredCompositionalOntologyNode:
       type: object
       properties:
-        score:
-          $ref: "#/components/schemas/score"
-        ontology:
-          $ref: "#/components/schemas/compositionalOntologyNode"
-    bulkSearchOntologyToDatamart:
+        ontologies:
+          type: object
+          properties:
+            concepts:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+            processes:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+            properties:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+    bulkSearchOntologyToDatamartResponse:
       type: array
       items:
         type: object
@@ -130,7 +150,7 @@ components:
             $ref: "#/components/schemas/flatOntologyNode"
           datamarts:
             $ref: "#/components/schemas/scoredDatamarts"
-    bulkSearchDatamartToOntology:
+    bulkSearchDatamartToOntologyResponse:
       type: array
       items:
         type: object
@@ -223,50 +243,10 @@ paths:
           description: The searcher is not working correctly.
 
   /v1/compositionalSearch:
-    post:
+    put:
       summary: For a home item in the compositional ontology and zero or more away items, find the best matches in the datamarts.
       description: ""
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                homeId:
-                  $ref: "#/components/schemas/compositionalOntologyNode"
-                awayIds:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/compositionalOntologyNode"
       parameters:
-#        - name: homeId
-#          in: body
-#          description: "4-tuple specification of compositional ontology grounding"
-#          required: true
-#          schema:
-#            $ref: "#/components/schemas/compositionalOntologyNode"
-#          example:
-#            concept: "wm/concept/population/age"
-#            conceptProperty: "wm/property/stability"
-#            process: "wm/process/train/agriculture_training"
-#            processProperty: "wm/property/diversity"
-#        - name: awayIds
-#          in: body
-#          description: "an array of zero or more 4-tuple specifications of compositional ontology groundings"
-#          required: false
-#          schema:
-#            type: array
-#            items:
-#              $ref: "#/components/schemas/compositionalOntologyNode"
-#          example:
-#            - concept: "wm/concept/health/life"
-#              conceptProperty: "wm/property/insecurity"
-#              process: "wm/process/intake"
-#              processProperty: "wm/property/preference"
-#            - concept: "wm/concept/health/life"
-#              conceptProperty: "wm/property/insecurity"
-#              process: "wm/process/intake"
-#              processProperty: "wm/property/preference"
         - name: maxHits
           in: query
           description: maximum number of matches to return
@@ -284,13 +264,40 @@ paths:
             type: number
             format: float
           example: 0.7
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                homeId:
+                  $ref: "#/components/schemas/compositionalOntologyNode"
+                awayIds:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/compositionalOntologyNode"
+              example:
+                homeId:
+                  concept: "wm/concept/population/age"
+                  conceptProperty: "wm/property/stability"
+                  process: "wm/process/train/agriculture_training"
+                  processProperty: "wm/property/diversity"
+                awayIds:
+                    - concept: "wm/concept/health/life"
+                      conceptProperty: "wm/property/insecurity"
+                      process: "wm/process/intake"
+                      processProperty: "wm/property/preference"
+                    - concept: "wm/concept/health/life"
+                      conceptProperty: "wm/property/insecurity"
+                      process: "wm/process/intake"
+                      processProperty: "wm/property/preference"
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/searchResponse"
+                $ref: "#/components/schemas/compositionalSearchResponse"
         500:
           description: The searcher is not working correctly.
 
@@ -328,7 +335,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/bulkSearchOntologyToDatamart"
+                $ref: "#/components/schemas/bulkSearchOntologyToDatamartResponse"
         500:
           description: The searcher is not working correctly.
 
@@ -374,7 +381,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/bulkSearchDatamartToOntology"
+                $ref: "#/components/schemas/bulkSearchDatamartToOntologyResponse"
         500:
           description: The searcher is not working correctly.
 

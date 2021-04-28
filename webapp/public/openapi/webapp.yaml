@@ -338,6 +338,8 @@ paths:
                 $ref: "#/components/schemas/bulkSearchOntologyToDatamartResponse"
         500:
           description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
 
   /v1/bulkSearchDatamartToOntology:
     get:
@@ -384,6 +386,8 @@ paths:
                 $ref: "#/components/schemas/bulkSearchDatamartToOntologyResponse"
         500:
           description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
 
   /v1/reindex:
     put:

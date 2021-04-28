@@ -56,7 +56,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def echo(text: String): Action[AnyContent] = Action {
-    logger.info(s"Called 'echo' function with '$text'!")
+    logger.info(s"Called 'echo' function with text='$text'!")
     Ok(text)
   }
 
@@ -78,7 +78,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def search(query: String, maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'search' function with '$query' and '$maxHits' and '$thresholdOpt'!")
+    logger.info(s"Called 'search' function with '$query' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
@@ -95,9 +95,9 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def compositionalSearch(maxHits: Int, threshold: Option[Float]): Action[AnyContent] = Action { request =>
+  def compositionalSearch(maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action { request =>
     val body: AnyContent = request.body
-    logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and '$threshold'!")
+    logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt'!")
     try {
       val searcher = currentSearcher
       val status = searcher.getStatus
@@ -119,9 +119,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
               }.toArray
             }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
-
-        val compositionalOntologyToDatamarts: CompositionalOntologyToDatamarts =
-            searcher.compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(hits), threshold)
+        val compositionalOntologyToDatamarts = searcher.run(homeId, awayIds, hits, thresholdOpt)
         val jsObjects = compositionalOntologyToDatamarts.resultsToJsArray()
 
         Ok(jsObjects)
@@ -136,13 +134,15 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and '$thresholdOpt'!")
+    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized
     else if (status == SearcherStatus.Failing)
       InternalServerError
+    else if (searcher.flatOntologyMapperOpt.isEmpty)
+      ServiceUnavailable
     else {
       val jsObjects = {
         val allOntologyToDatamarts = searcher.flatOntologyMapperOpt.get.ontologyToDatamartMapping(maxHitsOpt, thresholdOpt)
@@ -155,13 +155,15 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and '$thresholdOpt' and '$compositional'!")
+    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))
       Unauthorized
     else if (status == SearcherStatus.Failing)
       InternalServerError
+    else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+      ServiceUnavailable
     else {
       val jsObjects =
           if (!compositional) {

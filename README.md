@@ -11,9 +11,9 @@ or [dynamically](http://linking.cs.arizona.edu/api).
 
 ## Notes for the initiated
 
-* It will take any words, but preferably those found in glove.  Others don't do much good.
+* The search function will accept any words, but preferably those found in glove.  Others don't do much good.
   
-* It presently works independently of ontology.  One could enter the description or
+* The plain search function works independently of ontology.  (In the meantime there is a separate, specific compositionalSearch that works with that ontology.)  One could enter the description or
 examples associated with an ontology node like "livestock feed hay CSB silage corn meal
 soybean hulls" and whatever results from the datamart scraping would be "aligned" with
 wm / concept / causal_factor / interventions / provide / agriculture_inputs / livestock_production.
@@ -61,7 +61,8 @@ $ # Run this one just once because it takes a long time and glove shouldn't chan
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
 $ # Run these each time the datamarts have changed.
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
-$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibOntologyIndexerApp ../hnswlib-wm_flattened.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibFLatOntologyIndexerApp ../hnswlib-wm_flattened.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibCompositionalOntologyIndexerApp ../hnswlib-concept.idx ../hnswlib-process.idx ../hnswlib-property.idx"
 $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
 $ # Start the server in development mode.  It should by default access ../hnswlib-glove.idx and ../index_#.
 $ sbt webapp/run
@@ -81,6 +82,9 @@ else via Docker, create the image with instructions like these:
 $ # Copy the index files to the Docker directory so they can be accessed by the `docker` command.
 $ cp ../hnswlib-glove.idx Docker
 $ cp ../hnswlib-wm_flattened.idx Docker
+$ cp ../hnswlib-concept.idx Docker
+$ cp ../hnswlib-process.idx Docker
+$ cp ../hnswlib-property.idx Docker
 $ cp -r ../index_0 ../credentials Docker
 ```
 

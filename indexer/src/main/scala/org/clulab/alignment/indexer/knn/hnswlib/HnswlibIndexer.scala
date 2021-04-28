@@ -55,7 +55,7 @@ class HnswlibIndexer {
     index
   }
 
-  def indexFlatOntology(indexFilename: String): FlatOntologyIndex.Index = {
+  def readFlatOntologyItems(): Seq[FlatOntologyAlignmentItem] = {
     val namespace = "wm_flattened"
     val ontologyHandler = OntologyHandler.fromConfig(config)
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
@@ -63,7 +63,7 @@ class HnswlibIndexer {
         .find { grounder => grounder.name == namespace }
         .get
     val conceptEmbeddings = eidosOntologyGrounder.conceptEmbeddings
-    val items = conceptEmbeddings.map { conceptEmbedding =>
+    val items: Seq[FlatOntologyAlignmentItem] = conceptEmbeddings.map { conceptEmbedding =>
       val name = conceptEmbedding.namer.name
       val branch = conceptEmbedding.namer.branch
       val embedding = conceptEmbedding.embedding
@@ -71,6 +71,12 @@ class HnswlibIndexer {
 
       FlatOntologyAlignmentItem(identifier, embedding)
     }
+
+    items
+  }
+
+  def indexFlatOntology(indexFilename: String): FlatOntologyIndex.Index = {
+    val items = readFlatOntologyItems()
     val index = FlatOntologyIndex.newIndex(items)
 
     index.save(new File(indexFilename))

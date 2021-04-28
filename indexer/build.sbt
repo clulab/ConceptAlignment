@@ -13,6 +13,7 @@ resolvers ++= Seq(
 libraryDependencies ++= {
   Seq(
     "org.clulab"              %% "eidos"              % "1.2.0", // "1.1.0-SNAPSHOT"
-    "com.github.WorldModelers" % "Ontologies"         % "master-SNAPSHOT"
+    "com.github.WorldModelers" % "Ontologies"         % "master-SNAPSHOT",
+    "org.scalatestplus.play"  %% "scalatestplus-play" % "3.1.2" % Test
   )
 }

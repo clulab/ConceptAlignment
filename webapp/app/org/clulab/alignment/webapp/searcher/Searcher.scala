@@ -1,12 +1,14 @@
 package org.clulab.alignment.webapp.searcher
 
 import org.clulab.alignment.CompositionalOntologyMapper
+import org.clulab.alignment.CompositionalOntologyToDatamarts
 
 import java.util.concurrent.TimeUnit
 import javax.inject._
 import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
+import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
@@ -71,6 +73,23 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       }
     }
     val result = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
+  def run(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDatamarts = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(maxHits), thresholdOpt)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          new CompositionalOntologyToDatamarts(homeId, Seq.empty)
+      }
+    }
+    val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
     result
   }
 

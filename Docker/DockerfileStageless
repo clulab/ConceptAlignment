@@ -1,12 +1,12 @@
-# Use a command like this from the Docker directory
-# docker build -t conceptalignment --build-arg secret="<secret>" -f DockerfileStage .
+# Use a command like this from the Docker directory to build the image.
+# docker build -t conceptalignment --env supermaas="<supermass_url>" -f DockerfileStage .
+# Add a few environment variables when starting up the container.
+# docker run --env secret="<secret>" --env supermaas="<supermass_url>" <image>
 
 FROM ubuntu:16.04
 
 # Install base packages
 RUN apt-get update && apt-get install -y \
-    git \
-    wget \
     vim
 
 # Install Java
@@ -30,9 +30,10 @@ ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
 RUN echo "export _JAVA_OPTIONS=\"-Xmx16g -Xms12g -Dfile.encoding=UTF-8\"" >> /root/.bashrc
 
 # Configure the webapp
-WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage/conf
-ARG secret
-RUN sed -i "s/changeme/${secret}/" application.conf
+# Override the secret with an environment variable instead.
+# WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage/conf
+# ARG secret
+# RUN sed -i "s/changeme/${secret}/" application.conf
 
 # Prepare to run the image
 WORKDIR /home/conceptalignment-project/conceptalignment/webapp/target/universal/stage

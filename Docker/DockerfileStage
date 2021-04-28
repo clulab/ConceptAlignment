@@ -1,5 +1,5 @@
 # Use a command like this from the Docker directory
-# docker build -t conceptalignment --build-arg secret="<secret>" -f DockerfileStage .
+# docker build -t conceptalignment -f DockerfileStage .
 
 FROM ubuntu:16.04
 
@@ -42,9 +42,9 @@ ENV _JAVA_OPTIONS "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
 RUN echo "export _JAVA_OPTIONS=\"-Xmx16g -Xms12g -Dfile.encoding=UTF-8\"" >> /root/.bashrc
 
 # Configure the webapp
-WORKDIR /home/conceptalignment-project/conceptalignment/webapp/conf
-ARG secret
-RUN sed -i "s/changeme/${secret}/" application.conf
+# WORKDIR /home/conceptalignment-project/conceptalignment/webapp/conf
+# ARG secret
+# RUN sed -i "s/changeme/${secret}/" application.conf
 
 # Stage the webapp
 WORKDIR /home/conceptalignment-project/conceptalignment

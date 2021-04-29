@@ -11,136 +11,159 @@ servers:
 
 components:
   schemas:
+    indexedStatus:
+      type: object
+      properties:
+        index:
+          description: an autoincrementing number
+          type: number
+          format: int32
+          example: 1
+        status:
+          type: object
+          properties:
+            number:
+              description: a numeric value for computers
+              type: number
+              format: int32
+              example: 0
+            text:
+              description: a textual value for humans
+              type: string
+              example: waiting
     statusResponse:
       type: object
       properties:
         searcher:
-          type: object
-          properties:
-            index:
-              description: an autoincrementing number
-              type: number
-              format: int32
-              example: 1
-            status:
-              type: object
-              properties:
-                number:
-                  description: a numeric value for computers
-                  type: number
-                  format: int32
-                  example: 0
-                text:
-                  description: a textual value for humans
-                  type: string
-                  example: waiting
+          $ref: "#/components/schemas/indexedStatus"
         indexer:
-          index:
-          type: object
-          properties:
-            index:
-              description: an autoincrementing number
-              type: number
-              format: int32
-              example: 2
-            status:
-              type: object
-              properties:
-                number:
-                  description: a numeric value for computers
-                  type: number
-                  format: int32
-                  example: 0
-                text:
-                  description: a textual value for humans
-                  type: string
-                  example: idling
+          $ref: "#/components/schemas/indexedStatus"
+    score:
+      description: a value in the range [-1, 1] with higher being a better match for the search
+      type: number
+      format: float
+    datamart:
+      description: the ID of the datamart
+      type: object
+      properties:
+        datamartId:
+          description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+          type: string
+        datasetId:
+          description: a unique identifer for the dataset within a particular datamart
+          type: string
+        variableId:
+          description: a unique identifier for a variable within a particular dataset
+          type: string
+    # TODO: This score should really be separate.
+    scoredDatamart:
+      type: object
+      properties:
+        score:
+          $ref: "#/components/schemas/score"
+        datamartId:
+          description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+          type: string
+        datasetId:
+          description: a unique identifer for the dataset within a particular datamart
+          type: string
+        variableId:
+          description: a unique identifier for a variable within a particular dataset
+          type: string
+        # The next two are just extra information for the reader.
+        variableName:
+          description: a more human readable version of the variableId
+          type: string
+        variableDescription:
+          description: an more thorough explanation of the variable
+          type: string
+    scoredDatamarts:
+      description: score and datamart ID of all matches
+      type: array
+      items:
+        $ref: "#/components/schemas/scoredDatamart"
     searchResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/scoredDatamart"
+    compositionalSearchResponse:
       type: array
       items:
         type: object
         properties:
           score:
-            description: a value in the range [-1, 1] with higher being a better match for the search
-            type: number
-            format: float
-          datamartId:
-            description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
-            type: string
-          datasetId:
-            description: a unique identifer for the dataset of a particular datamart
-            type: string
-          variableId:
-            description: a unique identifier for a variable of a particular dataset
-            type: string
-          variableName:
-            description: a more human readable version of the variableId
-            type: string
-          variableDescription:
-            description: an more thorough explanation of the variable
-            type: string
-    bulkSearchOntologyToDatamart:
+            $ref: "#/components/schemas/score"
+          datamart:
+            $ref: "#/components/schemas/datamart"
+    flatOntologyNode:
+      description: the specification of the ontology node
+      type: string
+    scoredFlatOntologyNode:
+      type: object
+      properties:
+        score:
+          $ref: "#/components/schemas/score"
+        ontology:
+          $ref: "#/components/schemas/flatOntologyNode"
+    compositionalOntologyNode:
+      description: the specification of the ontology node
+      type: object
+      properties:
+        concept:
+          description: the name of an ontology node within the concept subtree of the compositional ontology
+          type: string
+        conceptProperty:
+          description: the name of an ontology node within the property subtree of the compositional ontology to be associated with the concept
+          type: string
+        process:
+          description: the name of an ontology node within the process subtree of the compositional ontology
+          type: string
+        processProperty:
+          description: the name of an ontology node within the property subtree of the compositional ontology to be associated with the process
+          type: string
+      required:
+        - concept
+    scoredCompositionalOntologyNode:
+      type: object
+      properties:
+        ontologies:
+          type: object
+          properties:
+            concepts:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+            processes:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+            properties:
+              type: array
+              items:
+                $ref: "#/components/schemas/scoredFlatOntologyNode"
+    bulkSearchOntologyToDatamartResponse:
       type: array
       items:
         type: object
         properties:
           ontology:
-            description: the name of the ontology node
-            type: string
+            $ref: "#/components/schemas/flatOntologyNode"
           datamarts:
-            description: score and datamart ID of all matches
-            type: array
-            items:
-              type: object
-              properties:
-                score:
-                  description: a value in the range [-1, 1] with higher being a better match for the search
-                  type: number
-                  format: float
-                datamart:
-                  description: datamart ID of match
-                  type: object
-                  properties:
-                    datamartId:
-                      description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
-                      type: string
-                    datasetId:
-                      description: a unique identifer for the dataset of a particular datamart
-                      type: string
-                    variableId:
-                      description: a unique identifier for a variable of a particular dataset
-                      type: string
-    bulkSearchDatamartToOntology:
+            $ref: "#/components/schemas/scoredDatamarts"
+    bulkSearchDatamartToOntologyResponse:
       type: array
       items:
         type: object
         properties:
           datamart:
-            description: the ID of the datamart
-            type: object
-            properties:
-              datamartId:
-                description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
-                type: string
-              datasetId:
-                description: a unique identifer for the dataset of a particular datamart
-                type: string
-              variableId:
-                description: a unique identifier for a variable of a particular dataset
-                type: string
+            $ref: "#/components/schemas/datamart"
           ontologies:
             description: score and ontology node of all matches
             type: array
             items:
-              type: object
-              properties:
-                score:
-                  description: a value in the range [-1, 1] with higher being a better match for the search
-                  type: number
-                  format: float
-                ontology:
-                  description: the name of the ontology node
-                  type: string
+              oneOf:
+                - $ref: "#/components/schemas/scoredFlatOntologyNode"
+                - $ref: "#/components/schemas/scoredCompositionalOntologyNode"
 
 paths:
   /v1/ping:
@@ -219,6 +242,65 @@ paths:
         500:
           description: The searcher is not working correctly.
 
+  /v1/compositionalSearch:
+    put:
+      summary: For a home item in the compositional ontology and zero or more away items, find the best matches in the datamarts.
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                homeId:
+                  $ref: "#/components/schemas/compositionalOntologyNode"
+                awayIds:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/compositionalOntologyNode"
+              example:
+                homeId:
+                  concept: "wm/concept/population/age"
+                  conceptProperty: "wm/property/stability"
+                  process: "wm/process/train/agriculture_training"
+                  processProperty: "wm/property/diversity"
+                awayIds:
+                    - concept: "wm/concept/health/life"
+                      conceptProperty: "wm/property/insecurity"
+                      process: "wm/process/intake"
+                      processProperty: "wm/property/preference"
+                    - concept: "wm/concept/health/life"
+                      conceptProperty: "wm/property/insecurity"
+                      process: "wm/process/intake"
+                      processProperty: "wm/property/preference"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/compositionalSearchResponse"
+        500:
+          description: The searcher is not working correctly.
+
   /v1/bulkSearchOntologyToDatamart:
     get:
       summary: For each item in the ontology, find the best matches in the datamarts
@@ -253,9 +335,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/bulkSearchOntologyToDatamart"
+                $ref: "#/components/schemas/bulkSearchOntologyToDatamartResponse"
         500:
           description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
 
   /v1/bulkSearchDatamartToOntology:
     get:
@@ -285,15 +369,25 @@ paths:
             type: number
             format: float
           example: 0.7
+        - name: compositional
+          in: query
+          description: whether to use compositional grounding rather than the default flat grounding
+          required: false
+          schema:
+            type: boolean
+            default: false
+          example: false
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/bulkSearchDatamartToOntology"
+                $ref: "#/components/schemas/bulkSearchDatamartToOntologyResponse"
         500:
           description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
 
   /v1/reindex:
     put:

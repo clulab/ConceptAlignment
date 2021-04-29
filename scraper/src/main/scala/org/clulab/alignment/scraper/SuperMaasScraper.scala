@@ -17,7 +17,7 @@ class SuperMaasScraper(baseUrl: String, createdSince: String = "") extends Datam
 }
 
 object SuperMaasScraper {
-  protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val stanza = "SuperMaasScraper"
   val urlKey = s"$stanza.url"
 

@@ -90,7 +90,7 @@ object SingleKnnApp extends App {
   val luceneDirname = args(2)
 
   val knnLocations = new StaticKnnLocations(datamartFilename, gloveFilename, luceneDirname)
-  val datamartDocumentsAndScores = new SingleKnnApp(knnLocations).run("food", 10, None)
+  val datamartDocumentsAndScores = new SingleKnnApp(knnLocations).run("corn", 10, None)
 
   datamartDocumentsAndScores.foreach { case (datamartDocument, score) =>
     println(s"${datamartDocument.datamartId}\t${datamartDocument.datasetId}\t${datamartDocument.variableId}\t${datamartDocument.variableName}\t${datamartDocument.variableDescription}\t$score")

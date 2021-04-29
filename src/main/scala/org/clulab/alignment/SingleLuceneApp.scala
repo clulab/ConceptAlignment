@@ -3,7 +3,7 @@ package org.clulab.alignment
 import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 
@@ -19,7 +19,7 @@ object SingleLuceneApp extends App {
 
   val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(luceneDirname, field)
   val datamartIndex = DatamartIndex.load(datamartFilename)
-  val ontologyIndex = OntologyIndex.load(ontologyFilename)
+  val ontologyIndex = FlatOntologyIndex.load(ontologyFilename)
 
   // In this example, just take the single best search result.
   val datamartDocumentOpt = {

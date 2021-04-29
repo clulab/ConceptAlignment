@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import requests.RequestAuth.Basic
 
+import scala.collection.mutable.{HashSet => MutableHashSet}
 import scala.util.control.NonFatal
 
 class IsiScraper(baseUrl: String, username: String, password: String) extends DatamartScraper {
@@ -28,6 +29,7 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
       val datasetDescription = dataset("description").str
       val datasetUrl = dataset("url").str
       val variablesUrl = s"$baseUrl/metadata/datasets/$datasetId/variables"
+      val doubleIds: MutableHashSet[(String, String)] = MutableHashSet.empty
       // Sometimes the variable is not there.
       try {
         val variablesText = requests.get(variablesUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
@@ -38,19 +40,25 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
           // The name is sometimes missing.
           val variableName = variable.obj.getOrElse("name", IsiScraper.blankJson).str
           val variableDescription = variable("description").str
+          val doubleId = (datasetId, variableId)
 
-          tsvWriter.println(
-            IsiScraper.datamartId,
-            datasetId,
-            datasetName,
-            "[]", // tags
-            datasetDescription,
-            datasetUrl,
-            variableId,
-            variableName,
-            "[]", // tags
-            variableDescription
-          )
+          if (doubleIds.contains(doubleId))
+            IsiScraper.logger.error(s"The ISI (dataset_id, variable_id) of ($datasetId, $variableId) is duplicated and skipped.")
+          else {
+            doubleIds.add(doubleId)
+            tsvWriter.println(
+              IsiScraper.datamartId,
+              datasetId,
+              datasetName,
+              "[]", // tags
+              datasetDescription,
+              datasetUrl,
+              variableId,
+              variableName,
+              "[]", // tags
+              variableDescription
+            )
+          }
         }
       }
       catch {

@@ -30,4 +30,9 @@ class TestSingleKnnApp extends Test {
   it should "cross reference corn and maize" in {
     testCrossReference("corn", "maize")
   }
+
+  it should "divulge all results" in {
+    val datamartSize = singleKnnApp.datamartIndex
+
+  }
 }

@@ -6,9 +6,9 @@ import org.clulab.alignment.aligner.ScoredPair
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartConcept
 import org.clulab.alignment.utils.ConceptUtils
-import org.clulab.embeddings.word2vec.CompactWord2Vec
+import org.clulab.embeddings.WordEmbeddingMap
 
-class DatamartGrounder(ontology: DatamartOntology, word2vec: CompactWord2Vec, aligner: Aligner) {
+class DatamartGrounder(ontology: DatamartOntology, word2vec: WordEmbeddingMap, aligner: Aligner) {
   val tokenizer: Tokenizer = Tokenizer()
   val datamartConcepts: Seq[DatamartConcept] = ontology.datamartEntries.map { datamartEntry =>
     val identifier = datamartEntry.identifier

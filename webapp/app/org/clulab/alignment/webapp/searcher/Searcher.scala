@@ -1,15 +1,17 @@
 package org.clulab.alignment.webapp.searcher
 
-import java.util.concurrent.TimeUnit
+import org.clulab.alignment.CompositionalOntologyMapper
+import org.clulab.alignment.CompositionalOntologyToDatamarts
 
+import java.util.concurrent.TimeUnit
 import javax.inject._
-import org.clulab.alignment.OntologyMapper
-import org.clulab.alignment.OntologyMapperApp.ontologyIndexFilename
+import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
+import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.OntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.webapp.utils.AutoLocations
@@ -25,7 +27,9 @@ import scala.concurrent.duration.FiniteDuration
 // The reason for the trait is that some things want to run straight on the
 // SingleKnnApp rather than on the Searcher.  This keeps them compatible.
 class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Option[DatamartIndex.Index] = None,
-    var ontologyMapperOpt: Option[OntologyMapper] = None, var gloveIndexOpt: Option[GloveIndex.Index] = None)
+    var gloveIndexOpt: Option[GloveIndex.Index] = None,
+    var flatOntologyMapperOpt: Option[FlatOntologyMapper] = None,
+    var compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper] = None)
     extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,8 +39,12 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     try {
       val singleKnnApp = new SingleKnnApp(searcherLocations, datamartIndexOpt, gloveIndexOpt)
       gloveIndexOpt = Some(singleKnnApp.gloveIndex)
-      val ontologyIndex = OntologyIndex.load(searcherLocations.ontologyFilename)
-      ontologyMapperOpt = Some(new OntologyMapper(singleKnnApp.datamartIndex, ontologyIndex))
+      val ontologyIndex = FlatOntologyIndex.load(searcherLocations.ontologyFilename)
+      flatOntologyMapperOpt = Some(new FlatOntologyMapper(singleKnnApp.datamartIndex, ontologyIndex))
+      val conceptIndex = FlatOntologyIndex.load(searcherLocations.conceptFilename)
+      val processIndex = FlatOntologyIndex.load(searcherLocations.processFilename)
+      val propertyIndex = FlatOntologyIndex.load(searcherLocations.propertyFilename)
+      compositionalOntologyMapperOpt = Some(new CompositionalOntologyMapper(singleKnnApp.datamartIndex, conceptIndex, processIndex, propertyIndex))
       statusHolder.set(SearcherStatus.Waiting)
       singleKnnApp
     }
@@ -68,9 +76,26 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     result
   }
 
+  def run(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDatamarts = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(maxHits), thresholdOpt)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          new CompositionalOntologyToDatamarts(homeId, Seq.empty)
+      }
+    }
+    val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
   def next(index: Int, datamartIndex: DatamartIndex.Index): Searcher = {
     val nextSearcherLocations = new SearcherLocations(index, searcherLocations.baseDir, searcherLocations.baseFile)
-    val nextSearcher = new Searcher(nextSearcherLocations, Some(datamartIndex), ontologyMapperOpt, gloveIndexOpt)
+    val nextSearcher = new Searcher(nextSearcherLocations, Some(datamartIndex), gloveIndexOpt, flatOntologyMapperOpt, compositionalOntologyMapperOpt)
 
     nextSearcher
   }

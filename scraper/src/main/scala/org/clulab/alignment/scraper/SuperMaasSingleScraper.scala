@@ -3,6 +3,8 @@ package org.clulab.alignment.scraper
 import org.clulab.alignment.utils.TsvWriter
 import ujson.Value
 
+import scala.collection.mutable.{HashSet => MutableHashSet}
+
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -44,6 +46,8 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
   )
 
   protected def scrapeLongVariables(tsvWriter: TsvWriter, variableContext: VariableContext, variables: IndexedSeq[Value]): Unit = {
+    val variableIds: MutableHashSet[String] = MutableHashSet.empty
+
     variables.foreach { variable =>
       val parameterName = variable("name").str // Compulsory if exposed
       val parameterDescription = stringElse(variable, "description", "") // Optional
@@ -54,22 +58,29 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
       val variableTags = parameterTags
       val variableDescription = parameterDescription
 
-      tsvWriter.println(
-        variableContext.datamartId,
-        variableContext.datasetId,
-        variableContext.datasetName,
-        tagsToJson(variableContext.datasetTags),
-        variableContext.datasetDescription,
-        variableContext.datasetUrl,
-        variableId,
-        variableName,
-        tagsToJson(variableTags),
-        variableDescription
-      )
+      if (variableIds.contains(variableId))
+        SuperMaasScraper.logger.error(s"The SuperMaaS (datamartId, dataset_id, variable_id) of (${variableContext.datamartId}, ${variableContext.datasetId}, $variableId) is duplicated and skipped.")
+      else {
+        variableIds.add(variableId)
+        tsvWriter.println(
+          variableContext.datamartId,
+          variableContext.datasetId,
+          variableContext.datasetName,
+          tagsToJson(variableContext.datasetTags),
+          variableContext.datasetDescription,
+          variableContext.datasetUrl,
+          variableId,
+          variableName,
+          tagsToJson(variableTags),
+          variableDescription
+        )
+      }
     }
   }
 
   protected def scrapeShortVariables(tsvWriter: TsvWriter, variableContext: VariableContext, variables: IndexedSeq[Value]): Unit = {
+    val variableIds: MutableHashSet[String] = MutableHashSet.empty
+
     variables.foreach { variable =>
       val parameterName = variable("name").str
       val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
@@ -80,18 +91,23 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
       val variableTags = parameterTags
       val variableDescription = parameterDescription
 
-      tsvWriter.println(
-        variableContext.datamartId,
-        variableContext.datasetId,
-        variableContext.datasetName,
-        tagsToJson(variableContext.datasetTags),
-        variableContext.datasetDescription,
-        variableContext.datasetUrl,
-        variableId,
-        variableName,
-        tagsToJson(variableTags),
-        variableDescription
-      )
+      if (variableIds.contains(variableId))
+        SuperMaasScraper.logger.error(s"The SuperMaaS (datamartId, dataset_id, variable_id) of (${variableContext.datamartId}, ${variableContext.datasetId}, $variableId) is duplicated and skipped.")
+      else {
+        variableIds.add(variableId)
+        tsvWriter.println(
+          variableContext.datamartId,
+          variableContext.datasetId,
+          variableContext.datasetName,
+          tagsToJson(variableContext.datasetTags),
+          variableContext.datasetDescription,
+          variableContext.datasetUrl,
+          variableId,
+          variableName,
+          tagsToJson(variableTags),
+          variableDescription
+        )
+      }
     }
   }
 }

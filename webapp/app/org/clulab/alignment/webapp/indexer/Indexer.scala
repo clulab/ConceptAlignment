@@ -87,7 +87,6 @@ class Indexer(indexerLocations: IndexerLocations, scrapers: Seq[DatamartScraper]
 
 object Indexer {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val supermaasUrlKey = "supermaas"
   type IndexCallbackType = IndexSender => Unit
 
   val muteIndexCallback: IndexCallbackType = (indexSender: IndexSender) => ()
@@ -99,12 +98,7 @@ class AutoIndexer @Inject()(autoLocations: AutoLocations) extends IndexerTrait {
   val index: Int = autoLocations.index
   val indexerLocations = new IndexerLocations(index, autoLocations.baseDir, autoLocations.baseFile)
   val statusHolder: StatusHolder[IndexerStatus] = new StatusHolder[IndexerStatus](getClass.getSimpleName, logger, IndexerStatus.Loading)
-  val supermaasUrlOpt: Option[String] = Option(System.getenv(Indexer.supermaasUrlKey))
-  val scrapers: Seq[DatamartScraper] = supermaasUrlOpt
-      .map { supermaasUrl =>
-        ScraperApp.getScrapers(supermaasUrl)
-      }
-      .getOrElse(ScraperApp.getScrapers)
+  val scrapers: Seq[DatamartScraper] = ScraperApp.getScrapers
   val loadingFuture: Future[IndexerApps] = Future[IndexerApps] {
     try {
       val result = new IndexerApps(indexerLocations)

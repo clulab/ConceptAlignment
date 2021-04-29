@@ -11,9 +11,9 @@ or [dynamically](http://linking.cs.arizona.edu/api).
 
 ## Notes for the initiated
 
-* It will take any words, but preferably those found in glove.  Others don't do much good.
+* The search function will accept any words, but preferably those found in glove.  Others don't do much good.
   
-* It presently works independently of ontology.  One could enter the description or
+* The plain search function works independently of ontology.  (In the meantime there is a separate, specific compositionalSearch that works with that ontology.)  One could enter the description or
 examples associated with an ontology node like "livestock feed hay CSB silage corn meal
 soybean hulls" and whatever results from the datamart scraping would be "aligned" with
 wm / concept / causal_factor / interventions / provide / agriculture_inputs / livestock_production.
@@ -61,16 +61,18 @@ $ # Run this one just once because it takes a long time and glove shouldn't chan
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
 $ # Run these each time the datamarts have changed.
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
-$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibOntologyIndexerApp ../hnswlib-wm_flattened.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibFLatOntologyIndexerApp ../hnswlib-wm_flattened.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibCompositionalOntologyIndexerApp ../hnswlib-concept.idx ../hnswlib-process.idx ../hnswlib-property.idx"
 $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
 $ # Start the server in development mode.  It should by default access ../hnswlib-glove.idx and ../index_#.
 $ sbt webapp/run
 ```
 
 The scraper for SuperMaaS is configured in `scraper/src/main/resources/application.conf`
-to use `localhost:8000`.  If both ConceptAlignment and SuperMaaS are running in Docker
+to use either `localhost:8000`, or when available, whatever is recorded in the `supermaas`
+environment variable.  If both ConceptAlignment and SuperMaaS are running in Docker
 containers, it may be necessary to reconfigure the scraper to use something like
- `supermaas_server_1:8000`.
+`supermaas_server_1:8000`.
 
 ### Preparing the Docker image
 
@@ -81,22 +83,25 @@ else via Docker, create the image with instructions like these:
 $ # Copy the index files to the Docker directory so they can be accessed by the `docker` command.
 $ cp ../hnswlib-glove.idx Docker
 $ cp ../hnswlib-wm_flattened.idx Docker
+$ cp ../hnswlib-concept.idx Docker
+$ cp ../hnswlib-process.idx Docker
+$ cp ../hnswlib-property.idx Docker
 $ cp -r ../index_0 ../credentials Docker
 ```
+
 
 Two docker files are provided to make the image.  For `DockerfileStage` use commands
 ```bash
 $ # Create the docker image, setting the version number from version.sbt.
-$ docker build -t clulab/conceptalignment:1.0.0 --build-arg secret="<secret for webserver>" -f DockerfileStage .
+$ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStage .
 ```
 
 `DockerfileStageless` needs a couple of additional files, so use these commands:
 ```bash
 $ sbt webapp/stage
-$ mkdir Docker/webapp
-$ mv webapp/target Docker/webapp
+$ mv webapp/target/universal/stage Docker
 $ cd Docker
-$ docker build -t clulab/conceptalignment:1.0.0 --build-arg secret="<secret for webserver>" -f DockerfileStageless .
+$ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStageless .
 ```
 
 To deploy,
@@ -117,9 +122,9 @@ $ # Download the image from Docker Hub if necessary.
 $ docker pull clulab/conceptalignment:1.0.0
 $ # Run the webapp.
 $ # If SuperMaaS is not available for indexing, skip its environment variable.
-$ docker run -it -p 9001:9001 --name conceptalignment -e secrets="password1|password2" clulab/conceptalignment:1.0.0
+$ docker run -it -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" clulab/conceptalignment:1.0.0
 $ # Include it otherwise.
-$ docker run -it -p 9001:9001 --name conceptalignment -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.0.0
+$ docker run -it -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.0.0
 $ # In order to connect to SuperMaaS running in local Docker containers, it will be necessary to connect to their Docker network.
 $ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.

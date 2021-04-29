@@ -24,7 +24,7 @@ bottom-up components.
 
 ## Preparations
 
-Some of the instructions below use 1.0.0 as a version number.  Change this number as necessary.
+Some of the instructions below use 1.2.0 as a version number.  Change this number as necessary.
 The standard port 9000 may already be used for SuperMaaS, so this project has been changed to use 9001
 and that's the reason some port numbers are included in the instructions.
 
@@ -93,7 +93,7 @@ $ cp -r ../index_0 ../credentials Docker
 Two docker files are provided to make the image.  For `DockerfileStage` use commands
 ```bash
 $ # Create the docker image, setting the version number from version.sbt.
-$ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStage .
+$ docker build -t clulab/conceptalignment:1.2.0 -f DockerfileStage .
 ```
 
 `DockerfileStageless` needs a couple of additional files, so use these commands:
@@ -101,7 +101,7 @@ $ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStage .
 $ sbt webapp/stage
 $ mv webapp/target/universal/stage Docker
 $ cd Docker
-$ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStageless .
+$ docker build -t clulab/conceptalignment:1.2.0 -f DockerfileStageless .
 ```
 
 To deploy,
@@ -109,7 +109,7 @@ To deploy,
 ```bash
 $ # If necessary, send the image to Docker Hub.
 $ docker login --username=<username>
-$ docker push clulab/conceptalignment:1.0.0
+$ docker push clulab/conceptalignment:1.2.0
 ```
 
 ### Preparing the Docker container
@@ -119,13 +119,13 @@ the webapp, you can go about it like this:
 
 ```bash
 $ # Download the image from Docker Hub if necessary.
-$ docker pull clulab/conceptalignment:1.0.0
+$ docker pull clulab/conceptalignment:1.2.0
 $ # Run the webapp.
 $ # If SuperMaaS is not available for indexing, skip its environment variable.
-$ docker run -it -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" clulab/conceptalignment:1.0.0
+$ docker run -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" clulab/conceptalignment:1.2.0
 $ # Include it otherwise.
-$ docker run -it -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.0.0
+$ docker run -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:1.2.0
 $ # In order to connect to SuperMaaS running in local Docker containers, it will be necessary to connect to their Docker network.
-$ docker run -it -p 9001:9001 --name conceptalignment --network supermaas_supermaas -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
+$ docker run -p 9001:9001 --name conceptalignment --network supermaas_supermaas -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.
 ```

@@ -15,7 +15,10 @@ RUN apt-get -y install openjdk-8-jdk
 
 # Copy files to the image for runProd configuration
 WORKDIR /home/conceptalignment-project/conceptalignment
-COPY webapp ./webapp
+RUN mkdir ./webapp
+RUN mkdir ./webapp/target
+RUN mkdir ./webapp/target/universal
+COPY stage ./webapp/target/universal/stage
 COPY index_0 ./webapp/target/universal/index_0
 COPY index_1 ./webapp/target/universal/index_1
 COPY credentials ./webapp/target/universal/credentials

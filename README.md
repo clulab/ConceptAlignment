@@ -99,8 +99,7 @@ $ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStage .
 `DockerfileStageless` needs a couple of additional files, so use these commands:
 ```bash
 $ sbt webapp/stage
-$ mkdir Docker/webapp
-$ mv webapp/target Docker/webapp
+$ mv webapp/target/universal/stage Docker
 $ cd Docker
 $ docker build -t clulab/conceptalignment:1.0.0 -f DockerfileStageless .
 ```

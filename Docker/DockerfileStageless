@@ -2,6 +2,7 @@
 # docker build -t conceptalignment --env supermaas="<supermass_url>" -f DockerfileStage .
 # Add a few environment variables when starting up the container.
 # docker run --env secret="<secret>" --env supermaas="<supermass_url>" <image>
+# To disable scraping of supermaas, set supermaas= so that the value is the empty string.
 
 FROM ubuntu:16.04
 

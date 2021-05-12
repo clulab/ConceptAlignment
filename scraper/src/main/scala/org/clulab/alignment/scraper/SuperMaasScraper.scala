@@ -11,8 +11,10 @@ class SuperMaasScraper(baseUrl: String, createdSince: String = "") extends Datam
   val cubeScraper = new SuperMaasCubeScraper(baseUrl, createdSince)
 
   def scrape(tsvWriter: TsvWriter): Unit = {
-    modelScraper.scrape(tsvWriter)
-    cubeScraper.scrape(tsvWriter)
+    if (baseUrl.nonEmpty) {
+      modelScraper.scrape(tsvWriter)
+      cubeScraper.scrape(tsvWriter)
+    }
   }
 }
 

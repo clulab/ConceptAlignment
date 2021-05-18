@@ -38,12 +38,14 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   val ontologyFilename = "../hnswlib-wm_flattened.idx"
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
-    println(s"Called 'receive' function")
+    logger.info(s"Called 'receive' function with index ${indexMessage.index}")
     // It will only get here if the reindexing was successful so that the new Searcher
     // is able to rely on the values coming from the message.
     val prevSearcher = currentSearcher
     currentSearcher = currentSearcher.next(indexMessage.index, indexMessage.datamartIndex)
     prevSearcher.close() // if it isn't busy, which is hard to know just now
+    // TODO: Indexes related to the previous searcher could be deleted.
+    // Could do it on finalization, but only if close indicated?
   }
 
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>

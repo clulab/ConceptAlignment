@@ -18,12 +18,16 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
   def scrape(tsvWriter: TsvWriter): Unit = {
     val datasetsUrl = s"$baseUrl/metadata/datasets"
     val datasetsText = requests.get(datasetsUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
-    val datasets = ujson.read(datasetsText).arr.toIndexedSeq
+    // These are being returned in different orders, so sort them for some consistency.
+    val datasetsAndIds = ujson
+        .read(datasetsText)
+        .arr
+        .toIndexedSeq
+        .map { dataset => (dataset, dataset("dataset_id").str) } // collect all dataset IDs
+        .sortBy(_._2) // sort by those same IDs
 
-    datasets.foreach { dataset =>
-      val datasetId = dataset("dataset_id").str
-
-      IsiScraper.logger.info(s"Scriaping ISI datasetId $datasetId")
+    datasetsAndIds.foreach { case (dataset, datasetId) =>
+      IsiScraper.logger.info(s"Scraping ISI datasetId $datasetId")
 
       val datasetName = dataset("name").str
       val datasetDescription = dataset("description").str

@@ -21,5 +21,6 @@ object IndexerStatus {
   case object Failing  extends IndexerStatus(-1, "failing")
   case object Idling   extends IndexerStatus( 0, "idling")
   case object Loading  extends IndexerStatus( 1, "loading")
-  case object Indexing extends IndexerStatus( 1, "indexing")
+  case object Indexing extends IndexerStatus( 2, "indexing")
+  case object Closing  extends IndexerStatus( 3, "closing")
 }

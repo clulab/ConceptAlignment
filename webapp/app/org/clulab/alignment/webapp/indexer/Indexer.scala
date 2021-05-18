@@ -73,15 +73,13 @@ class Indexer(indexerLocations: IndexerLocations, scrapers: Seq[DatamartScraper]
   def next(indexReceiverOpt: Option[IndexReceiver]): Indexer = {
     require(indexingFuture.isCompleted)
     val nextLocation = new IndexerLocations(indexerLocations.index + 1, indexerLocations.baseDir, indexerLocations.baseFile)
-    val result = new Indexer(nextLocation, scrapers, indexerApps, indexReceiverOpt)
+    val result = new Indexer(nextLocation, scrapers, new IndexerApps(nextLocation), indexReceiverOpt)
     close()
     result
   }
 
   def close(): Unit = {
-    // change state to closing
-    // make sure all files are closed in apps
-    // delete files?
+    statusHolder.set(IndexerStatus.Closing)
   }
 }
 
@@ -125,5 +123,7 @@ class AutoIndexer @Inject()(autoLocations: AutoLocations) extends IndexerTrait {
   }
 
   // There wouldn't be any files to delete for this one.
-  def close(): Unit = ()
+  def close(): Unit = {
+    statusHolder.set(IndexerStatus.Closing)
+  }
 }

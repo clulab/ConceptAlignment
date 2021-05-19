@@ -17,3 +17,6 @@ Docker/*.idx
 Docker/index_*/
 Docker/credentials/
 
+# Files for Docker deployment
+Docker/stage/
+

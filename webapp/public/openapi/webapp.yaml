@@ -126,21 +126,18 @@ components:
     scoredCompositionalOntologyNode:
       type: object
       properties:
-        ontologies:
-          type: object
-          properties:
-            concepts:
-              type: array
-              items:
-                $ref: "#/components/schemas/scoredFlatOntologyNode"
-            processes:
-              type: array
-              items:
-                $ref: "#/components/schemas/scoredFlatOntologyNode"
-            properties:
-              type: array
-              items:
-                $ref: "#/components/schemas/scoredFlatOntologyNode"
+        concepts:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatOntologyNode"
+        processes:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatOntologyNode"
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatOntologyNode"
     bulkSearchOntologyToDatamartResponse:
       type: array
       items:

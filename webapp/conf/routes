@@ -15,6 +15,9 @@ PUT     /v1/reindex                      org.clulab.alignment.webapp.controllers
 GET     /v1/bulkSearchOntologyToDatamart org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int], threshold: Option[Float])
 GET     /v1/bulkSearchDatamartToOntology org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchDatamartToOntology(secret: String, maxHits: Option[Int], threshold: Option[Float], compositional: Boolean ?= false)
 
+PUT     /v1/groundIndicator              org.clulab.alignment.webapp.controllers.v1.HomeController.groundIndicator(maxHits: Int ?= 10, threshold: Option[Float], compositional: Boolean ?= false)
+PUT     /v1/groundModel                  org.clulab.alignment.webapp.controllers.v1.HomeController.groundModel(maxHits: Int ?= 10, threshold: Option[Float], compositional: Boolean ?= false)
+
 # API spec
 GET     /api                        org.clulab.swagger.controllers.OpenApiController.openAPI
 

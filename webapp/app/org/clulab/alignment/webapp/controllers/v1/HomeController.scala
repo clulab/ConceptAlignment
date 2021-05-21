@@ -85,6 +85,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError
+    else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+      ServiceUnavailable
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
       val datamartDocumentsAndScores: Seq[(DatamartDocument, Float)] = searcher.run(query, hits, thresholdOpt)
@@ -105,6 +107,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       val status = searcher.getStatus
       if (status == SearcherStatus.Failing)
         InternalServerError
+      else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+        ServiceUnavailable
       else {
         val jsonBodyOpt: Option[JsValue] = body.asJson
         val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
@@ -203,6 +207,67 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       // one can be used with the next index.
       currentIndexer = indexer.next(Some(this))
       Created
+    }
+  }
+
+  def groundModel(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
+    val body: AnyContent = request.body
+    logger.info(s"Called 'groundModel' function with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    try {
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+        ServiceUnavailable
+      else {
+        val jsonBodyOpt: Option[JsValue] = body.asJson
+        val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+
+
+        val jsObjects =
+          if (!compositional) {
+            val allDatamartToOntologies = searcher.flatOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
+            allDatamartToOntologies.map(_.toJsObject).toSeq
+          }
+          else {
+            val allDatamartToOntologies = searcher.compositionalOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
+            allDatamartToOntologies.map(_.toJsObject)
+          }
+        val jsValue: JsValue = JsArray(jsObjects)
+
+        Ok(jsValue)
+      }
+    }
+    catch {
+      case throwable: Throwable =>
+        logger.error("An exception was thrown in groundModel:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
+        BadRequest
+    }
+  }
+
+  def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {
+    logger.info(s"Called 'groundIndicator' function with maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    val searcher = currentSearcher
+    val status = searcher.getStatus
+    if (status == SearcherStatus.Failing)
+      InternalServerError
+    else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+      ServiceUnavailable
+    else {
+      val jsObjects =
+        if (!compositional) {
+          val allDatamartToOntologies = searcher.flatOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
+          allDatamartToOntologies.map(_.toJsObject).toSeq
+        }
+        else {
+          val allDatamartToOntologies = searcher.compositionalOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
+          allDatamartToOntologies.map(_.toJsObject)
+        }
+      val jsValue: JsValue = JsArray(jsObjects)
+
+      Ok(jsValue)
     }
   }
 }

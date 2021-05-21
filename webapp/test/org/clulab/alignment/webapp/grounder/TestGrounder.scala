@@ -10,14 +10,20 @@ class TestGrounder extends Test {
   it should "read a model document" in {
     val model = FileUtils.getTextFromFile("../model.example.json")
     val modelDocument = new ModelDocument(model)
-//    val groundedModelDocumentFlat = modelDocument.groundFlat()
-//    val groundedModelDocumentComp = modelDocument.groundComp()
+    val groundedModelDocumentFlat = modelDocument.groundFlat()
+    val groundedModelDocumentComp = modelDocument.groundComp()
+
+    println(groundedModelDocumentFlat.toJson)
+    println(groundedModelDocumentComp.toJson)
   }
 
   it should "read an indicator document" in {
     val indicator = FileUtils.getTextFromFile("../indicator.example.json")
     val indicatorDocument = new IndicatorDocument(indicator)
-//    val groundedIndicatorDocumentFlat = indicatorDocument.groundFlat()
-//    val groundedIndicatorDocumentComp = indicatorDocument.groundComp()
+    val groundedIndicatorDocumentFlat = indicatorDocument.groundFlat()
+    val groundedIndicatorDocumentComp = indicatorDocument.groundComp()
+
+    println(groundedIndicatorDocumentFlat.toJson)
+    println(groundedIndicatorDocumentComp.toJson)
   }
 }

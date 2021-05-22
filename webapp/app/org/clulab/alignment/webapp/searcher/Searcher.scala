@@ -14,6 +14,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.grounder.DojoDocument
 import org.clulab.alignment.webapp.utils.AutoLocations
 import org.clulab.alignment.webapp.utils.StatusHolder
 import org.slf4j.Logger
@@ -32,6 +33,8 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     var compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper] = None)
     extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  def isReady: Boolean = flatOntologyMapperOpt.nonEmpty && compositionalOntologyMapperOpt.nonEmpty
 
   val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](getClass.getSimpleName, logger, SearcherStatus.Loading)
   val index: Int = searcherLocations.index
@@ -90,6 +93,28 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       }
     }
     val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
+  def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { _ =>
+      try {
+        val groundedModel = {
+            // Need to pass along some kind of indexer
+            if (!compositional) dojoDocument.groundFlat()
+            else dojoDocument.groundComp()
+        }
+        groundedModel.toJson
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught searching dojoDocument for $maxHits hits on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          dojoDocument.toJson
+      }
+    }
+    val result: String = Await.result(searchingFuture, maxWaitTime)
     result
   }
 

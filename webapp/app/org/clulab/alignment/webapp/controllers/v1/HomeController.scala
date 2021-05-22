@@ -4,6 +4,7 @@ import javax.inject._
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.webapp.grounder.{IndicatorDocument, ModelDocument}
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
 import org.clulab.alignment.webapp.indexer.IndexReceiver
@@ -15,6 +16,7 @@ import org.clulab.alignment.webapp.searcher.Searcher
 import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import play.api.http.MimeTypes
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsLookupResult
 import play.api.libs.json.JsValue
@@ -85,7 +87,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError
-    else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+    else if (!searcher.isReady)
       ServiceUnavailable
     else {
       val hits = math.min(HomeController.maxMaxHits, maxHits)
@@ -107,8 +109,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       val status = searcher.getStatus
       if (status == SearcherStatus.Failing)
         InternalServerError
-      else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
-        ServiceUnavailable
       else {
         val jsonBodyOpt: Option[JsValue] = body.asJson
         val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
@@ -218,25 +218,12 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       val status = searcher.getStatus
       if (status == SearcherStatus.Failing)
         InternalServerError
-      else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
-        ServiceUnavailable
       else {
-        val jsonBodyOpt: Option[JsValue] = body.asJson
-        val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+        body.asJson.getOrElse(throw new RuntimeException("A json body was expected."))
+        val dojoDocument = new ModelDocument(body.asText.get)
+        val json = searcher.run(dojoDocument, maxHits, thresholdOpt, compositional)
 
-
-        val jsObjects =
-          if (!compositional) {
-            val allDatamartToOntologies = searcher.flatOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
-            allDatamartToOntologies.map(_.toJsObject).toSeq
-          }
-          else {
-            val allDatamartToOntologies = searcher.compositionalOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
-            allDatamartToOntologies.map(_.toJsObject)
-          }
-        val jsValue: JsValue = JsArray(jsObjects)
-
-        Ok(jsValue)
+        Ok(json).as(MimeTypes.JSON)
       }
     }
     catch {
@@ -247,27 +234,19 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
-  def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {
-    logger.info(s"Called 'groundIndicator' function with maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+  def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
+    val body: AnyContent = request.body
+    logger.info(s"Called 'groundIndicator' function  with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (status == SearcherStatus.Failing)
       InternalServerError
-    else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
-      ServiceUnavailable
     else {
-      val jsObjects =
-        if (!compositional) {
-          val allDatamartToOntologies = searcher.flatOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
-          allDatamartToOntologies.map(_.toJsObject).toSeq
-        }
-        else {
-          val allDatamartToOntologies = searcher.compositionalOntologyMapperOpt.get.datamartToOntologyMapping(Some(maxHits), thresholdOpt)
-          allDatamartToOntologies.map(_.toJsObject)
-        }
-      val jsValue: JsValue = JsArray(jsObjects)
+      body.asJson.getOrElse(throw new RuntimeException("A json body was expected."))
+      val dojoDocument = new IndicatorDocument(body.asText.get)
+      val json = searcher.run(dojoDocument, maxHits, thresholdOpt, compositional)
 
-      Ok(jsValue)
+      Ok(json).as(MimeTypes.JSON)
     }
   }
 }

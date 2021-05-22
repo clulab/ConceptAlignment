@@ -98,6 +98,18 @@ abstract class DojoDocument(json: String) {
   }
 
   def getWords: Array[String] = words
+
+  // This is used under error conditions just to echo the input.
+  def toJVal: ujson.Value = {
+    ujson.Obj(
+      ("id", id),
+    )
+  }
+
+  def toJson: String = toJVal.render(4)
+
+  def groundFlat(): GroundedDocument
+  def groundComp(): GroundedDocument
 }
 
 abstract class GroundedDocument {
@@ -137,13 +149,13 @@ class ModelDocument(json: String) extends DojoDocument(json) {
   val parameters: Array[DojoParameter] = jObj("parameters").arr.toArray.map(new DojoParameter(_, this)) // required
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
 
-  def groundFlat(): GroundedModelDocument = {
+  override def groundFlat(): GroundedModelDocument = {
     val parameterGrounds = parameters.map(_.groundFlat())
     val outputGrounds = outputs.map(_.groundFlat())
     new GroundedModelDocument(this, parameterGrounds, outputGrounds)
   }
 
-  def groundComp(): GroundedModelDocument = {
+  override def groundComp(): GroundedModelDocument = {
     val parameterGrounds = parameters.map(_.groundComp())
     val outputGrounds = outputs.map(_.groundComp())
     new GroundedModelDocument(this, parameterGrounds, outputGrounds)
@@ -163,12 +175,12 @@ class GroundedIndicatorDocument(indicatorDocument: IndicatorDocument, outputGrou
 class IndicatorDocument(json: String) extends DojoDocument(json) {
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
 
-  def groundFlat(): GroundedIndicatorDocument = {
+  override def groundFlat(): GroundedIndicatorDocument = {
     val outputGrounds = outputs.map(_.groundFlat())
     new GroundedIndicatorDocument(this, outputGrounds)
   }
 
-  def groundComp(): GroundedIndicatorDocument = {
+  override def groundComp(): GroundedIndicatorDocument = {
     val outputGrounds = outputs.map(_.groundComp())
     new GroundedIndicatorDocument(this, outputGrounds)
   }

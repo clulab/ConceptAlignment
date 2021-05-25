@@ -1,5 +1,6 @@
 package org.clulab.alignment.webapp.searcher
 
+import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.CompositionalOntologyMapper
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 
@@ -9,11 +10,16 @@ import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
+import org.clulab.alignment.webapp.grounder.DojoDocument
+import org.clulab.alignment.webapp.grounder.FlatGroundings
+import org.clulab.alignment.webapp.grounder.SingleGrounding
 import org.clulab.alignment.webapp.utils.AutoLocations
 import org.clulab.alignment.webapp.utils.StatusHolder
 import org.slf4j.Logger
@@ -32,6 +38,8 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     var compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper] = None)
     extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  def isReady: Boolean = flatOntologyMapperOpt.nonEmpty && compositionalOntologyMapperOpt.nonEmpty
 
   val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](getClass.getSimpleName, logger, SearcherStatus.Loading)
   val index: Int = searcherLocations.index
@@ -90,6 +98,28 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       }
     }
     val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
+  def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        val groundedModel =
+            if (!compositional) dojoDocument.groundFlat(singleKnnApp, flatOntologyMapperOpt.get, maxHits, thresholdOpt)
+            else dojoDocument.groundComp(singleKnnApp, compositionalOntologyMapperOpt.get, maxHits, thresholdOpt)
+
+        groundedModel.toJson
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught searching dojoDocument for $maxHits hits on index $index""", throwable)
+          //statusHolder.set(SearcherStatus.Failing)
+          //dojoDocument.toJson
+          throw throwable
+      }
+    }
+    val result: String = Await.result(searchingFuture, maxWaitTime)
     result
   }
 

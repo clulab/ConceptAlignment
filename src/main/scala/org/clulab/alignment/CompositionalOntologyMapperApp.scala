@@ -480,6 +480,14 @@ println(s"elapsed = $elapsed sec")
     datamartToOntologies
   }
 
+  def vectorToOntologyMapping(vector: Array[Float], topKOpt: Option[Int] = None, thresholdOpt: Option[Float] = None): Seq[Seq[(FlatOntologyIdentifier, Float)]] = {
+    val  conceptSearchResults = alignVectorToOntology(vector,  conceptIndex, topKOpt.getOrElse( conceptIndex.size), thresholdOpt)
+    val  processSearchResults = alignVectorToOntology(vector,  processIndex, topKOpt.getOrElse( processIndex.size), thresholdOpt)
+    val propertySearchResults = alignVectorToOntology(vector, propertyIndex, topKOpt.getOrElse(propertyIndex.size), thresholdOpt)
+
+    Seq(conceptSearchResults, processSearchResults, propertySearchResults)
+  }
+
   def alignOntologyItemToDatamart(ontologyItem: FlatOntologyAlignmentItem, topK: Int = datamartIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[DatamartAlignmentItem, Float]] = {
     alignOntologyVectorToDatamart(ontologyItem.vector, topK, thresholdOpt)
   }
@@ -489,15 +497,19 @@ println(s"elapsed = $elapsed sec")
     result.toVector
   }
 
-  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, ontologyIndex: FlatOntologyIndex.Index, topK: Int, thresholdOpt: Option[Float]): Seq[(FlatOntologyIdentifier, Float)] = {
-    val datamartNodeVector = datamartItem.vector
+  def alignVectorToOntology(vector: Array[Float], ontologyIndex: FlatOntologyIndex.Index, topK: Int, thresholdOpt: Option[Float]): Seq[(FlatOntologyIdentifier, Float)] = {
     val result = FlatOntologyIndex
-        .findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
+        .findNearest(ontologyIndex, vector, topK, thresholdOpt)
         .map { searchResult: SearchResult[FlatOntologyAlignmentItem, Float] =>
           // TODO: This shouldn't happen.
           (searchResult.item.id, if (searchResult.distance.isNaN) 0f else searchResult.distance)
         }
+
     result.toVector
+  }
+
+  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, ontologyIndex: FlatOntologyIndex.Index, topK: Int, thresholdOpt: Option[Float]): Seq[(FlatOntologyIdentifier, Float)] = {
+    alignVectorToOntology(datamartItem.vector, ontologyIndex, topK, thresholdOpt)
   }
 }
 

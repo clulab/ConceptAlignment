@@ -386,6 +386,98 @@ paths:
         503:
           description: The searcher is not yet ready.
 
+  /v1/groundIndicator:
+    put:
+      summary: Ground all of the outputs of an indicator.
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per output
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        - name: compositional
+          in: query
+          description: whether to use compositional grounding rather than the default flat grounding
+          required: false
+          schema:
+            type: boolean
+            default: true
+          example: true
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+
+        500:
+          description: The searcher is not working correctly.
+
+  /v1/groundModel:
+    put:
+      summary: Ground all of the parameters and outputs of a model.
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per output
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        - name: compositional
+          in: query
+          description: whether to use compositional grounding rather than the default flat grounding
+          required: false
+          schema:
+            type: boolean
+            default: true
+          example: true
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+
+        500:
+          description: The searcher is not working correctly.
+
   /v1/reindex:
     put:
       summary: Scrape and reindex the ISI datamarts and SuperMaaS

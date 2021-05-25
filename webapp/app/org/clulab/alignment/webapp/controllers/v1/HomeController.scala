@@ -210,6 +210,31 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
+  def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
+    val body: AnyContent = request.body
+    logger.info(s"Called 'groundIndicator' function  with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    try {
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else {
+        body.asJson.getOrElse(throw new RuntimeException("A json body was expected."))
+        val dojoDocument = new IndicatorDocument(Json.stringify(body.asJson.get))
+        // TODO: This is a very unfortunate conversion.
+        val json = searcher.run(dojoDocument, maxHits, thresholdOpt, compositional)
+
+        Ok(json).as(MimeTypes.JSON)
+      }
+    }
+    catch {
+      case throwable: Throwable =>
+        logger.error("An exception was thrown in groundIndicator:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
+        BadRequest
+    }
+  }
+
   def groundModel(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
     val body: AnyContent = request.body
     logger.info(s"Called 'groundModel' function with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
@@ -220,7 +245,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         InternalServerError
       else {
         body.asJson.getOrElse(throw new RuntimeException("A json body was expected."))
-        val dojoDocument = new ModelDocument(body.asText.get)
+        // TODO: This is a very unfortunate conversion.
+        val dojoDocument = new ModelDocument(Json.stringify(body.asJson.get))
         val json = searcher.run(dojoDocument, maxHits, thresholdOpt, compositional)
 
         Ok(json).as(MimeTypes.JSON)
@@ -231,22 +257,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         logger.error("An exception was thrown in groundModel:", throwable)
         // Make believe that the problem is with the request.  Use the log message to diagnose.
         BadRequest
-    }
-  }
-
-  def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
-    val body: AnyContent = request.body
-    logger.info(s"Called 'groundIndicator' function  with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
-    val searcher = currentSearcher
-    val status = searcher.getStatus
-    if (status == SearcherStatus.Failing)
-      InternalServerError
-    else {
-      body.asJson.getOrElse(throw new RuntimeException("A json body was expected."))
-      val dojoDocument = new IndicatorDocument(body.asText.get)
-      val json = searcher.run(dojoDocument, maxHits, thresholdOpt, compositional)
-
-      Ok(json).as(MimeTypes.JSON)
     }
   }
 }

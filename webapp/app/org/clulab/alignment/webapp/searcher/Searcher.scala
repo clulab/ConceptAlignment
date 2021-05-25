@@ -110,8 +110,9 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       catch {
         case throwable: Throwable =>
           Searcher.logger.error(s"""Exception caught searching dojoDocument for $maxHits hits on index $index""", throwable)
-          statusHolder.set(SearcherStatus.Failing)
-          dojoDocument.toJson
+          //statusHolder.set(SearcherStatus.Failing)
+          //dojoDocument.toJson
+          throw throwable
       }
     }
     val result: String = Await.result(searchingFuture, maxWaitTime)

@@ -161,6 +161,79 @@ components:
               oneOf:
                 - $ref: "#/components/schemas/scoredFlatOntologyNode"
                 - $ref: "#/components/schemas/scoredCompositionalOntologyNode"
+    scoredFlatGroundedNode:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "wm/entity/people/"
+        score:
+          type: float
+          example: 0.6891140341758728
+    scoredCompGroundedNode:
+      type: object
+      properties:
+        concepts:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatGroundedNode"
+        processes:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatGroundedNode"
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatGroundedNode"
+    namedScoredFlatGroundedNode:
+      type: object
+      properties:
+        name:
+          type: string
+          example: management_practice
+        ontologies:
+          type: array
+          items:
+            $ref: "#/components/schemas/scoredFlatGroundedNode"
+    namedScoredCompGroundedNode:
+      type: object
+      properties:
+        name:
+          type: string
+          example: management_practice
+        ontologies:
+          $ref: "#/components/schemas/scoredCompGroundedNode"
+    indicatorOrModelId:
+      type: string
+      example: 123e4567-e89b-12d3-a456-426614174000
+    parameters:
+      type: array
+      items:
+        oneOf:
+          - $ref: "#/components/schemas/namedScoredFlatGroundedNode"
+          - $ref: "#/components/schemas/namedScoredCompGroundedNode"
+    outputs:
+      type: array
+      items:
+        oneOf:
+          - $ref: "#/components/schemas/namedScoredFlatGroundedNode"
+          - $ref: "#/components/schemas/namedScoredCompGroundedNode"
+    groundIndicatorResponse:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/indicatorOrModelId"
+        parameters:
+          $ref: "#/components/schemas/parameters"
+        outputs:
+          $ref: "#/components/schemas/outputs"
+    groundModelResponse:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/indicatorOrModelId"
+        outputs:
+          $ref: "#/components/schemas/outputs"
 
 paths:
   /v1/ping:
@@ -422,13 +495,15 @@ paths:
           application/json:
             schema:
               type: object
-
       responses:
         200:
           description: OK
           content:
             application/json:
-
+              schema:
+                $ref: "#/components/schemas/groundIndicatorResponse"
+        400:
+          description: Something was wrong, possibly with the request.
         500:
           description: The searcher is not working correctly.
 
@@ -462,19 +537,20 @@ paths:
             type: boolean
             default: true
           example: true
-
       requestBody:
         content:
           application/json:
             schema:
               type: object
-
       responses:
         200:
           description: OK
           content:
             application/json:
-
+              schema:
+                $ref: "#/components/schemas/groundModelResponse"
+        400:
+          description: Something was wrong, possibly with the request.
         500:
           description: The searcher is not working correctly.
 

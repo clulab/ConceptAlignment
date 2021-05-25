@@ -223,8 +223,6 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/indicatorOrModelId"
-        parameters:
-          $ref: "#/components/schemas/parameters"
         outputs:
           $ref: "#/components/schemas/outputs"
     groundModelResponse:
@@ -232,6 +230,8 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/indicatorOrModelId"
+        parameters:
+          $ref: "#/components/schemas/parameters"
         outputs:
           $ref: "#/components/schemas/outputs"
 
@@ -514,7 +514,7 @@ paths:
       parameters:
         - name: maxHits
           in: query
-          description: maximum number of matches to return per output
+          description: maximum number of matches to return per parameter or output
           required: false
           schema:
             type: integer

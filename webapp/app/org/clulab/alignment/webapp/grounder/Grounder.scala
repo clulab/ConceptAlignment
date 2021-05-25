@@ -1,6 +1,10 @@
 package org.clulab.alignment.webapp.grounder
 
+import org.clulab.alignment.CompositionalOntologyMapper
+import org.clulab.alignment.FlatOntologyMapper
+import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.data.Tokenizer
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 
 import scala.collection.mutable
 
@@ -16,6 +20,7 @@ trait Groundings {
 }
 
 class FlatGroundings(groundings: Seq[SingleGrounding]) extends Groundings {
+  def this() = this(Seq.empty)
 
   def toJVal: ujson.Value = ujson.Arr(
     groundings.map(_.toJson):_*
@@ -23,6 +28,8 @@ class FlatGroundings(groundings: Seq[SingleGrounding]) extends Groundings {
 }
 
 class CompGroundings(concepts: FlatGroundings, processes: FlatGroundings, properties: FlatGroundings) extends Groundings {
+  def this() = this(new FlatGroundings(), new FlatGroundings(), new FlatGroundings())
+
   def toJVal: ujson.Value = ujson.Obj(
     ("concepts", concepts.toJVal),
     ("processes", processes.toJVal),
@@ -31,8 +38,12 @@ class CompGroundings(concepts: FlatGroundings, processes: FlatGroundings, proper
 }
 
 trait Groundable {
+  // These two are for testing.
   def groundFlat(): FlatGroundings
   def groundComp(): CompGroundings
+
+  def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): FlatGroundings
+  def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): CompGroundings
 }
 
 class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) extends Groundable {
@@ -58,6 +69,18 @@ class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) extends Ground
     ))
   }
 
+  def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): FlatGroundings = {
+    val vectorOpt = singleKnnApp.getVectorOpt(words)
+    val flatGroundings = vectorOpt.map { vector =>
+      val searchResults = flatOntologyMapper.alignVectorToOntology(vector, maxHits, thresholdOpt)
+      val singleGroundings = searchResults.map { searchResult => new SingleGrounding(searchResult.item.id.nodeName, searchResult.distance) }
+
+      new FlatGroundings(singleGroundings)
+    }.getOrElse(new FlatGroundings)
+
+    flatGroundings
+  }
+
   def groundComp(): CompGroundings = {
     new CompGroundings(
       new FlatGroundings(Seq(
@@ -73,6 +96,25 @@ class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) extends Ground
         new SingleGrounding("wm/property/preference", 0.5431265830993652f)
       ))
     )
+  }
+
+  def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): CompGroundings = {
+    def mkFlatGroundings(idsAndScores: Seq[(FlatOntologyIdentifier, Float)]): FlatGroundings = {
+      val singleGroundings = idsAndScores.map { case (flatOntologyIdentifier, float) =>
+        new SingleGrounding(flatOntologyIdentifier.nodeName, float)
+      }
+
+      new FlatGroundings(singleGroundings)
+    }
+
+    val vectorOpt = singleKnnApp.getVectorOpt(words)
+    val compGroundings = vectorOpt.map { vector =>
+      val Seq(concepts, processes, properties) = compositionalOntologyMapper.vectorToOntologyMapping(vector, Some(maxHits), thresholdOpt)
+
+      new CompGroundings(mkFlatGroundings(concepts), mkFlatGroundings(processes), mkFlatGroundings(properties))
+    }.getOrElse(new CompGroundings())
+
+    compGroundings
   }
 }
 
@@ -108,8 +150,8 @@ abstract class DojoDocument(json: String) {
 
   def toJson: String = toJVal.render(4)
 
-  def groundFlat(): GroundedDocument
-  def groundComp(): GroundedDocument
+  def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedDocument
+  def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedDocument
 }
 
 abstract class GroundedDocument {
@@ -149,15 +191,15 @@ class ModelDocument(json: String) extends DojoDocument(json) {
   val parameters: Array[DojoParameter] = jObj("parameters").arr.toArray.map(new DojoParameter(_, this)) // required
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
 
-  override def groundFlat(): GroundedModelDocument = {
-    val parameterGrounds = parameters.map(_.groundFlat())
-    val outputGrounds = outputs.map(_.groundFlat())
+  override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedModelDocument = {
+    val parameterGrounds = parameters.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
+    val outputGrounds = outputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
     new GroundedModelDocument(this, parameterGrounds, outputGrounds)
   }
 
-  override def groundComp(): GroundedModelDocument = {
-    val parameterGrounds = parameters.map(_.groundComp())
-    val outputGrounds = outputs.map(_.groundComp())
+  override def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedModelDocument = {
+    val parameterGrounds = parameters.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
+    val outputGrounds = outputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
     new GroundedModelDocument(this, parameterGrounds, outputGrounds)
   }
 }
@@ -175,13 +217,13 @@ class GroundedIndicatorDocument(indicatorDocument: IndicatorDocument, outputGrou
 class IndicatorDocument(json: String) extends DojoDocument(json) {
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
 
-  override def groundFlat(): GroundedIndicatorDocument = {
-    val outputGrounds = outputs.map(_.groundFlat())
+  override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedIndicatorDocument = {
+    val outputGrounds = outputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
     new GroundedIndicatorDocument(this, outputGrounds)
   }
 
-  override def groundComp(): GroundedIndicatorDocument = {
-    val outputGrounds = outputs.map(_.groundComp())
+  override def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedIndicatorDocument = {
+    val outputGrounds = outputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
     new GroundedIndicatorDocument(this, outputGrounds)
   }
 }

@@ -33,10 +33,8 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
 
   val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(knnLocations.luceneDirname, "")
 
-  def getVectorOpt(queryString: String): Option[Array[Float]] = {
-    val tokenizer = Tokenizer()
+  def getVectorOpt(words: Array[String]): Option[Array[Float]] = {
     val normalizer = Normalizer()
-    val words = tokenizer.tokenize(queryString)
     val vector = {
       val composite = new Array[Float](GloveIndex.dimensions)
 
@@ -53,6 +51,14 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
       if (len != 0) Some(normalizer.normalize(composite))
       else None
     }
+
+    vector
+  }
+
+  def getVectorOpt(queryString: String): Option[Array[Float]] = {
+    val tokenizer = Tokenizer()
+    val words = tokenizer.tokenize(queryString)
+    val vector = getVectorOpt(words)
 
     vector
   }

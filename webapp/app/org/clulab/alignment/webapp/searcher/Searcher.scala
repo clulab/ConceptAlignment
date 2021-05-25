@@ -1,5 +1,6 @@
 package org.clulab.alignment.webapp.searcher
 
+import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.CompositionalOntologyMapper
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 
@@ -9,12 +10,16 @@ import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
+import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
+import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.webapp.grounder.DojoDocument
+import org.clulab.alignment.webapp.grounder.FlatGroundings
+import org.clulab.alignment.webapp.grounder.SingleGrounding
 import org.clulab.alignment.webapp.utils.AutoLocations
 import org.clulab.alignment.webapp.utils.StatusHolder
 import org.slf4j.Logger
@@ -98,13 +103,12 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
 
   def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
-    val searchingFuture = loadingFuture.map { _ =>
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
       try {
-        val groundedModel = {
-            // Need to pass along some kind of indexer
-            if (!compositional) dojoDocument.groundFlat()
-            else dojoDocument.groundComp()
-        }
+        val groundedModel =
+            if (!compositional) dojoDocument.groundFlat(singleKnnApp, flatOntologyMapperOpt.get, maxHits, thresholdOpt)
+            else dojoDocument.groundComp(singleKnnApp, compositionalOntologyMapperOpt.get, maxHits, thresholdOpt)
+
         groundedModel.toJson
       }
       catch {

@@ -75,10 +75,13 @@ class FlatOntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyInd
     result
   }
 
-  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
-    val datamartNodeVector = datamartItem.vector
-    val result = FlatOntologyIndex.findNearest(ontologyIndex, datamartNodeVector, topK, thresholdOpt)
+  def alignVectorToOntology(vector: Array[Float], topK: Int = datamartIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
+    val result = FlatOntologyIndex.findNearest(ontologyIndex, vector, topK, thresholdOpt)
     result
+  }
+
+  def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
+    alignVectorToOntology(datamartItem.vector, topK, thresholdOpt)
   }
 }
 

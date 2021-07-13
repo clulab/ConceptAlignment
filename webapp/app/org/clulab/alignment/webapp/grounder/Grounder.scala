@@ -5,6 +5,7 @@ import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
+import ujson.Value
 
 import scala.collection.mutable
 
@@ -122,6 +123,8 @@ class DojoParameter(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoV
 
 class DojoOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVariable(jVal, dojoDocument)
 
+class DojoQualifierOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVariable(jVal, dojoDocument)
+
 abstract class DojoDocument(json: String) {
   protected val jObj: mutable.Map[String, ujson.Value] = ujson.read(json).obj
   val id: String = jObj("id").str // required
@@ -176,54 +179,84 @@ abstract class GroundedDocument {
   def toJson: String = toJVal.render(4)
 }
 
-class GroundedModelDocument(modelDocument: ModelDocument, parameterGroundings: Seq[Groundings], outputGroundings: Seq[Groundings]) extends GroundedDocument {
+class GroundedModelDocument(modelDocument: ModelDocument, parameterGroundings: Seq[Groundings],
+    outputGroundings: Seq[Groundings], qualifierOutputGroundingsOpt: Option[Seq[Groundings]]) extends GroundedDocument {
 
   def toJVal: ujson.Value = {
-    ujson.Obj(
-      ("id", modelDocument.id),
+    val requiredItems: Seq[(String, Value)] = Seq(
+      ("id", ujson.Str(modelDocument.id)),
       ("parameters", toJVal(modelDocument.parameters, parameterGroundings)),
       ("outputs", toJVal(modelDocument.outputs, outputGroundings))
     )
+    val jQualifierOutputs = qualifierOutputGroundingsOpt.map { qualifierOutputGroundings =>
+      val jQualifierOutputs = toJVal(modelDocument.qualifierOutputsOpt.get, qualifierOutputGroundings)
+      Seq(("qualifier_outputs", jQualifierOutputs))
+    }.getOrElse(Seq.empty)
+    val items = mutable.LinkedHashMap((requiredItems ++ jQualifierOutputs):_*)
+
+    ujson.Obj(items)
   }
 }
 
 class ModelDocument(json: String) extends DojoDocument(json) {
   val parameters: Array[DojoParameter] = jObj("parameters").arr.toArray.map(new DojoParameter(_, this)) // required
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
+  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = jObj.get("qualifier_outputs").map(_.arr.toArray.map(new DojoQualifierOutput(_, this)))
 
   override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedModelDocument = {
     val parameterGrounds = parameters.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
     val outputGrounds = outputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
-    new GroundedModelDocument(this, parameterGrounds, outputGrounds)
+    val qualifierOutputGrounds = qualifierOutputsOpt.map { qualifierOutputs =>
+      qualifierOutputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt)).toSeq
+    }
+    new GroundedModelDocument(this, parameterGrounds, outputGrounds, qualifierOutputGrounds)
   }
 
   override def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedModelDocument = {
     val parameterGrounds = parameters.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
     val outputGrounds = outputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
-    new GroundedModelDocument(this, parameterGrounds, outputGrounds)
+    val qualifierOutputGrounds = qualifierOutputsOpt.map { qualifierOutputs =>
+      qualifierOutputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt)).toSeq
+    }
+    new GroundedModelDocument(this, parameterGrounds, outputGrounds, qualifierOutputGrounds)
   }
 }
 
-class GroundedIndicatorDocument(indicatorDocument: IndicatorDocument, outputGroundings: Seq[Groundings]) extends GroundedDocument {
+class GroundedIndicatorDocument(indicatorDocument: IndicatorDocument,
+    outputGroundings: Seq[Groundings], qualifierOutputGroundingsOpt: Option[Seq[Groundings]]) extends GroundedDocument {
 
   def toJVal: ujson.Value = {
-    ujson.Obj(
-      ("id", indicatorDocument.id),
+    val requiredItems: Seq[(String, Value)] = Seq(
+      ("id", ujson.Str(indicatorDocument.id)),
       ("outputs", toJVal(indicatorDocument.outputs, outputGroundings))
     )
+    val jQualifierOutputs = qualifierOutputGroundingsOpt.map { qualifierOutputGroundings =>
+      val jQualifierOutputs = toJVal(indicatorDocument.qualifierOutputsOpt.get, qualifierOutputGroundings)
+      Seq(("qualifier_outputs", jQualifierOutputs))
+    }.getOrElse(Seq.empty)
+    val items = mutable.LinkedHashMap((requiredItems ++ jQualifierOutputs):_*)
+
+    ujson.Obj(items)
   }
 }
 
 class IndicatorDocument(json: String) extends DojoDocument(json) {
   val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
+  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = jObj.get("qualifier_outputs").map(_.arr.toArray.map(new DojoQualifierOutput(_, this)))
 
   override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedIndicatorDocument = {
     val outputGrounds = outputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
-    new GroundedIndicatorDocument(this, outputGrounds)
+    val qualifierOutputGroundsOpt = qualifierOutputsOpt.map { qualifierOutputs =>
+      qualifierOutputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt)).toSeq
+    }
+    new GroundedIndicatorDocument(this, outputGrounds, qualifierOutputGroundsOpt)
   }
 
   override def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedIndicatorDocument = {
     val outputGrounds = outputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt))
-    new GroundedIndicatorDocument(this, outputGrounds)
+    val qualifierOutputGroundsOpt = qualifierOutputsOpt.map { qualifierOutputs =>
+      qualifierOutputs.map(_.groundComp(singleKnnApp, compositionalOntologyMapper, maxHits, thresholdOpt)).toSeq
+    }
+    new GroundedIndicatorDocument(this, outputGrounds, qualifierOutputGroundsOpt)
   }
 }

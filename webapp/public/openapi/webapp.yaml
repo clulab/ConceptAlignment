@@ -218,6 +218,12 @@ components:
         oneOf:
           - $ref: "#/components/schemas/namedScoredFlatGroundedNode"
           - $ref: "#/components/schemas/namedScoredCompGroundedNode"
+    qualifierOutputs:
+      type: array
+      items:
+        oneOf:
+          - $ref: "#/components/schemas/namedScoredFlatGroundedNode"
+          - $ref: "#/components/schemas/namedScoredCompGroundedNode"
     groundIndicatorResponse:
       type: object
       properties:
@@ -225,6 +231,8 @@ components:
           $ref: "#/components/schemas/indicatorOrModelId"
         outputs:
           $ref: "#/components/schemas/outputs"
+        qualifier_outputs:
+          $ref: "#/components/schemas/qualifierOutputs"
     groundModelResponse:
       type: object
       properties:
@@ -234,6 +242,8 @@ components:
           $ref: "#/components/schemas/parameters"
         outputs:
           $ref: "#/components/schemas/outputs"
+        qualifier_outputs:
+          $ref: "#/components/schemas/qualifierOutputs"
 
 paths:
   /v1/ping:

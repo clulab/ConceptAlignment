@@ -471,7 +471,7 @@ paths:
 
   /v1/groundIndicator:
     put:
-      summary: Ground all of the outputs of an indicator.
+      summary: Ground all of the outputs and qualifier outputs of an indicator.
       description: ""
       parameters:
         - name: maxHits
@@ -519,7 +519,7 @@ paths:
 
   /v1/groundModel:
     put:
-      summary: Ground all of the parameters and outputs of a model.
+      summary: Ground all of the parameters, outputs, and qualifier outputs of a model.
       description: ""
       parameters:
         - name: maxHits

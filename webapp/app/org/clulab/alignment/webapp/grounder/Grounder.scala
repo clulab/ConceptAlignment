@@ -52,7 +52,7 @@ class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) extends Ground
   val name: String = jObj("name").str // required
   val displayName: String = jObj("display_name").str // required
   val description: String = jObj("description").str // required
-  val tags: Array[String] = jObj.get("tags").map(_.arr.toArray.map(_.str)).getOrElse(Array.empty[String]) // optional
+  val tags: Array[String] = DojoUtils.getTags(jObj) // optional
   val words: Array[String] = {
     val tokenizer = Tokenizer()
     val displayNameWords = tokenizer.tokenize(displayName)
@@ -130,8 +130,8 @@ abstract class DojoDocument(json: String) {
   val id: String = jObj("id").str // required
   // name // required // doesn't look helpful
   val description: String = jObj("description").str // required
-  val categories: Array[String] = jObj("category").arr.toArray.map(_.str) // required
-  val tags: Array[String] = jObj.get("tags").map(_.arr.toArray.map(_.str)).getOrElse(Array.empty[String]) // optional
+  val categories: Array[String] = DojoUtils.getCategories(jObj) // required
+  val tags: Array[String] = DojoUtils.getTags(jObj) // optional
   //  geography // optional // These won't be in our ontologies anyway.
   val words: Array[String] = {
     val tokenizer = Tokenizer()
@@ -155,6 +155,48 @@ abstract class DojoDocument(json: String) {
 
   def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedDocument
   def groundComp(singleKnnApp: SingleKnnApp, compositionalOntologyMapper: CompositionalOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedDocument
+}
+
+object DojoUtils {
+
+  def asOption(jValue: ujson.Value): Option[ujson.Value] =
+      Option(if (jValue.isNull) null else jValue)
+
+  def getTags(jObj: mutable.Map[String, ujson.Value]): Array[String] = jObj
+    .get("tags") // This is an option.
+    .flatMap { tagsOrNull =>
+      asOption(tagsOrNull).map { tags =>
+        tags.arr.toArray.map(_.str)
+      }
+    }
+    .getOrElse(Array.empty) // optional
+
+  // This is different in that an Option is expected rather than an empty array
+  def getQualifierOutputsOpt(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Option[Array[DojoQualifierOutput]] = jObj
+    .get("qualifier_outputs")
+    .flatMap { qualifierOutputsOrNull =>
+      asOption(qualifierOutputsOrNull).map { qualifierOutputs =>
+        qualifierOutputs.arr.toArray.map(new DojoQualifierOutput(_, dojoDocument))
+      }
+    } // optional and Optional
+
+  def getCategories(jObj: mutable.Map[String, ujson.Value]): Array[String] = asOption(jObj("category"))
+    .map { categories =>
+      categories.arr.toArray.map(_.str)
+    }
+    .getOrElse(Array.empty) // required, but perhaps the value is null
+
+  def getParameters(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoParameter] = asOption(jObj("parameters"))
+    .map { parameters =>
+      parameters.arr.toArray.map(new DojoParameter(_, dojoDocument))
+    }
+    .getOrElse(Array.empty) // required, but perhaps the value is null
+
+  def getOutputs(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoOutput] = asOption(jObj("outputs"))
+    .map { outputs =>
+      outputs.arr.toArray.map(new DojoOutput(_, dojoDocument))
+    }
+  .getOrElse(Array.empty) // required, but perhaps the value is null
 }
 
 abstract class GroundedDocument {
@@ -199,9 +241,9 @@ class GroundedModelDocument(modelDocument: ModelDocument, parameterGroundings: S
 }
 
 class ModelDocument(json: String) extends DojoDocument(json) {
-  val parameters: Array[DojoParameter] = jObj("parameters").arr.toArray.map(new DojoParameter(_, this)) // required
-  val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
-  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = jObj.get("qualifier_outputs").map(_.arr.toArray.map(new DojoQualifierOutput(_, this)))
+  val parameters: Array[DojoParameter] = DojoUtils.getParameters(jObj, this) // required
+  val outputs: Array[DojoOutput] = DojoUtils.getOutputs(jObj, this) // required
+  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoUtils.getQualifierOutputsOpt(jObj, this)
 
   override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedModelDocument = {
     val parameterGrounds = parameters.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))
@@ -241,8 +283,8 @@ class GroundedIndicatorDocument(indicatorDocument: IndicatorDocument,
 }
 
 class IndicatorDocument(json: String) extends DojoDocument(json) {
-  val outputs: Array[DojoOutput] = jObj("outputs").arr.toArray.map(new DojoOutput(_, this)) // required
-  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = jObj.get("qualifier_outputs").map(_.arr.toArray.map(new DojoQualifierOutput(_, this)))
+  val outputs: Array[DojoOutput] = DojoUtils.getOutputs(jObj, this) // required
+  val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoUtils.getQualifierOutputsOpt(jObj, this)
 
   override def groundFlat(singleKnnApp: SingleKnnApp, flatOntologyMapper: FlatOntologyMapper, maxHits: Int, thresholdOpt: Option[Float]): GroundedIndicatorDocument = {
     val outputGrounds = outputs.map(_.groundFlat(singleKnnApp, flatOntologyMapper, maxHits, thresholdOpt))

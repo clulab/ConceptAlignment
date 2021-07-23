@@ -171,13 +171,13 @@ object DojoUtils {
     }
     .getOrElse(Array.empty) // optional
 
-  // This is different in that an Option is expected rather than an empty array
+  // This is different in that an Option is expected rather than an empty array when not specified.
   def getQualifierOutputsOpt(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Option[Array[DojoQualifierOutput]] = jObj
     .get("qualifier_outputs")
-    .flatMap { qualifierOutputsOrNull =>
+    .map { qualifierOutputsOrNull =>
       asOption(qualifierOutputsOrNull).map { qualifierOutputs =>
         qualifierOutputs.arr.toArray.map(new DojoQualifierOutput(_, dojoDocument))
-      }
+      }.getOrElse(Array.empty) // null will turn into Some(Array.empty)
     } // optional and Optional
 
   def getCategories(jObj: mutable.Map[String, ujson.Value]): Array[String] = asOption(jObj("category"))

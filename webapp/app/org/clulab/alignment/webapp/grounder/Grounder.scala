@@ -163,40 +163,40 @@ object DojoUtils {
       Option(if (jValue.isNull) null else jValue)
 
   def getTags(jObj: mutable.Map[String, ujson.Value]): Array[String] = jObj
-    .get("tags") // This is an option.
-    .flatMap { tagsOrNull =>
-      asOption(tagsOrNull).map { tags =>
-        tags.arr.toArray.map(_.str)
+      .get("tags") // This is an option.
+      .flatMap { tagsOrNull =>
+        asOption(tagsOrNull).map { tags =>
+          tags.arr.toArray.map(_.str)
+        }
       }
-    }
-    .getOrElse(Array.empty) // optional
+      .getOrElse(Array.empty) // optional
+
+  def getCategories(jObj: mutable.Map[String, ujson.Value]): Array[String] = asOption(jObj("category"))
+      .map { categories =>
+        categories.arr.toArray.map(_.str)
+      }
+      .getOrElse(Array.empty) // required, but perhaps the value is null
+
+  def getParameters(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoParameter] = asOption(jObj("parameters"))
+      .map { parameters =>
+        parameters.arr.toArray.map(new DojoParameter(_, dojoDocument))
+      }
+      .getOrElse(Array.empty) // required, but perhaps the value is null
+
+  def getOutputs(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoOutput] = asOption(jObj("outputs"))
+      .map { outputs =>
+        outputs.arr.toArray.map(new DojoOutput(_, dojoDocument))
+      }
+      .getOrElse(Array.empty) // required, but perhaps the value is null
 
   // This is different in that an Option is expected rather than an empty array when not specified.
   def getQualifierOutputsOpt(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Option[Array[DojoQualifierOutput]] = jObj
-    .get("qualifier_outputs")
-    .map { qualifierOutputsOrNull =>
-      asOption(qualifierOutputsOrNull).map { qualifierOutputs =>
-        qualifierOutputs.arr.toArray.map(new DojoQualifierOutput(_, dojoDocument))
-      }.getOrElse(Array.empty) // null will turn into Some(Array.empty)
-    } // optional and Optional
-
-  def getCategories(jObj: mutable.Map[String, ujson.Value]): Array[String] = asOption(jObj("category"))
-    .map { categories =>
-      categories.arr.toArray.map(_.str)
-    }
-    .getOrElse(Array.empty) // required, but perhaps the value is null
-
-  def getParameters(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoParameter] = asOption(jObj("parameters"))
-    .map { parameters =>
-      parameters.arr.toArray.map(new DojoParameter(_, dojoDocument))
-    }
-    .getOrElse(Array.empty) // required, but perhaps the value is null
-
-  def getOutputs(jObj: mutable.Map[String, ujson.Value], dojoDocument: DojoDocument): Array[DojoOutput] = asOption(jObj("outputs"))
-    .map { outputs =>
-      outputs.arr.toArray.map(new DojoOutput(_, dojoDocument))
-    }
-  .getOrElse(Array.empty) // required, but perhaps the value is null
+      .get("qualifier_outputs")
+      .map { qualifierOutputsOrNull =>
+        asOption(qualifierOutputsOrNull).map { qualifierOutputs =>
+          qualifierOutputs.arr.toArray.map(new DojoQualifierOutput(_, dojoDocument))
+        }.getOrElse(Array.empty) // null will turn into Some(Array.empty)
+      } // optional and Optional
 }
 
 abstract class GroundedDocument {

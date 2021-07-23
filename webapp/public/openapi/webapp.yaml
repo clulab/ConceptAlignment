@@ -34,6 +34,9 @@ components:
     statusResponse:
       type: object
       properties:
+        version:
+          type: string
+          example: 1.2.6
         searcher:
           $ref: "#/components/schemas/indexedStatus"
         indexer:

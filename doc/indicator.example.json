@@ -1,0 +1,111 @@
+{
+    "$schema": "./indicator.schema.json",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "family_name": "WDI",
+    "name": "WDI",
+    "description": "World Development Indicators are the World Bank's compilation of relevant, high-quality, and internationally comparable statistics about global development. The global database contains 1,600 time series indicators for 217 economies and more than 40 country groups, with data for many indicators going back more than 50 years.  There are ~1400 indicators for Ethiopia at the National level.  This data was pulled by the World Modelers program in September 2020.",
+    "created_at": 1234567890000,
+    "category": [
+        "Economic",
+        "Agricultural"
+    ],
+    "maintainer": {
+        "name": "Bob Fakename",
+        "organization": "World Bank",
+        "email": "bob@fake.org",
+        "website": "https://databank.worldbank.org/source/world-development-indicators"
+    },
+    "data_paths": [
+        "https://jataware-world-modelers.s3.amazonaws.com/WDI/data.csv"
+    ],
+    "tags": [
+        "Agriculture"
+    ],
+    "geography": {
+        "country": [
+            "Ethiopia",
+            "South Sudan"
+        ],
+        "admin1": [
+            "Oromia",
+            "Sidama",
+            "Amhara"
+        ],
+        "admin2": [
+            "West Gojjam",
+            "East Gojjam",
+            "Agew Awi",
+            "Arsi",
+            "Bale",
+            "Borana"
+        ],
+        "admin3": [
+            "Aminyaa",
+            "Askoo",
+            "Coole",
+            "Galaanaa",
+            "Qarsaa",
+            "Qarcaa"
+        ]
+    },
+    "period": {
+        "gte": 0,
+        "lte": 1234567890000
+    },
+    "outputs": [
+        {
+            "name": "account_ownership_at_a_financial_institution_or_with_a_mobile_money_service_provider_older_adults_of_population_ages_25",
+            "display_name": "Account ownership at a financial institution or with a mobile-money-service provider, older adults (% of population ages 25+)",
+            "description": "SOURCE NOTE: Account denotes the percentage of respondents who report having an account (by themselves or together with someone else) at a bank or another type of financial institution or report personally using a mobile money service in the past 12 months (older adults, % of population ages 25+).\\nSOURCE ORGANIZATION: Demirguc-Kunt et al., 2018, Global Financial Inclusion Database, World Bank.",
+            "type": "float",
+            "unit": "unitless",
+            "unit_description": "",
+            "is_primary": true,
+            "ontologies": {
+                "concepts": [
+                    {
+                        "name": "wm/concept/humanitarian_assistance/food_aid",
+                        "score": 0.785829484462738
+                    }
+                ],
+                "processes": [
+                    {
+                        "name": "wm/process/train/agriculture_training",
+                        "score": 0.5917248129844666
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "wm/property/condition",
+                        "score": 0.6441149115562439
+                    }
+                ]
+            },
+            "data_resolution": {
+                "temporal_resolution": "weekly",
+                "spatial_resolution": [
+                    20,
+                    20
+                ]
+            }
+        }
+    ],
+    "qualifier_outputs": [
+        {
+            "name": "service_type",
+            "display_name": "Type of money service",
+            "description": "",
+            "type": "str",
+            "unit": "unitless",
+            "unit_description": "",
+            "related_features": [
+                "account_ownership_at_a_financial_institution_or_with_a_mobile_money_service_provider_older_adults_of_population_ages_25"
+            ],
+            "ontologies": {
+                "concepts": [],
+                "processes": [],
+                "properties": []
+            }
+        }
+    ]
+}

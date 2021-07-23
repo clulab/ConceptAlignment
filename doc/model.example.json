@@ -1,0 +1,190 @@
+{
+    "$schema": "./model.schema.json",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "DSSAT-PYTHIA",
+    "family_name": "DSSAT",
+    "description": "The Decision Support System for Agrotechnology Transfer (DSSAT) comprises dynamic crop growth simulation model for over 40 crops.",
+    "created_at": 1234567890000,
+    "category": [
+        "Economic",
+        "Agricultural"
+    ],
+    "maintainer": {
+        "name": "Bob Fakename",
+        "organization": "University of Fakeland",
+        "email": "bob@fake.org",
+        "website": "http://www.fake.org/"
+    },
+    "image": "DSSAT:latest",
+    "observed_data": [
+        "123e4567-e89b-12d3-a456-426614174000"
+    ],
+    "is_stochastic": false,
+    "tags": [
+        "Agriculture",
+        "DSSAT",
+        "Ethiopia",
+        "crop production"
+    ],
+    "geography": {
+        "country": [
+            "Ethiopia",
+            "South Sudan"
+        ],
+        "admin1": [
+            "Oromia",
+            "Sidama",
+            "Amhara"
+        ],
+        "admin2": [
+            "West Gojjam",
+            "East Gojjam",
+            "Agew Awi",
+            "Arsi",
+            "Bale",
+            "Borana"
+        ],
+        "admin3": [
+            "Aminyaa",
+            "Askoo",
+            "Coole",
+            "Galaanaa",
+            "Qarsaa",
+            "Qarcaa"
+        ]
+    },
+    "period": {
+        "gte": 0,
+        "lte": 1234567890000
+    },
+    "parameters": [
+        {
+            "name": "management_practice",
+            "display_name": "Management Practice",
+            "description": "The management practice to model. rf_highN corresponds to a high nitrogen management  practice. irrig corresponds to a high nitrogen, irrigated management practice. rf_0N  corresponds to a subsistence management practice. rf_lowN corresponds to a low nitrogen  managemet practice.",
+            "type": "str",
+            "unit_description": "Type of practice",
+            "ontologies": {
+                "concepts": [
+                    {
+                        "name": "wm/concept/humanitarian_assistance/food_aid",
+                        "score": 0.785829484462738
+                    }
+                ],
+                "processes": [
+                    {
+                        "name": "wm/process/train/agriculture_training",
+                        "score": 0.5917248129844666
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "wm/property/condition",
+                        "score": 0.6441149115562439
+                    }
+                ]
+            },
+            "is_drilldown": true,
+            "additional_options": {},
+            "data_type": "nominal",
+            "default": "irrig",
+            "choices": [
+                "irrig",
+                "rf_highN",
+                "rf_lowN",
+                "rf_0N"
+            ]
+        },
+        {
+            "name": "temperature",
+            "display_name": "Temperature",
+            "description": "The average outdoor temperature",
+            "type": "float",
+            "unit": "degC",
+            "unit_description": "degrees Celcius",
+            "ontologies": {
+                "concepts": [
+                    {
+                        "name": "wm/concept/humanitarian_assistance/food_aid",
+                        "score": 0.785829484462738
+                    }
+                ],
+                "processes": [
+                    {
+                        "name": "wm/process/train/agriculture_training",
+                        "score": 0.5917248129844666
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "wm/property/condition",
+                        "score": 0.6441149115562439
+                    }
+                ]
+            },
+            "is_drilldown": false,
+            "additional_options": {},
+            "data_type": "numerical",
+            "default": 5,
+            "min": 0,
+            "max": 10
+        }
+    ],
+    "outputs": [
+        {
+            "name": "yield",
+            "display_name": "Crop Yield",
+            "description": "The amount of crop harvested, by weight",
+            "type": "float",
+            "unit": "kg",
+            "unit_description": "kilograms",
+            "is_primary": true,
+            "ontologies": {
+                "concepts": [
+                    {
+                        "name": "wm/concept/humanitarian_assistance/food_aid",
+                        "score": 0.785829484462738
+                    }
+                ],
+                "processes": [
+                    {
+                        "name": "wm/process/train/agriculture_training",
+                        "score": 0.5917248129844666
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "wm/property/condition",
+                        "score": 0.6441149115562439
+                    }
+                ]
+            },
+            "additional_options": {},
+            "data_resolution": {
+                "temporal_resolution": "weekly",
+                "spatial_resolution": [
+                    20,
+                    20
+                ]
+            }
+        }
+    ],
+    "qualifier_outputs": [
+        {
+            "name": "crop_type",
+            "display_name": "Crop Type",
+            "description": "The type of crop that was produced",
+            "type": "str",
+            "unit": "unitless",
+            "unit_description": "",
+            "related_features": [
+                "yield"
+            ],
+            "ontologies": {
+                "concepts": [],
+                "processes": [],
+                "properties": []
+            }
+        }
+    ]
+}

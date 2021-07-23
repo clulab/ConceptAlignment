@@ -69,6 +69,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     val indexer = currentIndexer
     val searcher = currentSearcher
     val jsObject = Json.obj(
+      "version" -> HomeController.VERSION,
       "searcher" -> Json.obj(
         "index" -> searcher.index,
         "status" -> searcher.getStatus.toJsValue
@@ -262,6 +263,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 }
 
 object HomeController {
+  val VERSION = "1.2.6"
+
   val secretsKey = "secrets"
   val maxMaxHits = 500 // Cap it off at some reasonable amount.
   val logger: Logger = LoggerFactory.getLogger(this.getClass)

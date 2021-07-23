@@ -4,8 +4,6 @@ import org.clulab.alignment.Test
 import org.clulab.alignment.utils.FileUtils
 
 import java.io.File
-import scala.collection.mutable
-
 
 class TestGrounder extends Test {
 

@@ -4,6 +4,7 @@ import javax.inject._
 import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.utils.PropertiesBuilder
 import org.clulab.alignment.webapp.grounder.{IndicatorDocument, ModelDocument}
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -64,12 +65,22 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     Ok(text)
   }
 
+  // This only makes sense if the indexer actually used this version.
+  protected def getOntologyVersion: String = {
+    val properties = PropertiesBuilder.fromResource("/org/clulab/wm/eidos/english/ontologies/CompositionalOntology_metadata.properties").get
+    val hash = Option(properties.getProperty("hash"))
+    val ontologyVersion = hash.getOrElse("<unknown>")
+
+    ontologyVersion
+  }
+
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
     val indexer = currentIndexer
     val searcher = currentSearcher
     val jsObject = Json.obj(
       "version" -> HomeController.VERSION,
+      "ontology" -> getOntologyVersion,
       "searcher" -> Json.obj(
         "index" -> searcher.index,
         "status" -> searcher.getStatus.toJsValue

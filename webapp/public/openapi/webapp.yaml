@@ -37,6 +37,10 @@ components:
         version:
           type: string
           example: 1.2.6
+        ontology:
+          description: the git commit hash of the ontology file
+          type: string
+          example: "0f6a3510726fef3f0380bf2f966d4ea4b46af9f0"
         searcher:
           $ref: "#/components/schemas/indexedStatus"
         indexer:

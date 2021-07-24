@@ -61,7 +61,7 @@ $ # Run this one just once because it takes a long time and glove shouldn't chan
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
 $ # Run these each time the datamarts have changed.
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
-$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibFLatOntologyIndexerApp ../hnswlib-wm_flattened.idx"
+$ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibFlatOntologyIndexerApp ../hnswlib-wm_flattened.idx"
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibCompositionalOntologyIndexerApp ../hnswlib-concept.idx ../hnswlib-process.idx ../hnswlib-property.idx"
 $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
 $ # Start the server in development mode.  It should by default access ../hnswlib-glove.idx and ../index_#.

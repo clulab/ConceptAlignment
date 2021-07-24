@@ -16,7 +16,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 import org.clulab.alignment.utils.{OntologyHandlerHelper => OntologyHandler}
-import org.clulab.embeddings.CompactWordEmbeddingMap
+import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap, WordEmbeddingMapPool}
 import org.clulab.wm.eidos.EidosSystem
 import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
 
@@ -141,6 +141,7 @@ class HnswlibIndexer {
 
 object HnswlibIndexer {
   // This needs to be coordinated with processors or at least build.sbt.
-  lazy val w2v: CompactWordEmbeddingMap = CompactWordEmbeddingMap("/org/clulab/glove/glove.840B.300d.10f.txt",
-      resource = true, cached = false)
+  lazy val w2v: CompactWordEmbeddingMap = WordEmbeddingMapPool
+      .getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", true)
+      .asInstanceOf[CompactWordEmbeddingMap]
 }

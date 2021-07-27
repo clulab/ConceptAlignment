@@ -66,21 +66,31 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   // This only makes sense if the indexer actually used this version.
-  protected def getOntologyVersion: String = {
-    val properties = PropertiesBuilder.fromResource("/org/clulab/wm/eidos/english/ontologies/CompositionalOntology_metadata.properties").get
-    val hash = Option(properties.getProperty("hash"))
-    val ontologyVersion = hash.getOrElse("<unknown>")
+  protected def getOntologyVersions: (String, String) = {
 
-    ontologyVersion
+    def getOntologyVersion(propertiesPath: String): String = {
+      val properties = PropertiesBuilder.fromResource(propertiesPath).get
+      val hash = Option(properties.getProperty("hash"))
+      val ontologyVersion = hash.getOrElse("<unknown>")
+
+      ontologyVersion
+    }
+
+    val compVersion = getOntologyVersion("/org/clulab/wm/eidos/english/ontologies/CompositionalOntology_metadata.properties")
+    val flatVersion = getOntologyVersion("/org/clulab/wm/eidos/english/ontologies/wm_flat_metadata.properties")
+
+    (compVersion, flatVersion)
   }
 
   def status: Action[AnyContent] = Action {
     logger.info("Called 'status' function!")
     val indexer = currentIndexer
     val searcher = currentSearcher
+    val (compVersion, flatVersion) = getOntologyVersions
     val jsObject = Json.obj(
       "version" -> HomeController.VERSION,
-      "ontology" -> getOntologyVersion,
+      "compOntology" -> compVersion,
+      "flatOntology" -> flatVersion,
       "searcher" -> Json.obj(
         "index" -> searcher.index,
         "status" -> searcher.getStatus.toJsValue

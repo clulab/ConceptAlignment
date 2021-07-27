@@ -37,10 +37,14 @@ components:
         version:
           type: string
           example: 1.2.6
-        ontology:
-          description: the git commit hash of the ontology file
+        compOntology:
+          description: the git commit hash of the compositional ontology file
           type: string
           example: "0f6a3510726fef3f0380bf2f966d4ea4b46af9f0"
+        flatOntology:
+          description: the git commit hash of the flat ontology file
+          type: string
+          example: "53bb28c048264e89a30a605fddd77f93849299b1"
         searcher:
           $ref: "#/components/schemas/indexedStatus"
         indexer:

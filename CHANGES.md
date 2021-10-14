@@ -1,4 +1,5 @@
 # Changes
++ **0.3.1** - Add version to flat ontology, more memory for json parser
 + **0.3.0** - Update eidos, processors, ontology, docker 1.3.0
 + **0.3.0** - Better handle nulls in input of groundModel and groundIndicators
 + **0.3.0** - Include version number and ontology commit hash in status

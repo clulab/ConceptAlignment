@@ -284,7 +284,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 }
 
 object HomeController {
-  val VERSION = "1.3.0"
+  val VERSION = "1.3.1"
 
   val secretsKey = "secrets"
   val maxMaxHits = 500 // Cap it off at some reasonable amount.

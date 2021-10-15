@@ -1,10 +1,8 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import javax.inject._
-import org.clulab.alignment.CompositionalOntologyToDatamarts
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
-import org.clulab.alignment.utils.PropertiesBuilder
 import org.clulab.alignment.webapp.grounder.{IndicatorDocument, ModelDocument}
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -15,6 +13,7 @@ import org.clulab.alignment.webapp.indexer.IndexerTrait
 import org.clulab.alignment.webapp.searcher.AutoSearcher
 import org.clulab.alignment.webapp.searcher.Searcher
 import org.clulab.alignment.webapp.searcher.SearcherStatus
+import org.clulab.alignment.webapp.utils.OntologyVersion
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.http.MimeTypes
@@ -67,17 +66,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   // This only makes sense if the indexer actually used this version.
   protected def getOntologyVersions: (String, String) = {
-
-    def getOntologyVersion(propertiesPath: String): String = {
-      val properties = PropertiesBuilder.fromResource(propertiesPath).get
-      val hash = Option(properties.getProperty("hash"))
-      val ontologyVersion = hash.getOrElse("<unknown>")
-
-      ontologyVersion
-    }
-
-    val compVersion = getOntologyVersion("/org/clulab/wm/eidos/english/ontologies/CompositionalOntology_metadata.properties")
-    val flatVersion = getOntologyVersion("/org/clulab/wm/eidos/english/ontologies/wm_flat_metadata.properties")
+    val compVersion = OntologyVersion.get("/org/clulab/wm/eidos/english/ontologies/CompositionalOntology_metadata.properties")
+    val flatVersion = OntologyVersion.get("/org/clulab/wm/eidos/english/ontologies/wm_flat_metadata.properties")
 
     (compVersion, flatVersion)
   }
@@ -284,7 +274,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 }
 
 object HomeController {
-  val VERSION = "1.3.0"
+  val VERSION = "1.3.1"
 
   val secretsKey = "secrets"
   val maxMaxHits = 500 // Cap it off at some reasonable amount.

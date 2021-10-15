@@ -369,9 +369,9 @@ paths:
                     $ref: "#/components/schemas/compositionalOntologyNode"
               example:
                 homeId:
-                  concept: "wm/concept/population/age"
+                  concept: "wm/concept/population_demographics/age"
                   conceptProperty: "wm/property/stability"
-                  process: "wm/process/train/agriculture_training"
+                  process: "wm/process/training/agriculture_training"
                   processProperty: "wm/property/diversity"
                 awayIds:
                     - concept: "wm/concept/health/life"
@@ -389,6 +389,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/compositionalSearchResponse"
+        400:
+          description: Something was wrong, possibly with the request, probably the Ids in the request body.
         500:
           description: The searcher is not working correctly.
 

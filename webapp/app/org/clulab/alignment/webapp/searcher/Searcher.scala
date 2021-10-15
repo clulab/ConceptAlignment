@@ -93,8 +93,8 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       catch {
         case throwable: Throwable =>
           Searcher.logger.error(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
-          statusHolder.set(SearcherStatus.Failing)
-          new CompositionalOntologyToDatamarts(homeId, Seq.empty)
+          throw throwable // statusHolder.set(SearcherStatus.Failing)
+          // new CompositionalOntologyToDatamarts(homeId, Seq.empty)
       }
     }
     val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)

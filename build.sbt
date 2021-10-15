@@ -41,9 +41,9 @@ lazy val webapp = project
     .enablePlugins(PlayScala)
     .aggregate(core).dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
-lazy val jclapp = project
-    .enablePlugins(PlayScala)
-    .dependsOn(core, scraper, indexer)
+//lazy val jclapp = project
+//    .enablePlugins(PlayScala)
+//    .dependsOn(core, scraper, indexer)
 
 lazy val evaluator = project
     .dependsOn(core, indexer)

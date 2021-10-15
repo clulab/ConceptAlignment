@@ -345,12 +345,12 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
       val         processVectorOpt = toVectorOpt(compositionalOntologyId.        processOntologyIdentifierOpt, processIndex)
       val processPropertyVectorOpt = toVectorOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, propertyIndex)
       // If some Ids were specified, but not found, it is an error.
-      val bad = false ||
+      val bad = conceptVectorOpt.isEmpty ||
         (compositionalOntologyId.conceptPropertyOntologyIdentifierOpt.isDefined && conceptPropertyVectorOpt.isEmpty) ||
         (compositionalOntologyId.processOntologyIdentifierOpt.isDefined && processVectorOpt.isEmpty) ||
         (compositionalOntologyId.processPropertyOntologyIdentifierOpt.isDefined && processPropertyVectorOpt.isEmpty)
 
-      if (conceptVectorOpt.isEmpty || bad)
+      if (bad)
         throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
       else
         combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)

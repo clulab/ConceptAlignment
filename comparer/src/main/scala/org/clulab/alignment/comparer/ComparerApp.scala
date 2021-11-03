@@ -1,11 +1,11 @@
 package org.clulab.alignment.comparer
 
 import org.clulab.alignment.utils.{Sourcer, TsvReader}
-import org.clulab.wm.eidoscommon.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.wm.eidoscommon.utils.FileUtils
-import ujson._
 
 object ComparerApp extends App {
+  // Should this be from the index instead?
   val tsvFilename = "../comparer/datamarts.tsv"
   val jsonFilename = "../comparer/data-datacube-dump.json"
 

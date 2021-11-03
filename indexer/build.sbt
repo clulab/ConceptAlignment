@@ -11,7 +11,10 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= {
+  val ulihaoyiVer = "0.7.1"
+
   Seq(
+    "com.lihaoyi"             %% "ujson"              % ulihaoyiVer,
     "org.clulab"              %% "eidos"              % "1.3.0", // "1.1.0-SNAPSHOT"
     // Only change this if you are prepared to reindex.
     "com.github.WorldModelers" % "Ontologies"         % "lastFmt1",

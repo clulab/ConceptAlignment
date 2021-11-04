@@ -34,6 +34,40 @@ object CheckerApp extends App {
     }
   }
 
+  def getHomeIdOpt(node: String, searcher: Searcher): Option[CompositionalOntologyIdentifier] = {
+    val parent = StringUtils.beforeLast(node, '/', all = false)
+    val name = StringUtils.afterLast(node, '/', all = true)
+    val parts = name.split('_')
+    val count = parts.length
+    val homeIds = 0.until(count).map { propertyCount =>
+      val conceptParts = parts.dropRight(propertyCount)
+      val propertyParts = parts.takeRight(propertyCount)
+
+      val conceptPath = parent + "/" + conceptParts.mkString("_")
+      val propertyPath = "wm/property/" + propertyParts.mkString("_")
+
+      val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPath, Some(CompositionalOntologyIdentifier.concept))
+      val propertyIdentifierOpt =
+        if (propertyParts.isEmpty) None
+        else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyPath, Some(CompositionalOntologyIdentifier.property)))
+      val homeId = new CompositionalOntologyIdentifier(conceptIdentifier, propertyIdentifierOpt, None, None)
+
+      homeId
+    }
+    val homeIdOpt = homeIds.find { homeId =>
+      try {
+        searcher.run(homeId, Array.empty[CompositionalOntologyIdentifier], hits, thresholdOpt)
+        true
+      }
+      catch {
+        case _: Exception => false
+      }
+    }
+
+    homeIdOpt
+  }
+
+
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
     val nodes = readNodes(inputFilename)
 
@@ -44,24 +78,23 @@ object CheckerApp extends App {
         val variableIds =
             if (node.startsWith("wm/")) {
               val nodes = node.split('/')
-              if (nodes(1) == "concept") {
-                val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, node, Some(CompositionalOntologyIdentifier.concept))
-                val homeId = new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None)
-                val awayIds = Array.empty[CompositionalOntologyIdentifier]
-                try {
-                  searcher
-                      .run(homeId, awayIds, hits, thresholdOpt)
-                      .dstResults
-                      .map { case (datamartIdentifier, _) => datamartIdentifier.variableId }
-                }
-                catch {
-                  case _: Exception =>
-                    println(node)
-                    Seq.empty[String]
-                }
+              if (nodes.lift(1).map(_ == "concept").getOrElse(false)) {
+                val homeIdOpt = getHomeIdOpt(node, searcher)
+
+                homeIdOpt
+                    .map { homeId =>
+                      searcher
+                          .run(homeId, Array.empty[CompositionalOntologyIdentifier], hits, thresholdOpt)
+                          .dstResults
+                          .map { case (datamartIdentifier, _) => datamartIdentifier.variableId }
+                    }
+                    .getOrElse {
+                      println(node)
+                      Seq("[Ontology node not found]")
+                    }
               }
               else
-                Seq.empty[String]
+                Seq("[Not concept node]")
             }
             else
               searcher

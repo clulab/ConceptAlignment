@@ -2,7 +2,7 @@ package org.clulab.alignment.comparer
 
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.utils.{CsvWriter, FileUtils, Sourcer}
+import org.clulab.alignment.utils.{CsvWriter, FileUtils, Sourcer, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
 import org.clulab.wm.eidoscommon.utils.StringUtils
@@ -28,6 +28,7 @@ object CheckerApp extends App {
     Thread.sleep(100)
 
   val conceptMapLong = {
+    println("\nconceptMapLong:\n")
     val conceptIndex = searcher.compositionalOntologyMapperOpt.get.conceptIndex
     val map = conceptIndex.map { flatOntologyAlignmentItem =>
       val nodeName = flatOntologyAlignmentItem.id.nodeName
@@ -43,6 +44,7 @@ object CheckerApp extends App {
   }
 
   val conceptMapShort = {
+    println("\nconceptMapShort:\n")
     val conceptIndex = searcher.compositionalOntologyMapperOpt.get.conceptIndex
     val map = conceptIndex.map { flatOntologyAlignmentItem =>
       val nodeName = flatOntologyAlignmentItem.id.nodeName
@@ -59,6 +61,7 @@ object CheckerApp extends App {
   }
 
   val propertyMap = {
+    println("\npropertyMap:\n")
     val propertyIndex = searcher.compositionalOntologyMapperOpt.get.propertyIndex
     val map = propertyIndex.map { flatOntologyAlignmentItem =>
       val nodeName = flatOntologyAlignmentItem.id.nodeName
@@ -75,6 +78,7 @@ object CheckerApp extends App {
   }
 
   val processMap = {
+    println("\nprocessMap:\n")
     val processIndex = searcher.compositionalOntologyMapperOpt.get.processIndex
     val map = processIndex.map { flatOntologyAlignmentItem =>
       val nodeName = flatOntologyAlignmentItem.id.nodeName
@@ -102,10 +106,13 @@ object CheckerApp extends App {
     val arrayBuffer = new ArrayBuffer[String]()
 
     arrayBuffer += homeId.conceptOntologyIdentifier.nodeName
-    homeId.conceptPropertyOntologyIdentifierOpt.map(arrayBuffer += _.nodeName)
-    homeId.processOntologyIdentifierOpt.map(arrayBuffer += _.nodeName)
-    assert(homeId.processPropertyOntologyIdentifierOpt.isEmpty)
-    awayIdOpt.map(arrayBuffer += _.conceptOntologyIdentifier.nodeName)
+    homeId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
+    homeId.processOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
+    homeId.processPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
+    awayIdOpt.foreach(arrayBuffer += _.conceptOntologyIdentifier.nodeName)
+    awayIdOpt.foreach { awayId =>
+      awayId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
+    }
 
     val composedName = arrayBuffer
       .map { string =>
@@ -128,15 +135,39 @@ object CheckerApp extends App {
     val homeIdAndAwayIdOpts = 0.until(count).flatMap { propertyCount =>
       val conceptParts = parts.dropRight(propertyCount)
       val conceptPathLongOpt = conceptMapLong.get(parent + "/" + conceptParts.mkString("_"))
-
       val otherParts = parts.takeRight(propertyCount)
-      val conceptPathShortOpt = conceptMapShort.get(otherParts.mkString("_"))
-      val propertyPathOpt = propertyMap.get(otherParts.mkString("_"))
-      val processPathOpt = processMap.get(otherParts.mkString("_"))
+
+      val (propertyPathOpt, processPathOpt, conceptPathShortOpt) = {
+        val tmpConceptPathShortOpt = conceptMapShort.get(otherParts.mkString("_"))
+        val tmpPropertyPathOpt = propertyMap.get(otherParts.mkString("_"))
+        val tmpProcessPathOpt = processMap.get(otherParts.mkString("_"))
+        val tmpCount = Seq(tmpConceptPathShortOpt, tmpPropertyPathOpt, tmpProcessPathOpt).count(_.isDefined)
+
+        if (conceptPathLongOpt.isEmpty)
+          (None, None, None) // Don't even consider this.
+        else if (tmpCount == 0 || tmpCount == 1)
+          (tmpPropertyPathOpt, tmpProcessPathOpt, tmpConceptPathShortOpt)
+        else if (tmpCount == 2) {
+          val conceptEndsWithSlash = tmpConceptPathShortOpt.map(_.endsWith("/")).getOrElse(false)
+          val propertyEndsWithSlash = tmpPropertyPathOpt.map(_.endsWith("/")).getOrElse(false)
+          val processEndsWithSlash = tmpProcessPathOpt.map(_.endsWith("/")).getOrElse(false)
+
+          if (tmpPropertyPathOpt.isDefined && tmpProcessPathOpt.isDefined)
+            (tmpPropertyPathOpt, tmpProcessPathOpt, None)
+          else if ((!propertyEndsWithSlash || !processEndsWithSlash) && conceptEndsWithSlash)
+            (tmpPropertyPathOpt, tmpProcessPathOpt, None)
+          else if ((propertyEndsWithSlash || processEndsWithSlash) && !conceptEndsWithSlash)
+            (None, None, tmpConceptPathShortOpt)
+          else // both, so disfavor the concept
+            (tmpPropertyPathOpt, tmpProcessPathOpt, None)
+        }
+        else
+          (None, None, None)
+      }
       val count = Seq(conceptPathShortOpt, propertyPathOpt, processPathOpt).count(_.isDefined)
 
       val homeIdOptAndAwayIdOptOpt = if (count > 1) {
-        println("Even worse!")
+        println(node + " even worse!")
         None
       }
       else {
@@ -181,14 +212,60 @@ object CheckerApp extends App {
       }
     }
 
-    homeIdAndAwayIdOptOpt
+    if (homeIdAndAwayIdOpts.isEmpty) {
+
+      val (concept1, conceptProperty, process, processProperty, concept2, conceptProperty2) = node match {
+        case "wm/concept/goods/food_access_availability" => None
+          ("food", "", "access", "availability", "", "")
+        case "wm/concept/goods/food_insecurity_earthquake" =>
+          ("food", "insecurity", "", "", "earthquake", "")
+        case "wm/concept/goods/food_insecurity_nutrients" =>
+          ("food", "insecurity", "", "", "nutrients", "")
+        case "wm/concept/goods/food_insecurity_tension" =>
+          ("food", "insecurity", "", "", "tension", "")
+        case "wm/concept/goods/food_security_tension" =>
+          ("food", "security", "", "", "tension", "")
+        case "wm/concept/goods/food_security_threat" =>
+          ("food", "security", "threat", "", "", "")
+        case "wm/concept/health/vaccination_pathogen_availability" =>
+          ("vaccination", "", "", "", "pathogen", "availability")
+        case "wm/concept/health_intensive_care_price_or_cost" =>
+          ("health", "", "", "", "intensive_care", "price_or_cost")
+        case "wm/concept/agriculture/poultry/poultry_feed_price_or_cost" =>
+          ("poultry", "", "", "", "feed", "price_or_cost")
+        case "wm/concept/agriculture/poultry/poultry_meat_availability" =>
+          ("poultry", "", "", "", "meat", "availability")
+        case _ => ???
+      }
+      val homeId = CompositionalOntologyIdentifier(
+        FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept1),Some(CompositionalOntologyIdentifier.concept)),
+        if (conceptProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty),Some(CompositionalOntologyIdentifier.property))),
+        if (process.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processMap(process),Some(CompositionalOntologyIdentifier.process))),
+        if (processProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(processProperty),Some(CompositionalOntologyIdentifier.property))),
+      )
+      val awayIdOpt =
+          if (concept2.isEmpty) None
+          else
+            Some(CompositionalOntologyIdentifier(
+              FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept2),Some(CompositionalOntologyIdentifier.concept)),
+              if (conceptProperty2.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty2),Some(CompositionalOntologyIdentifier.property))),
+              None,
+              None
+            ))
+
+      Some((homeId, awayIdOpt))
+    }
+    else
+      homeIdAndAwayIdOptOpt
   }
 
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
     val nodes = readNodes(inputFilename)
 
     FileUtils.printWriterFromFile(outputFilenames(index)).autoClose { printWriter =>
-      val csvWriter = new CsvWriter(printWriter)
+      val xsvWriter = new TsvWriter(printWriter)
+
+      xsvWriter.println("OldNode", "NewNodes", "VariableId1", "VariableId2", "VariableId3")
 
       nodes.foreach { node =>
         val nodeNameAndVariableIds =
@@ -206,7 +283,7 @@ object CheckerApp extends App {
                       (getNodeName(node, homeId, awayIdOpt), variableIds)
                     }
                     .getOrElse {
-                      println(node)
+                      println(node + " not found")
                       (node, Seq("[Ontology node not found]"))
                     }
               }
@@ -222,7 +299,7 @@ object CheckerApp extends App {
             }
 
         val (nodeName, variableIds) = nodeNameAndVariableIds
-        csvWriter.println(Seq(nodeName) ++ variableIds.take(2))
+        xsvWriter.println(Seq(node, nodeName) ++ variableIds.take(3))
       }
     }
   }

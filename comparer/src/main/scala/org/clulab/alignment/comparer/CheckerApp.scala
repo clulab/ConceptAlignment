@@ -1,15 +1,11 @@
 package org.clulab.alignment.comparer
 
-import org.clulab.alignment.CompositionalOntologyToDatamarts
-import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
-import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.{CsvWriter, FileUtils, Sourcer}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
-import org.clulab.wm.eidoscommon.utils.{StringUtils, TsvReader}
+import org.clulab.wm.eidoscommon.utils.StringUtils
 
 object CheckerApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
@@ -26,6 +22,56 @@ object CheckerApp extends App {
   val searcherLocations = new SearcherLocations(1, "./Docker")
   val searcher = new Searcher(searcherLocations)
 
+  while (!searcher.isReady)
+    Thread.sleep(100)
+
+  val conceptMap = {
+    val conceptIndex = searcher.compositionalOntologyMapperOpt.get.conceptIndex
+    val map = conceptIndex.map { flatOntologyAlignmentItem =>
+      val nodeName = flatOntologyAlignmentItem.id.nodeName
+      val key =
+          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
+          else nodeName
+
+      println(key)
+      key -> nodeName // Map nodeName without / to one with or without.
+    }.toMap
+
+    map
+  }
+
+  val propertyMap = {
+    val propertyIndex = searcher.compositionalOntologyMapperOpt.get.propertyIndex
+    val map = propertyIndex.map { flatOntologyAlignmentItem =>
+      val nodeName = flatOntologyAlignmentItem.id.nodeName
+      val withoutSlash =
+          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
+          else nodeName
+      val key = StringUtils.afterLast(withoutSlash, '/', true)
+
+      println(key)
+      key -> nodeName
+    }.toMap
+
+    map
+  }
+
+  val processMap = {
+    val processIndex = searcher.compositionalOntologyMapperOpt.get.processIndex
+    val map = processIndex.map { flatOntologyAlignmentItem =>
+      val nodeName = flatOntologyAlignmentItem.id.nodeName
+      val withoutSlash =
+        if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
+        else nodeName
+      val key = StringUtils.afterLast(withoutSlash, '/', true)
+
+      println(key)
+      key -> nodeName
+    }.toMap
+
+    map
+  }
+
   def readNodes(filename: String): Array[String] = {
     Sourcer.sourceFromFile(filename).autoClose { source =>
       source.getLines.map { line =>
@@ -39,20 +85,35 @@ object CheckerApp extends App {
     val name = StringUtils.afterLast(node, '/', all = true)
     val parts = name.split('_')
     val count = parts.length
-    val homeIds = 0.until(count).map { propertyCount =>
+    val homeIds = 0.until(count).flatMap { propertyCount =>
       val conceptParts = parts.dropRight(propertyCount)
-      val propertyParts = parts.takeRight(propertyCount)
+      val conceptPathOpt = conceptMap.get(parent + "/" + conceptParts.mkString("_"))
 
-      val conceptPath = parent + "/" + conceptParts.mkString("_")
-      val propertyPath = "wm/property/" + propertyParts.mkString("_")
+      val otherParts = parts.takeRight(propertyCount)
+      val propertyPathOpt = propertyMap.get(otherParts.mkString("_"))
+      val processPathOpt = processMap.get(otherParts.mkString("_"))
 
-      val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPath, Some(CompositionalOntologyIdentifier.concept))
-      val propertyIdentifierOpt =
-        if (propertyParts.isEmpty) None
-        else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyPath, Some(CompositionalOntologyIdentifier.property)))
-      val homeId = new CompositionalOntologyIdentifier(conceptIdentifier, propertyIdentifierOpt, None, None)
+      if (conceptPathOpt.isDefined && (otherParts.isEmpty || propertyPathOpt.isDefined || processPathOpt.isDefined)) {
+        val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPathOpt.get, Some(CompositionalOntologyIdentifier.concept))
+        val homeIdOpt = {
+          if (otherParts.isEmpty)
+            Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None))
+          else if (propertyPathOpt.isDefined) {
+            val propertyIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyPathOpt.get, Some(CompositionalOntologyIdentifier.property))
+            Some(new CompositionalOntologyIdentifier(conceptIdentifier, Some(propertyIdentifier), None, None))
+          }
+          else if (processPathOpt.isDefined) {
+            val processIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processPathOpt.get, Some(CompositionalOntologyIdentifier.process))
+            Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, Some(processIdentifier), None))
+          }
+          else
+            None
+        }
 
-      homeId
+        homeIdOpt
+      }
+      else
+        None
     }
     val homeIdOpt = homeIds.find { homeId =>
       try {
@@ -66,7 +127,6 @@ object CheckerApp extends App {
 
     homeIdOpt
   }
-
 
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
     val nodes = readNodes(inputFilename)

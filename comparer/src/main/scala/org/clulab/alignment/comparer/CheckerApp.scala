@@ -94,10 +94,19 @@ object CheckerApp extends App {
     map
   }
 
-  def readNodes(filename: String): Array[String] = {
+  case class Record(node: String, assigned: String, default: String)
+
+  def readRecords(filename: String): Array[Record] = {
     Sourcer.sourceFromFile(filename).autoClose { source =>
       source.getLines.map { line =>
-        StringUtils.beforeFirst(line, ',', true)
+        val firstComma = line.indexOf(',')
+        val lastComma = line.lastIndexOf(',')
+
+        val node = line.substring(0, firstComma)
+        val assigned = line.substring(firstComma + 1, lastComma)
+        val default = line.substring(lastComma + 1)
+
+        Record(node, assigned, default)
       }.toArray
     }
   }
@@ -260,14 +269,15 @@ object CheckerApp extends App {
   }
 
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
-    val nodes = readNodes(inputFilename)
+    val records = readRecords(inputFilename)
 
     FileUtils.printWriterFromFile(outputFilenames(index)).autoClose { printWriter =>
       val xsvWriter = new TsvWriter(printWriter)
 
-      xsvWriter.println("OldNode", "NewNodes", "VariableId1", "VariableId2", "VariableId3")
+      xsvWriter.println("Concept name", "OntologyNodes", "Assigned indicator", "Default indicator match", "VariableName1", "VariableName2", "VariableName3")
 
-      nodes.foreach { node =>
+      records.foreach { record =>
+        val node = record.node
         val nodeNameAndVariableIds =
             if (node.startsWith("wm/")) {
               val nodes = node.split('/')
@@ -293,13 +303,13 @@ object CheckerApp extends App {
             else {
               val variableIds = searcher
                   .run(node, hits, thresholdOpt)
-                  .map { case (datamartDocument, _ ) => datamartDocument.variableId }
+                  .map { case (datamartDocument, _ ) => datamartDocument.variableName }
 
               (node, variableIds)
             }
 
         val (nodeName, variableIds) = nodeNameAndVariableIds
-        xsvWriter.println(Seq(node, nodeName) ++ variableIds.take(3))
+        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
       }
     }
   }

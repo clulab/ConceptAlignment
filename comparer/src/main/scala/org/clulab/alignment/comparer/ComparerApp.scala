@@ -73,12 +73,15 @@ object ComparerApp extends App {
   val jsonKeys = jsonMap.keySet
 
   val onlyInTsv = tsvKeys -- jsonKeys
-  println("Only in tsv:")
+  println(s"Only in tsv: ${onlyInTsv.size}")
   println(onlyInTsv.mkString("\n"))
 
   println()
 
   val onlyInJson = jsonKeys -- tsvKeys
-  println("Only in json:")
+  println(s"Only in json: ${onlyInJson.size}")
   println(onlyInJson.mkString("\n")) // Add name from jsonRecord
+
+  val intersection = tsvKeys.intersect(jsonKeys)
+  println(s"Intersection: ${intersection.size}")
 }

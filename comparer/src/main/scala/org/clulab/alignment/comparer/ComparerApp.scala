@@ -1,87 +1,65 @@
 package org.clulab.alignment.comparer
 
-import org.clulab.alignment.utils.{Sourcer, TsvReader}
-import org.clulab.alignment.utils.Closer.AutoCloser
-import org.clulab.wm.eidoscommon.utils.FileUtils
-
 object ComparerApp extends App {
   // Should this be from the index instead?
   val tsvFilename = "../comparer/datamarts.tsv"
   val jsonFilename = "../comparer/data-datacube-dump.json"
+  val csvAtaFilename = "../comparer/ATA2.csv"
+  val csvNafFilename = "../comparer/NAF2.csv"
 
-  case class TsvRecord(
-    datamart_id: String,
-    dataset_id: String,
-    dataset_name: String,
-    dataset_tags: String,
-    dataset_description: String,
-    dataset_url: String,
-    variable_id: String,
-    variable_name: String,
-    variable_tags: String,
-    variable_description: String
-  ) {
-    def this(strings: Array[String]) = this(
-      strings(0), strings(1), strings(2), strings(3), strings(4),
-      strings(5), strings(6), strings(7), strings(8), strings(9)
-    )
-  }
-
-  def readTsv(): Array[TsvRecord] = {
-    val tsvReader = new TsvReader()
-
-    Sourcer.sourceFromFile(tsvFilename).autoClose { source =>
-      source
-          .getLines
-          .map { line => new TsvRecord(tsvReader.readln(line)) }
-          .toArray
-    }
-  }
-
-  case class JsonRecord(name: String, outputName: String)
-
-  def readJson(): Array[JsonRecord] = {
-    val jsonString = FileUtils.getTextFromFile(jsonFilename)
-    val jValue = ujson.read(jsonString)
-    val jArray = jValue.arr
-    val jsonRecords = jArray.flatMap { jValue =>
-      val jObject = jValue.obj
-      val name = jObject.value("name").str
-      val outputs = jObject.value("outputs").arr
-      val jsonRecords = outputs.map { output =>
-        val outputName = output.obj("name").str
-        JsonRecord(name, outputName)
-      }.toArray
-
-      jsonRecords
-    }.toArray
-
-    jsonRecords
-  }
-
-  val tsvRecords = readTsv()
-  val jsonRecords = readJson()
-
-  val tsvMap = tsvRecords.map { tsvRecord =>
-    tsvRecord.variable_id -> tsvRecord
-  }.toMap
-  val jsonMap = jsonRecords.map { jsonRecord =>
+  val jsonRecords = Shared.readJsonRecords(jsonFilename)
+  val jsonOutputNameMap = jsonRecords.map { jsonRecord =>
     jsonRecord.outputName -> jsonRecord
   }.toMap
+  val jsonOutputNames = jsonOutputNameMap.keySet
+  val jsonOutputDisplayNameMap = jsonRecords.map { jsonRecord =>
+    jsonRecord.outputDisplayName -> jsonRecord
+  }.toMap
+  val jsonOutputDisplayNames = jsonOutputDisplayNameMap.keySet
 
-  val tsvKeys = tsvMap.keySet
-  val jsonKeys = jsonMap.keySet
+  def compareJsonToTsv() = {
+    val tsvRecords = Shared.readTsvRecords(tsvFilename)
+    val tsvMap = tsvRecords.map { tsvRecord =>
+      tsvRecord.variable_id -> tsvRecord
+    }.toMap
+    val tsvKeys = tsvMap.keySet
 
-  val onlyInTsv = tsvKeys -- jsonKeys
-  println(s"Only in tsv: ${onlyInTsv.size}")
-  println(onlyInTsv.mkString("\n"))
+    val onlyInTsv = tsvKeys -- jsonOutputNames // jsonOutputNames
+    println(s"Only in tsv: ${onlyInTsv.size}")
+    println(onlyInTsv.mkString("\n"))
 
-  println()
+    println()
 
-  val onlyInJson = jsonKeys -- tsvKeys
-  println(s"Only in json: ${onlyInJson.size}")
-  println(onlyInJson.mkString("\n")) // Add name from jsonRecord
+    val onlyInJson = jsonOutputNames -- tsvKeys
+    println(s"Only in json: ${onlyInJson.size}")
+    println(onlyInJson.mkString("\n")) // Add name from jsonRecord
 
-  val intersection = tsvKeys.intersect(jsonKeys)
-  println(s"Intersection: ${intersection.size}")
+    val intersection = tsvKeys.intersect(jsonOutputNames) // jsonOutputNames
+    println(s"Intersection: ${intersection.size}")
+  }
+
+  def compareJsonToCsv(): Unit = {
+    val csvAtaRecords = Shared.readCsvRecords(csvAtaFilename)
+    val csvNafRecords = Shared.readCsvRecords(csvNafFilename)
+
+    def compareRecords(csvRecords: Array[Shared.CsvRecord]): Unit = {
+      csvRecords.foreach { csvRecord =>
+        if (csvRecord.assigned != "null" && !jsonOutputDisplayNames.contains(csvRecord.assigned))
+          println(csvRecord.assigned)
+        if (csvRecord.default != "null" && !jsonOutputDisplayNames.contains(csvRecord.default))
+          println(csvRecord.default)
+      }
+    }
+
+    println(s"Only in Ata:")
+    compareRecords(csvAtaRecords)
+
+    println()
+
+    println(s"Only in Naf:")
+    compareRecords(csvNafRecords)
+  }
+
+  compareJsonToCsv()
+  compareJsonToTsv()
 }

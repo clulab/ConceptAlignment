@@ -2,7 +2,7 @@ package org.clulab.alignment.comparer
 
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.utils.{CsvWriter, FileUtils, Sourcer, TsvWriter}
+import org.clulab.alignment.utils.{CsvWriter, FileUtils, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
 import org.clulab.wm.eidoscommon.utils.StringUtils
@@ -27,89 +27,11 @@ object CheckerApp extends App {
   while (!searcher.isReady)
     Thread.sleep(100)
 
-  val conceptMapLong = {
-    println("\nconceptMapLong:\n")
-    val conceptIndex = searcher.compositionalOntologyMapperOpt.get.conceptIndex
-    val map = conceptIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val key =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
-
-      println(key)
-      key -> nodeName // Map nodeName without / to one with or without.
-    }.toMap
-
-    map
-  }
-
-  val conceptMapShort = {
-    println("\nconceptMapShort:\n")
-    val conceptIndex = searcher.compositionalOntologyMapperOpt.get.conceptIndex
-    val map = conceptIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
-
-      println(key)
-      key -> nodeName
-    }.toMap
-
-    map
-  }
-
-  val propertyMap = {
-    println("\npropertyMap:\n")
-    val propertyIndex = searcher.compositionalOntologyMapperOpt.get.propertyIndex
-    val map = propertyIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
-
-      println(key)
-      key -> nodeName
-    }.toMap
-
-    map
-  }
-
-  val processMap = {
-    println("\nprocessMap:\n")
-    val processIndex = searcher.compositionalOntologyMapperOpt.get.processIndex
-    val map = processIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-        if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-        else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
-
-      println(key)
-      key -> nodeName
-    }.toMap
-
-    map
-  }
-
-  case class Record(node: String, assigned: String, default: String)
-
-  def readRecords(filename: String): Array[Record] = {
-    Sourcer.sourceFromFile(filename).autoClose { source =>
-      source.getLines.map { line =>
-        val firstComma = line.indexOf(',')
-        val lastComma = line.lastIndexOf(',')
-
-        val node = line.substring(0, firstComma)
-        val assigned = line.substring(firstComma + 1, lastComma)
-        val default = line.substring(lastComma + 1)
-
-        Record(node, assigned, default)
-      }.toArray
-    }
-  }
+  val compositionalOntologyMapper = searcher.compositionalOntologyMapperOpt.get
+  val conceptMapLong = Shared.readConceptMapLong(compositionalOntologyMapper)
+  val conceptMapShort = Shared.readConceptMapShort(compositionalOntologyMapper)
+  val propertyMap = Shared.readPropertyMap(compositionalOntologyMapper)
+  val processMap = Shared.readProcessMap(compositionalOntologyMapper)
 
   def getNodeName(node: String, homeId: CompositionalOntologyIdentifier, awayIdOpt: Option[CompositionalOntologyIdentifier]): String = {
     val arrayBuffer = new ArrayBuffer[String]()
@@ -269,7 +191,7 @@ object CheckerApp extends App {
   }
 
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
-    val records = readRecords(inputFilename)
+    val records = Shared.readCsvRecords(inputFilename)
 
     FileUtils.printWriterFromFile(outputFilenames(index)).autoClose { printWriter =>
       val xsvWriter = new TsvWriter(printWriter)

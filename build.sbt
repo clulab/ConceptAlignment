@@ -29,6 +29,9 @@ libraryDependencies ++= {
   )
 }
 
+lazy val comparer = project
+    .dependsOn(webapp)
+
 lazy val core = project in file(".")
 
 lazy val scraper = project

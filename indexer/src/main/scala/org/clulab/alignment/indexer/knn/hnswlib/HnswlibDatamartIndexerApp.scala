@@ -1,10 +1,12 @@
 package org.clulab.alignment.indexer.knn.hnswlib
 
 object HnswlibDatamartIndexerApp extends App {
-  val datamartFilename = args(0)
-  val indexFilename = args(1)
 
-  val hnswlibIndexer = new HnswlibIndexer()
+  def run(datamartFileName: String, indexFilename: String): Unit = {
+    val hnswlibIndexer = new HnswlibIndexer()
 
-  hnswlibIndexer.indexDatamart(datamartFilename, indexFilename)
+    hnswlibIndexer.indexDatamart(datamartFileName, indexFilename)
+  }
+
+  run(args(0), args(1))
 }

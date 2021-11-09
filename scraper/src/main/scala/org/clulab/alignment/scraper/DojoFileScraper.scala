@@ -1,5 +1,6 @@
 package org.clulab.alignment.scraper
 
+import com.typesafe.config.Config
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.utils.{Sourcer, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
@@ -128,7 +129,7 @@ class DojoFileScraper(filename: String) extends DatamartScraper {
 
     val doubleId = (datasetId, variableId)
     if (doubleIds.contains(doubleId))
-      DojoFileScraper.logger.error(s"The Dojo (dataset_id, variable_id) of ($datasetId, $variableId) is duplicated and skipped.")
+      DojoFileScraper.logger.error(s"The DOJO (dataset_id, variable_id) of ($datasetId, $variableId) is duplicated and skipped.")
     else {
       tsvWriter.println(
         DojoFileScraper.datamartId,
@@ -153,7 +154,7 @@ class DojoFileScraper(filename: String) extends DatamartScraper {
         val dojoDocument = new IndicatorDocument(line)
         val datasetId = dojoDocument.id
 
-        DojoFileScraper.logger.info(s"Scraping Dojo datasetId $datasetId")
+        DojoFileScraper.logger.info(s"Scraping DOJO datasetId $datasetId")
         dojoDocument.outputs.foreach { dojoOutput =>
           writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds)
         }
@@ -170,4 +171,10 @@ class DojoFileScraper(filename: String) extends DatamartScraper {
 object DojoFileScraper {
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val datamartId = "DOJO"
+
+  def fromConfig(config: Config): DojoFileScraper = {
+    val filename = config.getString("DojoFileScraper.filename")
+
+    new DojoFileScraper(filename)
+  }
 }

@@ -60,6 +60,6 @@ object ComparerApp extends App {
     compareRecords(csvNafRecords)
   }
 
-  compareJsonToCsv()
+//  compareJsonToCsv()
   compareJsonToTsv()
 }

@@ -67,7 +67,7 @@ object BuilderApp extends App {
 
 //  indexGlove()
 //  scrapeDatamarts()
-  indexDatamarts()
+//  indexDatamarts()
 //  indexOntologies()
-//  luceneIndexDatamarts()
+  luceneIndexDatamarts()
 }

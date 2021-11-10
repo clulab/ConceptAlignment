@@ -8,7 +8,7 @@ import ujson.Value
 
 object GrounderApp extends App {
   val inputFilename = "../comparer/indicators_11082021.jsonl"
-  val outputFilename = "../comparer/data-datacube-dump.jsonl"
+  val outputFilename = "../comparer/grounded_indicators_11082021.jsonl"
 
   val maxHits = 10
   val thresholdOpt = Some(0.6f)

@@ -21,7 +21,7 @@ object CheckerApp extends App {
   val hits = 10
   val thresholdOpt = None
 
-  val searcherLocations = new SearcherLocations(1, "./Docker")
+  val searcherLocations = new SearcherLocations(1, "../builder")
   val searcher = new Searcher(searcherLocations)
 
   while (!searcher.isReady)
@@ -231,7 +231,8 @@ object CheckerApp extends App {
             }
 
         val (nodeName, variableIds) = nodeNameAndVariableIds
-        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
+//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
+        xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ variableIds.take(3))
       }
     }
   }

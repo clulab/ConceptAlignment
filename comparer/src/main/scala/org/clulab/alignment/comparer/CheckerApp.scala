@@ -1,5 +1,6 @@
 package org.clulab.alignment.comparer
 
+import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
 import org.clulab.alignment.utils.{CsvWriter, FileUtils, TsvWriter}
@@ -190,17 +191,23 @@ object CheckerApp extends App {
       homeIdAndAwayIdOptOpt
   }
 
+  def getVariableNames(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[String] = {
+    searcher
+        .getDatamartDocuments(datamartIdentifiers)
+        .map(_.variableName)
+  }
+
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
     val records = Shared.readCsvRecords(inputFilename)
 
     FileUtils.printWriterFromFile(outputFilenames(index)).autoClose { printWriter =>
       val xsvWriter = new TsvWriter(printWriter)
 
-      xsvWriter.println("Concept name", "OntologyNodes", "Assigned indicator", "Default indicator match", "VariableName1", "VariableName2", "VariableName3")
+      xsvWriter.println("Concept name", "OntologyNodes", "Assigned indicator", "Default indicator match", "VariableDisplayName1", "VariableDisplayName2", "VariableDisplayName3")
 
       records.foreach { record =>
         val node = record.node
-        val nodeNameAndVariableIds =
+        val nodeNameAndVariableNames =
             if (node.startsWith("wm/")) {
               val nodes = node.split('/')
               if (nodes.lift(1).map(_ == "concept").getOrElse(false)) {
@@ -208,11 +215,17 @@ object CheckerApp extends App {
 
                 homeIdAndAwayIdOptOpt
                     .map { case (homeId, awayIdOpt) =>
-                      val variableIds = searcher
+                      val datamartIdentifiers = searcher
                           .run(homeId, awayIdOpt.toArray, hits, thresholdOpt)
                           .dstResults
-                          .map { case (datamartIdentifier, _) => datamartIdentifier.variableId }
-                      (getNodeName(node, homeId, awayIdOpt), variableIds)
+                          .map { case (datamartIdentifier, _) => datamartIdentifier }
+                      val nodeNames = getNodeName(node, homeId, awayIdOpt)
+                      val variableNames = getVariableNames(datamartIdentifiers)
+
+                      datamartIdentifiers.zip(variableNames).foreach { case (id, name) =>
+                        println(s"$id\t$name")
+                      }
+                      (nodeNames, variableNames)
                     }
                     .getOrElse {
                       println(node + " not found")
@@ -223,16 +236,16 @@ object CheckerApp extends App {
                 (node, Seq("[Not concept node]"))
             }
             else {
-              val variableIds = searcher
+              val variableNames = searcher
                   .run(node, hits, thresholdOpt)
                   .map { case (datamartDocument, _ ) => datamartDocument.variableName }
 
-              (node, variableIds)
+              (node, variableNames)
             }
 
-        val (nodeName, variableIds) = nodeNameAndVariableIds
+        val (nodeName, variableNames) = nodeNameAndVariableNames
 //        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
-        xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ variableIds.take(3))
+        xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ variableNames.take(3))
       }
     }
   }

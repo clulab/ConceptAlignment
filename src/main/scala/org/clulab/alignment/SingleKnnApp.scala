@@ -3,6 +3,7 @@ package org.clulab.alignment
 import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.Normalizer
 import org.clulab.alignment.data.Tokenizer
+import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
@@ -61,6 +62,16 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
     val vector = getVectorOpt(words)
 
     vector
+  }
+
+  def getDatamartDocumentsFromIds(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[DatamartDocument] = {
+    luceneSearcher.withReader { reader =>
+      datamartIdentifiers.map { datamartIdentifier =>
+        val document = luceneSearcher.find(reader, datamartIdentifier)
+
+        new DatamartDocument(document)
+      }
+    }
   }
 
   def getDatamartDocuments(searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]]): Seq[(DatamartDocument, Float)] = {

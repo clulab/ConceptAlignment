@@ -38,7 +38,7 @@ object Shared {
           if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
           else nodeName
 
-      println(key)
+      println(s"$key -> $nodeName")
       key -> nodeName // Map nodeName without / to one with or without.
     }.toMap
 
@@ -55,7 +55,7 @@ object Shared {
           else nodeName
       val key = StringUtils.afterLast(withoutSlash, '/', true)
 
-      println(key)
+      println(s"$key -> $nodeName")
       key -> nodeName
     }.toMap
 
@@ -72,7 +72,7 @@ object Shared {
           else nodeName
       val key = StringUtils.afterLast(withoutSlash, '/', true)
 
-      println(key)
+      println(s"$key -> $nodeName")
       key -> nodeName
     }.toMap
 
@@ -89,7 +89,7 @@ object Shared {
         else nodeName
       val key = StringUtils.afterLast(withoutSlash, '/', true)
 
-      println(key)
+      println(s"$key -> $nodeName")
       key -> nodeName
     }.toMap
 

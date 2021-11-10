@@ -13,11 +13,13 @@ import scala.collection.mutable.ArrayBuffer
 object CheckerApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
   val nafInputFilename = "../comparer/NAF2.csv"
-  val inputFilenames = Seq(ataInputFilename, nafInputFilename)
+  val xtraInputFilename = "../comparer/XTRA2.csv"
+  val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
   val ataOutputFilename = "../comparer/ATA-out.tsv"
   val nafOutputFilename = "../comparer/NAF-out.tsv"
-  val outputFilenames = Seq(ataOutputFilename, nafOutputFilename)
+  val xtraOutputFilename = "../comparer/XTRA-out.tsv"
+  val outputFilenames = Seq(ataOutputFilename, nafOutputFilename, xtraOutputFilename)
 
   val hits = 10
   val thresholdOpt = None

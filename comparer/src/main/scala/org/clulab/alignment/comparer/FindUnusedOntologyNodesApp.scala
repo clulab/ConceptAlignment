@@ -21,7 +21,7 @@ object FindUnusedOntologyNodesApp extends App {
   }
 
   val maxHits = 10
-  val thresholdOpt = Some(0.6f)
+  val thresholdOpt = None // Some(0.6f)
 
   val searcherLocations = new SearcherLocations(1, "../builder")
   val searcher = new Searcher(searcherLocations)

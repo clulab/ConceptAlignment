@@ -206,7 +206,7 @@ object CheckerApp extends App {
     FileUtils.printWriterFromFile(outputFilenames(index)).autoClose { printWriter =>
       val xsvWriter = new TsvWriter(printWriter)
 
-      xsvWriter.println("Concept name", "OntologyNodes", "Assigned indicator", "Default indicator match", "VariableDisplayName1", "VariableDisplayName2", "VariableDisplayName3")
+      xsvWriter.println("Concept name", "OntologyNodes", "Assigned indicator", "Default indicator match", "DatamartIdentifier1", "DatamartIdentifier2", "DatamartIdentifier3")
 
       records.foreach { record =>
         val node = record.node

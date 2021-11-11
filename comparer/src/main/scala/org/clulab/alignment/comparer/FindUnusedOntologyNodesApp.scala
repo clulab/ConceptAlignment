@@ -52,6 +52,7 @@ object FindUnusedOntologyNodesApp extends App {
     countResults(datamartToOntologies.processSearchResults)
   }
 
+  println("MatchCount\tOntologyLeafNode")
   counter
     .getCounts
     .sortBy { case (nodeName, count) => (count, nodeName) }

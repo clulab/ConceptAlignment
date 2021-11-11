@@ -22,7 +22,7 @@ object CheckSpreadsheetsApp extends App {
   val outputFilenames = Seq(ataOutputFilename, nafOutputFilename, xtraOutputFilename)
 
   val maxHits = 10
-  val thresholdOpt = Some(0.6f) // None would have resulted in the default, 0.7.
+  val thresholdOpt = None
 
   val searcherLocations = new SearcherLocations(1, "../builder")
   val searcher = new Searcher(searcherLocations)

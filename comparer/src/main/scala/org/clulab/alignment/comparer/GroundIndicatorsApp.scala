@@ -6,7 +6,7 @@ import org.clulab.alignment.webapp.grounder.IndicatorDocument
 import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
 import ujson.Value
 
-object GrounderApp extends App {
+object GroundIndicatorsApp extends App {
   val inputFilename = "../comparer/indicators_11082021.jsonl"
   val outputFilename = "../comparer/grounded_indicators_11082021.jsonl"
 

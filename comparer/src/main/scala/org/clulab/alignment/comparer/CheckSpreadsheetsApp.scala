@@ -10,7 +10,7 @@ import org.clulab.wm.eidoscommon.utils.StringUtils
 
 import scala.collection.mutable.ArrayBuffer
 
-object CheckerApp extends App {
+object CheckSpreadsheetsApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
   val nafInputFilename = "../comparer/NAF2.csv"
   val xtraInputFilename = "../comparer/XTRA2.csv"

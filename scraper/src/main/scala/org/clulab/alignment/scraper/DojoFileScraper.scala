@@ -158,11 +158,11 @@ class DojoFileScraper(filename: String) extends DatamartScraper {
         dojoDocument.outputs.foreach { dojoOutput =>
           writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds)
         }
-        dojoDocument.qualifierOutputsOpt.foreach { dojoQualifierOutputs =>
-          dojoQualifierOutputs.foreach { dojoQualifierOutput =>
-            writeDojoRecord(dojoDocument, dojoQualifierOutput, tsvWriter, doubleIds)
-          }
-        }
+//        dojoDocument.qualifierOutputsOpt.foreach { dojoQualifierOutputs =>
+//          dojoQualifierOutputs.foreach { dojoQualifierOutput =>
+//            writeDojoRecord(dojoDocument, dojoQualifierOutput, tsvWriter, doubleIds)
+//          }
+//        }
       }
     }
   }

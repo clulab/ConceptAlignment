@@ -194,9 +194,10 @@ object CheckerApp extends App {
   }
 
   def getVariableNames(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[String] = {
-    searcher
-        .getDatamartDocuments(datamartIdentifiers)
-        .map(_.variableName)
+    datamartIdentifiers.map(_.toString)
+//    searcher
+//        .getDatamartDocuments(datamartIdentifiers)
+//        .map(_.variableName)
   }
 
   inputFilenames.zipWithIndex.foreach { case (inputFilename, index) =>
@@ -209,7 +210,7 @@ object CheckerApp extends App {
 
       records.foreach { record =>
         val node = record.node
-        val nodeNameAndVariableNames =
+        val nodeNameAndDatamartIdentifiers =
             if (node.startsWith("wm/")) {
               val nodes = node.split('/')
               if (nodes.lift(1).map(_ == "concept").getOrElse(false)) {
@@ -221,13 +222,10 @@ object CheckerApp extends App {
                           .run(homeId, awayIdOpt.toArray, hits, thresholdOpt)
                           .dstResults
                           .map { case (datamartIdentifier, _) => datamartIdentifier }
+                          .map(_.toString)
                       val nodeNames = getNodeName(node, homeId, awayIdOpt)
-                      val variableNames = getVariableNames(datamartIdentifiers)
 
-                      datamartIdentifiers.zip(variableNames).foreach { case (id, name) =>
-                        println(s"$id\t$name")
-                      }
-                      (nodeNames, variableNames)
+                      (nodeNames, datamartIdentifiers)
                     }
                     .getOrElse {
                       println(node + " not found")
@@ -238,16 +236,16 @@ object CheckerApp extends App {
                 (node, Seq("[Not concept node]"))
             }
             else {
-              val variableNames = searcher
+              val datamartIdentifiers = searcher
                   .run(node, hits, thresholdOpt)
-                  .map { case (datamartDocument, _ ) => datamartDocument.variableName }
+                  .map { case (datamartDocument, _ ) => datamartDocument.datamartIdentifier.toString }
 
-              (node, variableNames)
+              (node, datamartIdentifiers)
             }
 
-        val (nodeName, variableNames) = nodeNameAndVariableNames
+        val (nodeName, datamartIdentifiers) = nodeNameAndDatamartIdentifiers
 //        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
-        xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ variableNames.take(3))
+        xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ datamartIdentifiers.take(3))
       }
     }
   }

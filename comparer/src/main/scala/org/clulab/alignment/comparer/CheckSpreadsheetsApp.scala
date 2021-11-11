@@ -21,8 +21,8 @@ object CheckSpreadsheetsApp extends App {
   val xtraOutputFilename = "../comparer/XTRA-out.tsv"
   val outputFilenames = Seq(ataOutputFilename, nafOutputFilename, xtraOutputFilename)
 
-  val hits = 10
-  val thresholdOpt = None
+  val maxHits = 10
+  val thresholdOpt = Some(0.6f) // None would have resulted in the default, 0.7.
 
   val searcherLocations = new SearcherLocations(1, "../builder")
   val searcher = new Searcher(searcherLocations)
@@ -138,7 +138,7 @@ object CheckSpreadsheetsApp extends App {
     }
     val homeIdAndAwayIdOptOpt = homeIdAndAwayIdOpts.find { case (homeId, awayIdOpt) =>
       try {
-        searcher.run(homeId, awayIdOpt.toArray, hits, thresholdOpt)
+        searcher.run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
         true
       }
       catch {
@@ -219,7 +219,7 @@ object CheckSpreadsheetsApp extends App {
                 homeIdAndAwayIdOptOpt
                     .map { case (homeId, awayIdOpt) =>
                       val datamartIdentifiers = searcher
-                          .run(homeId, awayIdOpt.toArray, hits, thresholdOpt)
+                          .run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
                           .dstResults
                           .map { case (datamartIdentifier, _) => datamartIdentifier }
                           .map(_.toString)
@@ -237,7 +237,7 @@ object CheckSpreadsheetsApp extends App {
             }
             else {
               val datamartIdentifiers = searcher
-                  .run(node, hits, thresholdOpt)
+                  .run(node, maxHits, thresholdOpt)
                   .map { case (datamartDocument, _ ) => datamartDocument.datamartIdentifier.toString }
 
               (node, datamartIdentifiers)

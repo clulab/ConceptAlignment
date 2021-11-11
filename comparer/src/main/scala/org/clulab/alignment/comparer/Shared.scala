@@ -30,6 +30,7 @@ object Shared {
 
   case class JsonRecord(name: String, outputName: String, outputDisplayName: String)
 
+  // This reads all nodes, even branch nodes, and converts to a Map.
   class OntologyMapReader(flatOntologyIndex: FlatOntologyIndex.Index, message: String) {
     println(s"\n$message\n")
 
@@ -42,6 +43,23 @@ object Shared {
         key -> nodeName
       }
     }.toMap
+  }
+
+  // This reads only leaf nodes and leaves them a Seq.
+  class OntologyNodeReader(flatOntologyIndex: FlatOntologyIndex.Index, message: String) {
+    println(s"\n$message\n")
+
+    def read(): Seq[String] = {
+      flatOntologyIndex.flatMap { flatOntologyAlignmentItem =>
+        val nodeName = flatOntologyAlignmentItem.id.nodeName
+
+        if (!nodeName.endsWith("/")) {
+          println(s"$nodeName")
+          Some(nodeName)
+        }
+        else None
+      }
+    }.toSeq
   }
 
   def nodeNameToLongKey(nodeName: String): String =

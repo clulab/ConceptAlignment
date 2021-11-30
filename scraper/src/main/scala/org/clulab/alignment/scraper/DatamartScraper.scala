@@ -15,6 +15,7 @@ object DatamartScraper {
       case "NyuScraper" => NyuScraper.fromConfig(config)
       case "SuperMaasScraper" => SuperMaasScraper.fromConfig(config)
       case "DojoFileScraper" => DojoFileScraper.fromConfig(config)
+      case "DojoRestScraper" => DojoRestScraper.fromConfig(config)
       case _ => throw new Exception(s"Scraper name $name is not recognized.")
     }
   }

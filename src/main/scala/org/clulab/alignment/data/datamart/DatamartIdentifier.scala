@@ -7,7 +7,14 @@ import play.api.libs.json.Json
 @SerialVersionUID(1L)
 case class DatamartIdentifier(datamartId: String, datasetId: String, variableId: String) extends Identifier {
 
-  override def toString(): String = s"$datamartId/$datasetId/$variableId"
+  def escape(string: String): String = string
+      .replace("\\", "\\\\")
+      .replace("/", "\\/")
+
+  override def toString(): String =
+      Seq(datamartId, datasetId, variableId)
+          .map(escape)
+          .mkString("/")
 
   def toJsObject: JsObject = {
     Json.obj(

@@ -1,9 +1,12 @@
 package org.clulab.alignment.indexer.knn.hnswlib
 
 object HnswlibFlatOntologyIndexerApp extends App {
-  val indexFilename = args(0)
 
-  val hnswlibIndexer = new HnswlibIndexer()
+  def run(indexFilename: String): Unit = {
+    val hnswlibIndexer = new HnswlibIndexer()
 
-  hnswlibIndexer.indexFlatOntology(indexFilename)
+    hnswlibIndexer.indexFlatOntology(indexFilename)
+  }
+
+  run(args(0))
 }

@@ -18,6 +18,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
 import org.clulab.alignment.utils.{OntologyHandlerHelper => OntologyHandler}
 import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap, WordEmbeddingMapPool}
 import org.clulab.wm.eidos.EidosSystem
+import org.clulab.wm.eidos.groundings.RealWordToVec
 import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
 
 import scala.collection.JavaConverters._
@@ -117,13 +118,21 @@ class HnswlibIndexer {
     indexes
   }
 
+  def getSimpleEmbedding(words: Array[String]): Array[Float] = {
+    w2v.makeCompositeVector(words)
+  }
+
+  def getComplexEmbedding(words: Array[String]): Array[Float] = {
+    null
+  }
+
   def indexDatamart(datamartFilename: String, indexFilename: String): DatamartIndex.Index = {
     val tokenizer = Tokenizer()
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
       val identifier = datamartEntry.identifier
       val words = datamartEntry.words
-      val embedding = w2v.makeCompositeVector(words)
+      val embedding = getSimpleEmbedding(words)
 
       DatamartAlignmentItem(identifier, embedding)
     }
@@ -140,8 +149,23 @@ class HnswlibIndexer {
 }
 
 object HnswlibIndexer {
+  lazy val eidos: EidosSystem = new EidosSystem()
+
   // This needs to be coordinated with processors or at least build.sbt.
-  lazy val w2v: CompactWordEmbeddingMap = WordEmbeddingMapPool
-      .getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", true)
-      .asInstanceOf[CompactWordEmbeddingMap]
+  lazy val w2v: CompactWordEmbeddingMap = {
+    // If Eidos has been loaded, get its map.
+//    eidos
+//        .components
+//        .ontologyHandlerOpt
+//        .get
+//        .wordToVec
+//        .asInstanceOf[RealWordToVec]
+//        .w2v
+//        .asInstanceOf[CompactWordEmbeddingMap]
+
+    // Without Eidos, one can be arranged via processors.
+    WordEmbeddingMapPool
+        .getOrElseCreate("/org/clulab/glove/glove.840B.300d.10f", true)
+        .asInstanceOf[CompactWordEmbeddingMap]
+  }
 }

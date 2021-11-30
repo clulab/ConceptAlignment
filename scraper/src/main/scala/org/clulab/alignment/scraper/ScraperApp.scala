@@ -56,7 +56,9 @@ object ScraperApp extends App {
     scrapers
   }
 
-  val datamartFilename = args(0)
+  def run(datamartFilename: String): Unit = {
+    new ScraperApp(new StaticScraperLocations(datamartFilename)).run(getScrapers)
+  }
 
-  new ScraperApp(new StaticScraperLocations(datamartFilename)).run(getScrapers)
+  run(args(0))
 }

@@ -29,6 +29,9 @@ libraryDependencies ++= {
   )
 }
 
+lazy val builder = project
+    .dependsOn(scraper, indexer)
+
 lazy val comparer = project
     .dependsOn(webapp)
 

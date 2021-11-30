@@ -1,6 +1,6 @@
 package org.clulab.alignment.comparer
 
-object ComparerApp extends App {
+object ComparerFilesApp extends App {
   // Should this be from the index instead?
   val tsvFilename = "../comparer/datamarts.tsv"
   val jsonFilename = "../comparer/data-datacube-dump.json"
@@ -60,6 +60,6 @@ object ComparerApp extends App {
     compareRecords(csvNafRecords)
   }
 
-  compareJsonToCsv()
+//  compareJsonToCsv()
   compareJsonToTsv()
 }

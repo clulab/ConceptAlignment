@@ -1,6 +1,7 @@
 package org.clulab.alignment.searcher.lucene.document
 
 import org.apache.lucene.document.Document
+import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.utils.SafeScore
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
@@ -12,6 +13,8 @@ class DatamartDocument(document: Document) {
   def datasetId = document.get("datasetId")
 
   def variableId = document.get("variableId")
+
+  def datamartIdentifier: DatamartIdentifier = DatamartIdentifier(datamartId, datasetId, variableId)
 
   def variableName: String = document.get("variableName")
 

@@ -1,11 +1,12 @@
 package org.clulab.alignment.indexer.knn.hnswlib
 
 object HnswlibCompositionalOntologyIndexerApp extends App {
-  val conceptIndexFilename = args(0)
-  val processIndexFilename = args(1)
-  val propertyIndexFilename = args(2)
 
-  val hnswlibIndexer = new HnswlibIndexer()
+  def run(conceptIndexFilename: String, processIndexFilename: String, propertyIndexFilename: String): Unit = {
+    val hnswlibIndexer = new HnswlibIndexer()
 
-  hnswlibIndexer.indexCompositionalOntology(conceptIndexFilename, processIndexFilename, propertyIndexFilename)
+    hnswlibIndexer.indexCompositionalOntology(conceptIndexFilename, processIndexFilename, propertyIndexFilename)
+  }
+
+  run(args(0), args(1), args(2))
 }

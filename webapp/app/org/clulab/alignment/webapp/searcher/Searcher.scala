@@ -9,6 +9,7 @@ import javax.inject._
 import org.clulab.alignment.FlatOntologyMapper
 import org.clulab.alignment.SingleKnnApp
 import org.clulab.alignment.SingleKnnAppTrait
+import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
@@ -79,6 +80,15 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
           statusHolder.set(SearcherStatus.Failing)
           Seq.empty
       }
+    }
+    val result = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
+  def getDatamartDocuments(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[DatamartDocument] = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      singleKnnApp.getDatamartDocumentsFromIds(datamartIdentifiers)
     }
     val result = Await.result(searchingFuture, maxWaitTime)
     result

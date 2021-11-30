@@ -1,6 +1,7 @@
 package org.clulab.alignment.comparer
 
 import org.clulab.alignment.CompositionalOntologyMapper
+import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.{Sourcer, TsvReader}
 import org.clulab.wm.eidoscommon.utils.{FileUtils, StringUtils}
@@ -29,72 +30,60 @@ object Shared {
 
   case class JsonRecord(name: String, outputName: String, outputDisplayName: String)
 
-  def readConceptMapLong(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] = {
-    println("\nconceptMapLong:\n")
-    val conceptIndex = compositionalOntologyMapper.conceptIndex
-    val map = conceptIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val key =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
+  // This reads all nodes, even branch nodes, and converts to a Map.
+  class OntologyMapReader(flatOntologyIndex: FlatOntologyIndex.Index, message: String) {
+    println(s"\n$message\n")
 
-      println(key)
-      key -> nodeName // Map nodeName without / to one with or without.
+    def read(f: String => String): Map[String, String] = {
+      flatOntologyIndex.map { flatOntologyAlignmentItem =>
+        val nodeName = flatOntologyAlignmentItem.id.nodeName
+        val key = f(nodeName)
+
+        println(s"$key -> $nodeName")
+        key -> nodeName
+      }
     }.toMap
-
-    map
   }
 
-  def readConceptMapShort(compositionalOntologyMapper: CompositionalOntologyMapper) = {
-    println("\nconceptMapShort:\n")
-    val conceptIndex = compositionalOntologyMapper.conceptIndex
-    val map = conceptIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
+  // This reads only leaf nodes and leaves them a Seq.
+  class OntologyNodeReader(flatOntologyIndex: FlatOntologyIndex.Index, message: String) {
+    println(s"\n$message\n")
 
-      println(key)
-      key -> nodeName
-    }.toMap
+    def read(): Seq[String] = {
+      flatOntologyIndex.flatMap { flatOntologyAlignmentItem =>
+        val nodeName = flatOntologyAlignmentItem.id.nodeName
 
-    map
+        if (!nodeName.endsWith("/")) {
+          println(s"$nodeName")
+          Some(nodeName)
+        }
+        else None
+      }
+    }.toSeq
   }
 
-  def readPropertyMap(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] = {
-    println("\npropertyMap:\n")
-    val propertyIndex = compositionalOntologyMapper.propertyIndex
-    val map = propertyIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-          if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-          else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
+  def nodeNameToLongKey(nodeName: String): String =
+      if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
+      else nodeName
 
-      println(key)
-      key -> nodeName
-    }.toMap
+  def nodeNameToShortKey(nodeName: String): String =
+      StringUtils.afterLast(nodeNameToLongKey(nodeName), '/', true)
 
-    map
-  }
+  def readConceptMapLong(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] =
+      new OntologyMapReader(compositionalOntologyMapper.conceptIndex, "conceptMapLong")
+          .read(nodeNameToLongKey)
 
-  def readProcessMap(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] = {
-    println("\nprocessMap:\n")
-    val processIndex = compositionalOntologyMapper.processIndex
-    val map = processIndex.map { flatOntologyAlignmentItem =>
-      val nodeName = flatOntologyAlignmentItem.id.nodeName
-      val withoutSlash =
-        if (nodeName.endsWith("/")) StringUtils.beforeLast(nodeName, '/')
-        else nodeName
-      val key = StringUtils.afterLast(withoutSlash, '/', true)
+  def readConceptMapShort(compositionalOntologyMapper: CompositionalOntologyMapper) =
+      new OntologyMapReader(compositionalOntologyMapper.conceptIndex, "conceptMapShort")
+          .read(nodeNameToShortKey)
 
-      println(key)
-      key -> nodeName
-    }.toMap
+  def readPropertyMap(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] =
+      new OntologyMapReader(compositionalOntologyMapper.propertyIndex, "propertyMap")
+          .read(nodeNameToShortKey)
 
-    map
-  }
+  def readProcessMap(compositionalOntologyMapper: CompositionalOntologyMapper): Map[String, String] =
+      new OntologyMapReader(compositionalOntologyMapper.processIndex, "processMap")
+          .read(nodeNameToShortKey)
 
   def readCsvRecords(filename: String): Array[CsvRecord] = {
     Sourcer.sourceFromFile(filename).autoClose { source =>

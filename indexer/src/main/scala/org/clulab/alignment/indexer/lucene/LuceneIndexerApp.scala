@@ -75,8 +75,10 @@ class StaticLuceneLocations(val datamartFilename: String, val luceneDirname: Str
 }
 
 object LuceneIndexerApp extends App {
-  val datamartFilename = args(0)
-  val luceneDirname = args(1)
 
-  new LuceneIndexerApp(new StaticLuceneLocations(datamartFilename, luceneDirname)).run()
+  def run(datamartFilename: String, luceneDirname: String): Unit = {
+    new LuceneIndexerApp(new StaticLuceneLocations(datamartFilename, luceneDirname)).run()
+  }
+
+  run(args(0), args(1))
 }

@@ -12,14 +12,12 @@ class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) {
   val name: String = jObj("name").str // required
   val displayName: String = jObj("display_name").str // required
   val description: String = jObj("description").str // required
-  val tags: Array[String] = DojoDocument.getTags(jObj) // optional
   val words: Array[String] = {
     val tokenizer = Tokenizer()
     val displayNameWords = tokenizer.tokenize(displayName)
     val descriptionWords = tokenizer.tokenize(description)
-    val tagWords = tags.flatMap(tokenizer.tokenize)
 
-    displayNameWords ++ descriptionWords ++ tagWords ++ dojoDocument.getWords
+    displayNameWords ++ descriptionWords ++ dojoDocument.getWords
   }
 }
 
@@ -119,7 +117,7 @@ abstract class DojoScraper extends DatamartScraper {
     val variableId = dojoVariable.name
     val variableName = dojoVariable.displayName
     val variableDescription = dojoVariable.description
-    val variableTags = dojoVariable.tags
+    val variableTags = Array.empty[String]
 
     val doubleId = (datasetId, variableId)
     if (doubleIds.contains(doubleId))

@@ -50,6 +50,11 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         dojoDocument.outputs.foreach { dojoOutput =>
           writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
         }
+//        dojoDocument.qualifierOutputsOpt.map { qualifierOutputs =>
+//          qualifierOutputs.foreach { qualifierOutput =>
+//            writeDojoRecord(dojoDocument, qualifierOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+//          }
+//        }
       }
 
       if (scrollIdOpt.isDefined && size >= DatasetsUrl.defaultSize) {

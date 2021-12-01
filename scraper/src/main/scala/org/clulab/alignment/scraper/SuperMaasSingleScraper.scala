@@ -83,8 +83,8 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
 
     variables.foreach { variable =>
       val parameterName = variable("name").str
-      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
       val parameterDescription = stringElse(variable, "description", "")
+      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
 
       val variableId = parameterName // It doesn't have an ID otherwise.
       val variableName = parameterName

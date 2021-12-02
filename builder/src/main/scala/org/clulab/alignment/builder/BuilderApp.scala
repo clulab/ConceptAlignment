@@ -1,24 +1,30 @@
 package org.clulab.alignment.builder
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import org.clulab.alignment.indexer.knn.hnswlib.{HnswlibCompositionalOntologyIndexerApp, HnswlibDatamartIndexerApp, HnswlibFlatOntologyIndexerApp, HnswlibGloveIndexerApp}
 import org.clulab.alignment.indexer.lucene.LuceneIndexerApp
-import org.clulab.alignment.scraper.{DatamartScraper, DojoFileScraper, IsiScraper, ScraperApp, StaticScraperLocations}
+import org.clulab.alignment.scraper.{DojoRestScraper, ScraperApp, StaticScraperLocations}
 
 import java.io.File
 
-// TODO Do this twice, once for glove for the 0 version?
-
 object BuilderApp extends App {
-  val baseDirName = "../builder"
-  val indexDirName = baseDirName + "/index_1"
-  val datamartFileName = indexDirName + "/datamarts.tsv"
 
+  def ensureDirExists(dirName: String): String = {
+    val file = new File(dirName)
+    if (!file.exists)
+      file.mkdirs()
+
+    dirName
+  }
+
+  val baseDirName = "../builder"
+  val datamartFileName = "/datamarts.tsv"
   // $ # Make a directory to contain the indexes of the form ../index_# where the number might be 0.
-  // $ mkdir ../index_0
-  val file = new File(indexDirName)
-  if (!file.exists)
-    file.mkdirs()
+  val indexDirName0 = ensureDirExists(baseDirName + "/index_0")
+  val indexDirName1 = ensureDirExists(baseDirName + "/index_1")
+
+  val datamartFileName0 = indexDirName0 + datamartFileName
+  val datamartFileName1 = indexDirName1 + datamartFileName
 
   def indexGlove(): Unit = {
     // $ # Run this one just once because it takes a long time and glove shouldn't change.  It doesn't go into ../Index_0.
@@ -27,7 +33,25 @@ object BuilderApp extends App {
     HnswlibGloveIndexerApp.run(gloveFileName)
   }
 
-  def scrapeDatamarts(): Unit = {
+  def scrapeDatamarts0(): Unit = {
+    // Make an empty file for indexing just so that files are generated.
+    new ScraperApp(new StaticScraperLocations(datamartFileName0)).run(Seq.empty)
+  }
+
+  def indexDatamarts0(): Unit = {
+    // $ # Run these each time the datamarts have changed.
+    // $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
+    val datamartIndexFileName = indexDirName0 + "/hnswlib-datamart.idx"
+    HnswlibDatamartIndexerApp.run(datamartFileName0, datamartIndexFileName)
+  }
+
+  def luceneIndexDatamarts0(): Unit = {
+    // $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
+    val luceneIndexDirName = indexDirName0 + "/lucene-datamart"
+    LuceneIndexerApp.run(datamartFileName0, luceneIndexDirName)
+  }
+
+  def scrapeDatamarts1(): Unit = {
     // $ # Scrape the datamarts, all of them if necessary.  Credentials are required.
     // $ sbt "scraper/runMain org.clulab.alignment.scraper.ScraperApp ../index_0/datamarts.tsv"
     // $ # For testing, sometimes SuperMaaS is only needed.
@@ -35,16 +59,24 @@ object BuilderApp extends App {
 
     // ScraperApp.run(datamartFileName) // This would use all the scrapers.
     val config = ConfigFactory.load
-    // val isiScraper = IsiScraper.fromConfig(config)
-    val dojoFileScraper = DojoFileScraper.fromConfig(config)
-    new ScraperApp(new StaticScraperLocations(datamartFileName)).run(Seq(dojoFileScraper))
+    val scrapers = Seq(
+      // IsiScraper.fromConfig(config),
+      DojoRestScraper.fromConfig(config)
+    )
+    new ScraperApp(new StaticScraperLocations(datamartFileName1)).run(scrapers)
   }
 
-  def indexDatamarts(): Unit = {
+  def indexDatamarts1(): Unit = {
     // $ # Run these each time the datamarts have changed.
     // $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp ../index_0/datamarts.tsv ../index_0/hnswlib-datamart.idx"
-    val datamartIndexFileName = indexDirName + "/hnswlib-datamart.idx"
-    HnswlibDatamartIndexerApp.run(datamartFileName, datamartIndexFileName)
+    val datamartIndexFileName = indexDirName1 + "/hnswlib-datamart.idx"
+    HnswlibDatamartIndexerApp.run(datamartFileName1, datamartIndexFileName)
+  }
+
+  def luceneIndexDatamarts1(): Unit = {
+    // $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
+    val luceneIndexDirName = indexDirName1 + "/lucene-datamart"
+    LuceneIndexerApp.run(datamartFileName1, luceneIndexDirName)
   }
 
   def indexOntologies(): Unit = {
@@ -59,15 +91,14 @@ object BuilderApp extends App {
     HnswlibCompositionalOntologyIndexerApp.run(conceptIndexFileName, processIndexFileName, propertyIndexFileName)
   }
 
-  def luceneIndexDatamarts(): Unit = {
-    // $ sbt "indexer/runMain org.clulab.alignment.indexer.lucene.LuceneIndexerApp ../index_0/datamarts.tsv ../index_0/lucene-datamart"
-    val luceneIndexDirName = indexDirName + "/lucene-datamart"
-    LuceneIndexerApp.run(datamartFileName, luceneIndexDirName)
-  }
+  scrapeDatamarts0()
+  indexDatamarts0()
+  luceneIndexDatamarts0()
 
-//  indexGlove()
-//  scrapeDatamarts()
-//  indexDatamarts()
-//  indexOntologies()
-  luceneIndexDatamarts()
+  scrapeDatamarts1()
+  indexDatamarts1()
+  luceneIndexDatamarts1()
+
+  indexOntologies()
+  indexGlove()
 }

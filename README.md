@@ -20,29 +20,56 @@ wm / concept / causal_factor / interventions / provide / agriculture_inputs / li
 It would require minimal change to match against existing ontology nodes along with the
 bottom-up components.
   
-* It only scrapes the ISI datamarts.  NYU is not presently included.  It also does SuperMaaS models, but not the data cubes.
+* The project is presently configured to scrape DOJO indicators.  It can be made to scrape DOJO Models, ISI datamarts, and SuperMaaS models and data cubes.  NYU is not presently included.
+
+## Subprojects
+
+* builder
+* comparer
+* evaluator
+* experiment
+* indexer
+* scraper
+* src (core)
+* webapp
 
 ## Preparations
 
 Some of the instructions below use 1.2.0 as a version number.  Change this number as necessary.
-The standard port 9000 may already be used for SuperMaaS, so this project has been changed to use 9001
-and that's the reason some port numbers are included in the instructions.
+The standard port 9000 may already be used for SuperMaaS, so some instructions use 9001 instead.
+
+Scraping the datamarts in order to index them does require authorization.  Account login information is stored in files that are specified in `./scraper/src/main/resources/application.conf`.  For obvious reasons, the files are not included in this repo.  If you need access, please ask for them.
+
+In addition, scraping via the webapp as part of its reindexing operation is also protected by a secret.  To use the functionality, record a secret value in an environment variable called `secrets` before starting the webapp and then use the same value when requesting to reindex.
+
+
 
 ### Preparing the index files
+
+Until recently, the index files were prepared manually.  The process has now been automated.  For the time being, both sets of instructions are provided.
+
+#### Automatic preparation
+
+Run `BuilderApp` in the `builder` subproject. One way to do this is with the command `sbt builder/runMain org.clulab.alignment.builder.BuilderApp`. 
+
+#### Manual preparation
 
 This instructions are for use on a development machine.  However, once the docker
 container has started up, these commands can also be run there.  Initial versions of all the
 indexes will be available in the container, so these commands would be used for updating.
 
 * Run the scrapers using the ScraperApp, which is configured for the
-  * IsiScraper and
-  * SuperMaasScraper.
-* You will need to have a file `../credentials/IsiScraper.properties` in order to do this.
+  * DojoScraper,
+  * ~~IsiScraper, and~~
+  * ~~SuperMaasScraper.~~
+* You will need to have login credentials in order to do this.
 * Run the indexers.
   * HnswlibIndexerApp is used for the KNN searches.  It should index the data from
-    * ISI
-    * SuperMaaS
+    * DOJO
+    * ~~ISI~~
+    * ~~SuperMaaS~~
     * Glove
+    * Flat and compositional ontologies
   * LuceneIndexerApp creates an index to map datamartId, datasetId, and variableId to the
     * variable names and
     * variable descriptions.
@@ -87,6 +114,8 @@ $ cp ../hnswlib-concept.idx Docker
 $ cp ../hnswlib-process.idx Docker
 $ cp ../hnswlib-property.idx Docker
 $ cp -r ../index_0 ../credentials Docker
+# If this is available, possible from an automatic build...
+$ cp -r ../index_1 ../credentials Docker
 ```
 
 

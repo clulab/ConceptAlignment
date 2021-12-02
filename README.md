@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/clulab/ConceptAlignment/workflows/ConceptAlignment%20CI/badge.svg)](https://github.com/clulab/ConceptAlignment/actions)
+
 # ConceptAlignment
 
 This library under development for the DARPA WorldModelers program.

@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets
 // each dataset delivered has a value greater that it.
 abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = "") extends DatamartScraper {
 
-  def encode(parameter: String): String = URLEncoder.encode(createdSince, StandardCharsets.UTF_8.toString)
+  def encode(parameter: String): String = URLEncoder.encode(parameter, StandardCharsets.UTF_8.toString)
 
   def stringElse(value: Value, key: String, consolation: String): String = {
     if (value.obj.contains(key))
@@ -83,8 +83,8 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
 
     variables.foreach { variable =>
       val parameterName = variable("name").str
-      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
       val parameterDescription = stringElse(variable, "description", "")
+      val parameterTags = arrElseEmpty(variable, "tags").map(_.str)
 
       val variableId = parameterName // It doesn't have an ID otherwise.
       val variableName = parameterName

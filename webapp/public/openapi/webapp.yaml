@@ -7,7 +7,9 @@ servers:
   - url: http://linking.cs.arizona.edu
     description: University of Arizona linking server
   - url: http://localhost:9001
-    description: Local host running the webapp
+    description: Local host running the webapp while avoiding the SuperMaaS server
+  - url: http://localhost:9000
+    description: Local host running the webapp with the default port
 
 components:
   schemas:
@@ -579,7 +581,7 @@ paths:
 
   /v1/reindex:
     put:
-      summary: Scrape and reindex the ISI datamarts and SuperMaaS
+      summary: Scrape and reindex the datamarts
       description: "All the data will be downloaded to a new directory and then reindexed.  Searches conducted after the index is complete will run on the new index."
       parameters:
         - name: secret

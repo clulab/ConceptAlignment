@@ -26,14 +26,14 @@ bottom-up components.
 
 ## Subprojects
 
-* builder
-* comparer
-* evaluator
-* experiment
-* indexer
-* scraper
-* src (core)
-* webapp
+* builder - provides the initial, automatic scrape and indexing
+* comparer - runs search on sample data so that performance can be compared to a different tool
+* evaluator - provides a space for implementing different alignment algorithms
+* experiment - provides a space for running experiments on the different alignment algorithms
+* indexer - indexes scraped data for faster lookup
+* scraper - scrapes data from various datamarts
+* src (core) - contains library code used by other subprojects
+* webapp - provides a REST interface
 
 ## Preparations
 
@@ -104,6 +104,11 @@ containers, it may be necessary to reconfigure the scraper to use something like
 `supermaas_server_1:8000`.
 
 ### Preparing the Docker image
+
+#### Automatic preparation
+
+
+#### Manual prepration
 
 If the webapp and other functionality is not to run on the development machine, but somewhere
 else via Docker, create the image with instructions like these:

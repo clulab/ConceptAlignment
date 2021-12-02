@@ -16,7 +16,8 @@ import scala.util.control.NonFatal
 class DojoRestScraper(baseUrl: String, username: String, password: String) extends DojoScraper {
   protected val auth = new Basic(username, password)
   protected val readTimeout = 60000
-  val datasetsUrl = new DatasetsUrl(baseUrl)
+  val modelsUrl = new ModelsUrl(baseUrl)
+  val indicatorsUrl = new IndicatorsUrl(baseUrl)
 
   def getJVal(datasetsUrl: String): ujson.Value = {
     val json = requests.get(datasetsUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
@@ -24,6 +25,52 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
   }
 
   def scrapeModels(tsvWriter: TsvWriter): Unit = {
+    val doubleIds: MutableHashSet[(String, String)] = MutableHashSet.empty
+
+    @tailrec
+    def loop(jVal: ujson.Value): Unit = {
+      val jObj = jVal.obj
+      val hits = jObj("hits").num.toInt
+      val scrollIdOpt = jObj
+          .get("scroll_id")
+          // This is necessary because it isn't real null but instead ujson.Null.
+          .flatMap { stringOrNull => if (stringOrNull.isNull) None else Some(stringOrNull) }
+          .map(_.str)
+      val results = jObj("results").arr
+      val size = results.size
+
+      results.foreach { result =>
+        val jObj = result.obj
+        val dojoDocument = new ModelDocument(jObj)
+        val datasetId = dojoDocument.id
+
+        DojoRestScraper.logger.info(s"Scraping DOJO model with datasetId $datasetId")
+        dojoDocument.parameters.map { parameter =>
+          writeDojoRecord(dojoDocument, parameter, tsvWriter, doubleIds, DojoRestScraper.logger)
+        }
+        dojoDocument.outputs.foreach { dojoOutput =>
+          writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+        }
+//        dojoDocument.qualifierOutputsOpt.map { qualifierOutputs =>
+//          qualifierOutputs.foreach { qualifierOutput =>
+//            writeDojoRecord(dojoDocument, qualifierOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+//          }
+//        }
+      }
+
+      if (scrollIdOpt.isDefined && size >= modelsUrl.size) {
+        val jVal = getJVal(modelsUrl.getTailUrl(scrollIdOpt.get))
+        loop(jVal)
+      }
+    }
+
+    try {
+      val jVal = getJVal(modelsUrl.getHeadUrl())
+      loop(jVal)
+    }
+    catch {
+      case NonFatal(throwable) => println(throwable.getMessage)
+    }
   }
 
   def scrapeIndicators(tsvWriter: TsvWriter): Unit = {
@@ -46,7 +93,7 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         val dojoDocument = new IndicatorDocument(jObj)
         val datasetId = dojoDocument.id
 
-        DojoRestScraper.logger.info(s"Scraping DOJO datasetId $datasetId")
+        DojoRestScraper.logger.info(s"Scraping DOJO indicator with datasetId $datasetId")
         dojoDocument.outputs.foreach { dojoOutput =>
           writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
         }
@@ -57,14 +104,14 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
 //        }
       }
 
-      if (scrollIdOpt.isDefined && size >= DatasetsUrl.defaultSize) {
-        val jVal = getJVal(datasetsUrl.getTailUrl(scrollIdOpt.get))
+      if (scrollIdOpt.isDefined && size >= indicatorsUrl.size) {
+        val jVal = getJVal(indicatorsUrl.getTailUrl(scrollIdOpt.get))
         loop(jVal)
       }
     }
 
     try {
-      val jVal = getJVal(datasetsUrl.getHeadUrl())
+      val jVal = getJVal(indicatorsUrl.getHeadUrl())
       loop(jVal)
     }
     catch {
@@ -73,7 +120,7 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
   }
 
   def scrape(tsvWriter: TsvWriter): Unit = {
-    scrapeModels(tsvWriter)
+//    scrapeModels(tsvWriter)
     scrapeIndicators(tsvWriter)
   }
 }
@@ -92,23 +139,30 @@ object DojoRestScraper {
   }
 }
 
-class DatasetsUrl(baseUrl: String, query: String = DatasetsUrl.defaultQuery, size: Int = DatasetsUrl.defaultSize) {
+class DatasetsUrl(baseUrl: String, path: String, query: String = DatasetsUrl.defaultQuery, val size: Int = DatasetsUrl.defaultSize) {
   val encodedQuery = encode(query)
 
   def encode(parameter: String): String = URLEncoder.encode(parameter, StandardCharsets.UTF_8.toString)
 
   def getHeadUrl(): String = {
-    s"$baseUrl/${DatasetsUrl.defaultRest}?q=$encodedQuery&size=$size"
+    s"$baseUrl/$path?q=$encodedQuery&size=$size"
   }
 
   def getTailUrl(scrollId: String): String = {
     val encodedScrollId = scrollId // encode(scrollId)
-    s"$baseUrl/${DatasetsUrl.defaultRest}?q=$encodedQuery&scroll_id=$encodedScrollId&size=$size"
+    s"$baseUrl/$path?q=$encodedQuery&scroll_id=$encodedScrollId&size=$size"
   }
 }
 
+class IndicatorsUrl(baseUrl: String, query: String = DatasetsUrl.defaultQuery, size: Int = DatasetsUrl.defaultSize)
+    extends DatasetsUrl(baseUrl, DatasetsUrl.defaultIndicatorsPath, query, size)
+
+class ModelsUrl(baseUrl: String, query: String = DatasetsUrl.defaultQuery, size: Int = DatasetsUrl.defaultSize)
+    extends DatasetsUrl(baseUrl, DatasetsUrl.defaultModelsPath, query, size)
+
 object DatasetsUrl {
-  val defaultQuery = "a"
+  val defaultQuery = "*"
   val defaultSize = 1000
-  val defaultRest = "indicators"
+  val defaultIndicatorsPath = "indicators"
+  val defaultModelsPath = "models"
 }

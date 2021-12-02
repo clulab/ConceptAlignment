@@ -27,7 +27,7 @@ class DojoOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVari
 
 class DojoQualifierOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVariable(jVal, dojoDocument)
 
-abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value]) {
+abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value], val datamartId: String) {
   val id: String = jObj("id").str // required
   val name: String = jObj("name").str
   val description: String = jObj("description").str // required
@@ -94,13 +94,13 @@ object DojoDocument {
   }
 }
 
-class ModelDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj) {
+class ModelDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj, DojoScraper.datamartModelId) {
   val parameters: Array[DojoParameter] = DojoDocument.getParameters(jObj, this) // required
   val outputs: Array[DojoOutput] = DojoDocument.getOutputs(jObj, this) // required
   val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoDocument.getQualifierOutputsOpt(jObj, this)
 }
 
-class IndicatorDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj) {
+class IndicatorDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj, DojoScraper.datamartIndicatorId) {
   val outputs: Array[DojoOutput] = DojoDocument.getOutputs(jObj, this) // required
   val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoDocument.getQualifierOutputsOpt(jObj, this)
 }
@@ -108,6 +108,7 @@ class IndicatorDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocu
 abstract class DojoScraper extends DatamartScraper {
 
   def writeDojoRecord(dojoDocument: DojoDocument, dojoVariable: DojoVariable, tsvWriter: TsvWriter, doubleIds: MutableHashSet[(String, String)], logger: Logger): Unit = {
+    val datamartId = dojoDocument.datamartId
     val datasetId = dojoDocument.id
     val datasetName = dojoDocument.name
     val datasetTags = dojoDocument.tags
@@ -124,7 +125,7 @@ abstract class DojoScraper extends DatamartScraper {
       logger.error(s"The DOJO (dataset_id, variable_id) of ($datasetId, $variableId) is duplicated and skipped.")
     else {
       tsvWriter.println(
-        DojoScraper.datamartId,
+        datamartId,
         datasetId,
         datasetName,
         DojoDocument.tagsToJson(datasetTags),
@@ -140,5 +141,6 @@ abstract class DojoScraper extends DatamartScraper {
 }
 
 object DojoScraper {
-  val datamartId = "DOJO"
+  val datamartModelId = "DOJO_Model"
+  val datamartIndicatorId = "DOJO_Indicator"
 }

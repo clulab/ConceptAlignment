@@ -45,6 +45,7 @@ lazy val indexer = project
 
 lazy val webapp = project
     .enablePlugins(PlayScala)
+    .enablePlugins(JavaAppPackaging, DockerPlugin)
     .aggregate(core).dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
 //lazy val jclapp = project
@@ -56,3 +57,5 @@ lazy val evaluator = project
 
 lazy val experiment = project
     .dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
+
+addCommandAlias("dockerize", ";compile;test;webapp/docker:publishLocal")

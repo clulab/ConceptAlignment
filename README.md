@@ -52,7 +52,7 @@ Until recently, the index files were prepared manually.  The process has now bee
 
 #### Automatic preparation
 
-Run `BuilderApp` in the `builder` subproject. One way to do this is with the command `sbt builder/runMain org.clulab.alignment.builder.BuilderApp`. 
+Run `BuilderApp` in the `builder` subproject. One way to do this is with the command `sbt "builder/runMain org.clulab.alignment.builder.BuilderApp"`. 
 
 #### Manual preparation
 

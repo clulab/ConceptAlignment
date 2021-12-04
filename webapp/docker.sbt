@@ -9,11 +9,8 @@ val port = 9001
 
 Docker / defaultLinuxInstallLocation := appDir
 Docker / dockerBaseImage := "openjdk:8"
-//Docker / daemonUser := "nobody"
+Docker / daemonUser := "nobody"
 Docker / dockerExposedPorts := List(port)
-dockerEnvVars := Map(
-  "_JAVA_OPTIONS" -> "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
-)
 Docker / maintainer := "Keith Alcock <docker@keithalcock.com>"
 Docker / mappings := (Docker / mappings).value.filter { case (_, string) =>
   // Only allow the app into the /app/bin directory.  Other apps that
@@ -27,6 +24,9 @@ dockerAdditionalPermissions += (DockerChmodType.UserGroupPlusExecute, app)
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
 dockerCmd := Seq(s"-Dhttp.port=$port")
 dockerEntrypoint := Seq(app)
+dockerEnvVars := Map(
+  "_JAVA_OPTIONS" -> "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
+)
 dockerPermissionStrategy := DockerPermissionStrategy.MultiStage
 dockerUpdateLatest := true
 

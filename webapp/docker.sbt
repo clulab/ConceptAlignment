@@ -11,7 +11,7 @@ Docker / defaultLinuxInstallLocation := appDir
 Docker / dockerBaseImage := "openjdk:8"
 //Docker / daemonUser := "nobody"
 Docker / dockerExposedPorts := List(port)
-Docker / dockerEnvVars := Map(
+dockerEnvVars := Map(
   "_JAVA_OPTIONS" -> "-Xmx16g -Xms12g -Dfile.encoding=UTF-8"
 )
 Docker / maintainer := "Keith Alcock <docker@keithalcock.com>"
@@ -31,17 +31,26 @@ dockerPermissionStrategy := DockerPermissionStrategy.MultiStage
 dockerUpdateLatest := true
 
 // Run "show dockerCommands" and use this to edit as appropriate.
-//dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
-//  dockerCommand match {
-//    case Cmd("USER", "1001:0") =>
-//      Seq(
-//         Make sure that the app can be executed by everyone.
-//        Cmd("RUN", "chmod", "775", app),
-//        dockerCommand
-//      )
-//    case _ => Seq(dockerCommand)
-//  }
-//}
+dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
+  val oldDir = "/conceptalignment/app"
+  val newDir = "/conceptalignment"
+
+  dockerCommand match {
+    // This is necessary to reach outside app to its parent directory.
+    case cmd @ Cmd("COPY", oldArgs @ _*) =>
+      if (oldArgs.length == 1) {
+        val args = oldArgs.head.split(' ')
+        if (args.length == 4 && args(2) == oldDir && args(3) == oldDir) {
+          val newArgs = Array(args(0), args(1), newDir, newDir).mkString(" ")
+          Seq(Cmd("COPY", newArgs))
+        }
+        else Seq(cmd)
+      }
+      else Seq(cmd)
+    case _ =>
+      Seq(dockerCommand)
+  }
+}
 
 Universal / mappings ++= {
 

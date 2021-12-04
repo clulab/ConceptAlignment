@@ -7,6 +7,7 @@ val appDir = topDir + "/app"
 val binDir = appDir + "/bin/" // The second half is determined by the plug-in.  Don't change.
 val app = binDir + "webapp"
 val port = 9001
+val tag = "1.4.0"
 
 Docker / defaultLinuxInstallLocation := appDir
 Docker / dockerBaseImage := "openjdk:8"
@@ -19,7 +20,7 @@ Docker / mappings := (Docker / mappings).value.filter { case (_, string) =>
   !string.startsWith(binDir) || string == app
 }
 Docker / packageName := "conceptalignment"
-Docker / version := "1.4.0"
+Docker / version := tag
 
 dockerAdditionalPermissions += (DockerChmodType.UserGroupPlusExecute, app)
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
@@ -43,8 +44,7 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
       if (oldArgs.length == 1) {
         val args = oldArgs.head.split(' ')
         if (args.length == 4 && args(2) == oldDir && args(3) == oldDir) {
-          val newArgs = Array(args(0), args(1), newDir, newDir).mkString(" ")
-          Seq(Cmd("COPY", newArgs))
+          Seq(Cmd("COPY", args(0), args(1), newDir, newDir))
         }
         else Seq(cmd)
       }
@@ -53,6 +53,7 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
     case Cmd("USER", oldArgs @ _*) if (oldArgs.length == 1 && oldArgs.head == "1001:0") =>
       Seq(
         Cmd("RUN", "chmod", "775", topDir),
+        Cmd("LABEL", "version=\"" + tag + "\""),
         dockerCommand
       )
     case _ =>

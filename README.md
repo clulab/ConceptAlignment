@@ -53,7 +53,7 @@ Until recently, the index files were prepared manually.  The process has now bee
 
 #### Automatic preparation
 
-Run `BuilderApp` in the `builder` subproject. One way to do this is with the command `sbt builder/runMain org.clulab.alignment.builder.BuilderApp`. 
+Run `BuilderApp` in the `builder` subproject. One way to do this is with the command `sbt "builder/runMain org.clulab.alignment.builder.BuilderApp"`. 
 
 #### Manual preparation
 
@@ -85,7 +85,7 @@ $ # Make a directory to contain the indexes of the form ../index_# where the num
 $ mkdir ../index_0
 $ # Scrape the datamarts, all of them if necessary.  Credentials are required.
 $ sbt "scraper/runMain org.clulab.alignment.scraper.ScraperApp ../index_0/datamarts.tsv"
-# $ For testing, sometimes SuperMaaS is only needed.
+$ # For testing, sometimes SuperMaaS is only needed.
 $ sbt "scraper/runMain org.clulab.alignment.scraper.SuperMaasScraperApp ../index_0/datamarts.tsv"
 $ # Run this one just once because it takes a long time and glove shouldn't change.  It doesn't go into ../Index_0.
 $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
@@ -108,8 +108,9 @@ containers, it may be necessary to reconfigure the scraper to use something like
 
 #### Automatic preparation
 
+Run either `sbt dockerize` to include steps like testing or `sbt webapp/docker:publishLocal` if you know it's ready to go.  This automatic preparation does not include the credentials files, so those will need to be attached using a volume.
 
-#### Manual prepration
+#### Manual preparation
 
 If the webapp and other functionality is not to run on the development machine, but somewhere
 else via Docker, create the image with instructions like these:
@@ -121,9 +122,10 @@ $ cp ../hnswlib-wm_flattened.idx Docker
 $ cp ../hnswlib-concept.idx Docker
 $ cp ../hnswlib-process.idx Docker
 $ cp ../hnswlib-property.idx Docker
-$ cp -r ../index_0 ../credentials Docker
-# If this is available, possible from an automatic build...
-$ cp -r ../index_1 ../credentials Docker
+$ cp -r ../index_0 Docker
+$ # If this is available, possibly from an automatic build...
+$ cp -r ../index_1 Docker
+$ cp -r ../credentials Docker
 ```
 
 
@@ -165,4 +167,6 @@ $ docker run -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_ser
 $ # In order to connect to SuperMaaS running in local Docker containers, it will be necessary to connect to their Docker network.
 $ docker run -p 9001:9001 --name conceptalignment --network supermaas_supermaas -e secrets="password1|password2" -e supermaas="http://localhost:8000/api/v1" clulab/conceptalignment:0.1.0
 $ # Access the webapp in a browser at http://localhost:9001.
+$ # If the credentials files were not included in the image, they must be added.  For automatically generated images for which they are not included, they should end up in `/conceptalignment/credentials`.
+$ docker run -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" -v`pwd`/../credentials:/conceptalignment/credentials clulab/conceptalignment:1.2.0
 ```

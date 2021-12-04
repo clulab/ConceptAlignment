@@ -2,7 +2,8 @@ import NativePackagerHelper._
 import com.typesafe.sbt.packager.MappingsHelper.directory
 import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerChmodType, DockerPermissionStrategy}
 
-val appDir = "/conceptalignment/app"
+val topDir = "/conceptalignment"
+val appDir = topDir + "/app"
 val binDir = appDir + "/bin/" // The second half is determined by the plug-in.  Don't change.
 val app = binDir + "webapp"
 val port = 9001
@@ -32,8 +33,9 @@ dockerUpdateLatest := true
 
 // Run "show dockerCommands" and use this to edit as appropriate.
 dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
-  val oldDir = "/conceptalignment/app"
-  val newDir = "/conceptalignment"
+  // Run "show dockerCommands" and use this to edit as appropriate.
+  val oldDir = appDir
+  val newDir = topDir
 
   dockerCommand match {
     // This is necessary to reach outside app to its parent directory.
@@ -47,6 +49,12 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
         else Seq(cmd)
       }
       else Seq(cmd)
+    // Make sure that the topDir can be written for reindexing.
+    case Cmd("USER", oldArgs @ _*) if (oldArgs.length == 1 && oldArgs.head == "1001:0") =>
+      Seq(
+        Cmd("RUN", "chmod", "775", topDir),
+        dockerCommand
+      )
     case _ =>
       Seq(dockerCommand)
   }

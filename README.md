@@ -1,5 +1,5 @@
 [![Build Status](https://github.com/clulab/ConceptAlignment/workflows/ConceptAlignment%20CI/badge.svg)](https://github.com/clulab/ConceptAlignment/actions)
-[![Docker Version](https://shields.io/docker/v/clulab/conceptalignment?sort=semver&label=docker)](https://hub.docker.com/r/clulab/conceptalignment/tags)
+[![Docker Version](https://shields.io/docker/v/clulab/conceptalignment?sort=semver&label=docker&logo=docker)](https://hub.docker.com/r/clulab/conceptalignment/tags)
 
 # ConceptAlignment
 

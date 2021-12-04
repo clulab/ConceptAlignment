@@ -90,4 +90,5 @@ def moveDir(dirname: String): Seq[(File, String)] = {
 
 Universal / mappings ++= moveDir("../index_0")
 Universal / mappings ++= moveDir("../index_1")
-Universal / mappings ++= moveDir("../credentials")
+// Don't copy the credentials in case image is published.
+// Universal / mappings ++= moveDir("../credentials")

@@ -50,7 +50,8 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
       }
       else Seq(cmd)
     // Make sure that the topDir can be written for reindexing.
-    case Cmd("USER", oldArgs @ _*) if (oldArgs.length == 1 && oldArgs.head == "1001:0") =>
+    // case Cmd("USER", oldArgs @ _*) if (oldArgs.length == 1 && oldArgs.head == "1001:0") =>
+    case Cmd("USER", "1001:0") =>
       Seq(
         Cmd("RUN", "chmod", "775", topDir),
         Cmd("LABEL", "org.label-schema.version=\"" + tag + "\""),

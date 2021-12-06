@@ -54,7 +54,6 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
     case Cmd("USER", "1001:0") =>
       Seq(
         Cmd("RUN", "chmod", "775", topDir),
-        Cmd("LABEL", "org.label-schema.version=\"" + tag + "\""),
         dockerCommand
       )
     case _ =>

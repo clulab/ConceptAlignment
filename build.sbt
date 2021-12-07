@@ -7,13 +7,13 @@ description := BuildUtils.singleLine("""
   |concepts/indicators/variables/model components.
 """)
 
-// Last checked 2021-08-23
+// Last checked 2021-12-06
 val scala11 = "2.11.12" // up to 2.11.12
 val scala12 = "2.12.14" // up to 2.12.14
 val scala13 = "2.13.6"  // up to 2.13.6
 
 // Processors is not available for scala13, so it is skipped here.
-ThisBuild / crossScalaVersions := Seq(scala12, scala11) // , scala13)
+ThisBuild / crossScalaVersions := Seq(scala12) // wait for eidos, scala11) // , scala13)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 resolvers ++= Seq(
@@ -23,6 +23,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= {
   val luceneVer = "6.6.6" // Match transitive dependency in Eidos.
+  val playVer = BuildUtils.sbtPluginVersion
 
   Seq(
     "ai.lum"                     %% "common"                  % "0.0.8", // match eidos
@@ -31,7 +32,7 @@ libraryDependencies ++= {
     "org.apache.lucene"           % "lucene-queryparser"      % luceneVer,
 
     "com.typesafe.scala-logging" %% "scala-logging"           % "3.7.2",
-    "com.typesafe.play"          %% "play-json"               % "2.8.0", // match the plug-in
+    "com.typesafe.play"          %% "play-json"               % playVer,
 
     "ch.qos.logback"              % "logback-classic"         % "1.0.10",
     "org.slf4j"                   % "slf4j-api"               % "1.7.10",
@@ -73,4 +74,16 @@ lazy val experiment = project
     .dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
 addCommandAlias("dockerize", ";compile;test;webapp/docker:publishLocal")
-addCommandAlias("publishAllLocal", ";core/publishLocal;indexer/publishLocal;scraper/publishLocal;webapp/publishLocal")
+
+val projects = Seq(
+  "core",
+  "indexer",
+  "scraper",
+  "webapp"
+)
+
+addCommandAlias("publishAllLocal", {
+  val result = projects.map { project => s"+ $project/publishLocal" }.mkString(";", ";", "")
+  println(result)
+  result
+})

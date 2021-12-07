@@ -1,5 +1,7 @@
 [![Build Status](https://github.com/clulab/ConceptAlignment/workflows/ConceptAlignment%20CI/badge.svg)](https://github.com/clulab/ConceptAlignment/actions)
+[![Maven Central](https://img.shields.io/maven-central/v/org.clulab/conceptalignment-core_2.12?logo=apachemaven)](https://mvnrepository.com/artifact/org.clulab/conceptalignment-core)
 [![Docker Version](https://shields.io/docker/v/clulab/conceptalignment?sort=semver&label=docker&logo=docker)](https://hub.docker.com/r/clulab/conceptalignment/tags)
+
 
 # ConceptAlignment
 

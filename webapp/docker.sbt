@@ -5,7 +5,7 @@ import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerChmodType, DockerPe
 val topDir = "/conceptalignment"
 val appDir = topDir + "/app"
 val binDir = appDir + "/bin/" // The second half is determined by the plug-in.  Don't change.
-val app = binDir + "webapp"
+val app = binDir + "conceptalignment-webapp"
 val port = 9001
 val tag = "1.4.0"
 
@@ -93,3 +93,5 @@ Universal / mappings ++= moveDir("../index_0")
 Universal / mappings ++= moveDir("../index_1")
 // Don't copy the credentials in case image is published.
 // Universal / mappings ++= moveDir("../credentials")
+
+Global / excludeLintKeys += Docker / dockerBaseImage

@@ -88,5 +88,3 @@ addCommandAlias("publishAllLocal", {
 addCommandAlias("publishAll", {
   projects.map { project => s"+ $project/publish" }.mkString(";", ";", ";")
 })
-
-Global / excludeLintKeys += webapp / Docker / dockerBaseImage

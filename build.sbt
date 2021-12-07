@@ -9,8 +9,8 @@ description := BuildUtils.singleLine("""
 
 // Last checked 2021-12-06
 val scala11 = "2.11.12" // up to 2.11.12
-val scala12 = "2.12.14" // up to 2.12.14
-val scala13 = "2.13.6"  // up to 2.13.6
+val scala12 = "2.12.15" // up to 2.12.15
+val scala13 = "2.13.7"  // up to 2.13.7
 
 // Processors is not available for scala13, so it is skipped here.
 ThisBuild / crossScalaVersions := Seq(scala12) // wait for eidos, scala11) // , scala13)
@@ -60,7 +60,6 @@ lazy val indexer = project
 lazy val webapp = project
     .enablePlugins(PlayScala)
     .enablePlugins(JavaAppPackaging, DockerPlugin)
-    .aggregate(core)
     .dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
 //lazy val jclapp = project
@@ -83,7 +82,9 @@ val projects = Seq(
 )
 
 addCommandAlias("publishAllLocal", {
-  val result = projects.map { project => s"+ $project/publishLocal" }.mkString(";", ";", "")
-  println(result)
-  result
+  projects.map { project => s"+ $project/publishLocal" }.mkString(";", ";", ";")
+})
+
+addCommandAlias("publishAll", {
+  projects.map { project => s"+ $project/publish" }.mkString(";", ";", ";")
 })

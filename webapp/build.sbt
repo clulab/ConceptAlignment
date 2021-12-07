@@ -1,8 +1,10 @@
-name := "webapp"
+import org.clulab.sbt.Resolvers
 
-scalaVersion := "2.12.8"
+name := "conceptalignment-webapp"
+description := "webapp"
 
-resolvers += "jitpack" at "https://jitpack.io"
+resolvers ++= Seq(
+)
 
 libraryDependencies ++= Seq(
   guice,

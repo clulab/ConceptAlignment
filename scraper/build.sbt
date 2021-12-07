@@ -1,9 +1,7 @@
+import org.clulab.sbt.Resolvers
 
-name := "scraper"
-organization := "org.clulab"
-
-scalaVersion := "2.12.8"
-crossScalaVersions := Seq("2.11.12", "2.12.8")
+name := "conceptalignment-scraper"
+description := "Code to scrape data used for concept alignment"
 
 libraryDependencies ++= {
   val ulihaoyiVer = "0.7.1"

@@ -56,6 +56,6 @@ object ExperimentApp extends App {
   (flatConceptEmbeddings ++ compositionalConceptEmbeddings).foreach { conceptEmbedding =>
     // These happen to come with embeddings already.
     val embedding = conceptEmbedding.embedding.take(10).mkString(" ")
-    println(s"${conceptEmbedding.namer.name} $embedding")
+    println(s"${conceptEmbedding.namer.getName} $embedding")
   }
 }

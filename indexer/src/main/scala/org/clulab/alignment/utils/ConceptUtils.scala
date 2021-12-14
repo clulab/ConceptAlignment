@@ -26,7 +26,7 @@ object ConceptUtils {
       .collect { case grounder: EidosOntologyGrounder => grounder}
       .find { grounder => grounder.name == namespace }.get
     val TDConceptEmbeddings = TDOntology.conceptEmbeddings
-    ConceptSequence(TDConceptEmbeddings.map(ce => new FlatConcept(ce.namer.name, ce.embedding)))
+    ConceptSequence(TDConceptEmbeddings.map(ce => new FlatConcept(ce.namer.getName, ce.embedding)))
   }
 
 }

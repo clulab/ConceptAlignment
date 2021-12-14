@@ -137,8 +137,9 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
               }.toArray
             }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
-        val compositionalOntologyToDatamarts = searcher.run(homeId, awayIds, hits, thresholdOpt)
-        val jsObjects = compositionalOntologyToDatamarts.resultsToJsArray()
+        // val compositionalOntologyToDatamarts = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val compositionalOntologyToDocuments = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val jsObjects = compositionalOntologyToDocuments.resultsToJsArray()
 
         Ok(jsObjects)
       }

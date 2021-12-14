@@ -1,14 +1,10 @@
 package org.clulab.alignment.webapp.searcher
 
 import com.github.jelmerk.knn.scalalike.SearchResult
-import org.clulab.alignment.CompositionalOntologyMapper
-import org.clulab.alignment.CompositionalOntologyToDatamarts
+import org.clulab.alignment.{CompositionalOntologyMapper, CompositionalOntologyToDatamarts, CompositionalOntologyToDocuments, FlatOntologyMapper, SingleKnnApp, SingleKnnAppTrait}
 
 import java.util.concurrent.TimeUnit
 import javax.inject._
-import org.clulab.alignment.FlatOntologyMapper
-import org.clulab.alignment.SingleKnnApp
-import org.clulab.alignment.SingleKnnAppTrait
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
@@ -94,7 +90,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     result
   }
 
-  def run(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDatamarts = {
+  def run(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDocuments = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
     val searchingFuture = loadingFuture.map { singleKnnApp =>
       try {
@@ -107,8 +103,15 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
           // new CompositionalOntologyToDatamarts(homeId, Seq.empty)
       }
     }
-    val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
-    result
+    val datamartsResult: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    val datamartIdentifiers = datamartsResult.dstResults.map(_._1)
+    val datamartDocuments = getDatamartDocuments(datamartIdentifiers)
+    val datamartDocumentsAndFloats = datamartsResult.dstResults.zip(datamartDocuments).map { case (datamartIdentifierAndFloat, datamartDocument) =>
+      (datamartDocument, datamartIdentifierAndFloat._2)
+    }
+    val documentsResult: CompositionalOntologyToDocuments = CompositionalOntologyToDocuments(datamartsResult.srcId, datamartDocumentsAndFloats)
+
+    documentsResult
   }
 
   def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {

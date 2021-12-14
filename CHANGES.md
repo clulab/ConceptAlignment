@@ -1,4 +1,6 @@
 # Changes
++ **0.5.0** - Use Eidos 1.5.0 with newly formatted ontology
++ **0.4.0** - Scrape Dojo by default instead of ISI and SuperMaaS
 + **0.3.1** - Don't overreact on input errors in compositional searches
 + **0.3.1** - Add version to flat ontology, more memory for json parser
 + **0.3.0** - Update eidos, processors, ontology, docker 1.3.0

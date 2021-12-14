@@ -30,4 +30,14 @@ class DatamartDocument(document: Document) {
       "variableDescription" -> variableDescription
     )
   }
+
+  def toJsObject: JsObject = {
+    Json.obj(
+      "datamartId" -> datamartId,
+      "datasetId" -> datasetId,
+      "variableId" -> variableId,
+      "variableName" -> variableName,
+      "variableDescription" -> variableDescription
+    )
+  }
 }

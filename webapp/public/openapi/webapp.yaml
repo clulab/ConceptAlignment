@@ -68,6 +68,26 @@ components:
         variableId:
           description: a unique identifier for a variable within a particular dataset
           type: string
+    extendedDatamart:
+      description: the ID of the datamart plus variable name and description
+      type: object
+      properties:
+        datamartId:
+          description: an indication of the source of the data to distinguish clashing datasetIds from different sources.  Together the datamartId, datasetId, and variableId should form a GUID.
+          type: string
+        datasetId:
+          description: a unique identifer for the dataset within a particular datamart
+          type: string
+        variableId:
+          description: a unique identifier for a variable within a particular dataset
+          type: string
+        # The next two are just extra information for the reader.
+        variableName:
+          description: a more human readable version of the variableId
+          type: string
+        variableDescription:
+          description: an more thorough explanation of the variable
+          type: string
     # TODO: This score should really be separate.
     scoredDatamart:
       type: object
@@ -107,7 +127,7 @@ components:
           score:
             $ref: "#/components/schemas/score"
           datamart:
-            $ref: "#/components/schemas/datamart"
+            $ref: "#/components/schemas/extendedDatamart"
     flatOntologyNode:
       description: the specification of the ontology node
       type: string

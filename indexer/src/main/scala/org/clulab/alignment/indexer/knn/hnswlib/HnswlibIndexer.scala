@@ -65,10 +65,10 @@ class HnswlibIndexer {
         .get
     val conceptEmbeddings = eidosOntologyGrounder.conceptEmbeddings
     val items: Seq[FlatOntologyAlignmentItem] = conceptEmbeddings.map { conceptEmbedding =>
-      val name = conceptEmbedding.namer.name
-      val branch = conceptEmbedding.namer.branch
+      val name = conceptEmbedding.namer.getName
+      val branchOpt = conceptEmbedding.namer.getBranchOpt
       val embedding = conceptEmbedding.embedding
-      val identifier = FlatOntologyIdentifier(namespace, name, branch)
+      val identifier = FlatOntologyIdentifier(namespace, name, branchOpt)
 
       FlatOntologyAlignmentItem(identifier, embedding)
     }
@@ -98,14 +98,14 @@ class HnswlibIndexer {
         .find { grounder => grounder.name == namespace }
         .get
     val allConceptEmbeddings = eidosOntologyGrounder.conceptEmbeddings
-    val branchedConceptEmbeddings = allConceptEmbeddings.groupBy(_.namer.branch.get)
+    val branchedConceptEmbeddings = allConceptEmbeddings.groupBy(_.namer.getBranchOpt.get)
     val indexes = branchesAndFilenames.map { case (branch, indexFilename) =>
       val conceptEmbeddings = branchedConceptEmbeddings(branch)
       val items = conceptEmbeddings.map { conceptEmbedding =>
-        val name = conceptEmbedding.namer.name
-        val branch = conceptEmbedding.namer.branch
+        val name = conceptEmbedding.namer.getName
+        val branchOpt = conceptEmbedding.namer.getBranchOpt
         val embedding = conceptEmbedding.embedding
-        val identifier = FlatOntologyIdentifier(namespace, name, branch)
+        val identifier = FlatOntologyIdentifier(namespace, name, branchOpt)
 
         FlatOntologyAlignmentItem(identifier, embedding)
       }

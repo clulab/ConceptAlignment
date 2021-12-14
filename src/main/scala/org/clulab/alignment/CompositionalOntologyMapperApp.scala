@@ -6,6 +6,7 @@ import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, FlatOntologyIndex}
 import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, FlatOntologyAlignmentItem}
+import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.FileUtils
 import org.clulab.alignment.utils.SafeScore
 import play.api.libs.json.JsArray
@@ -13,6 +14,31 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
 import scala.collection.mutable
+
+case class CompositionalOntologyToDocuments(srcId: CompositionalOntologyIdentifier, dstResults: Seq[(DatamartDocument, Float)]) {
+
+  def resultsToJsArray(): JsArray = {
+    val searchResults = dstResults.toArray
+    val jsDatamartObjects = searchResults.map { searchResult =>
+      Json.obj(
+        "score" -> SafeScore.get(searchResult._2),
+        "datamart" -> searchResult._1.toJsObject
+      )
+    }
+
+    JsArray(jsDatamartObjects)
+  }
+
+  def toJsObject: JsObject = {
+    val ontologyIdentifier = srcId
+    val jsDatamartValues = resultsToJsArray()
+
+    Json.obj(
+      "ontology" -> ontologyIdentifier.toJsObject,
+      "datamarts" -> jsDatamartValues
+    )
+  }
+}
 
 case class CompositionalOntologyToDatamarts(srcId: CompositionalOntologyIdentifier, dstResults: Seq[(DatamartIdentifier, Float)]) {
 
@@ -27,7 +53,6 @@ case class CompositionalOntologyToDatamarts(srcId: CompositionalOntologyIdentifi
 
     JsArray(jsDatamartObjects)
   }
-
 
   def toJsObject: JsObject = {
     val ontologyIdentifier = srcId

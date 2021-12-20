@@ -110,7 +110,7 @@ containers, it may be necessary to reconfigure the scraper to use something like
 
 #### Automatic preparation
 
-Run either `sbt dockerize` to include steps like testing or `sbt webapp/docker:publishLocal` if you know it's ready to go.  This automatic preparation does not include the credentials files, so those will need to be attached using a volume.
+Run either `sbt dockerize` to include steps like testing and scraping and indexing or `sbt webapp/docker:publishLocal` if you know it's ready to go.  This automatic preparation does not include the credentials files, so those will need to be attached using a volume.
 
 #### Manual preparation
 

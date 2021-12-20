@@ -72,7 +72,7 @@ lazy val evaluator = project
 lazy val experiment = project
     .dependsOn(core % "compile -> compile; test -> test", scraper, indexer)
 
-addCommandAlias("dockerize", ";compile;test;webapp/docker:publishLocal")
+addCommandAlias("dockerize", ";test;builder/runMain org.clulab.alignment.builder.BuilderApp;webapp/docker:publishLocal")
 
 val projects = Seq(
   "core",

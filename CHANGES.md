@@ -1,4 +1,5 @@
 # Changes
++ **0.5.1** - Update Eidos dependency, logback
 + **0.5.0** - Use Eidos 1.5.0 with newly formatted ontology
 + **0.4.0** - Scrape Dojo by default instead of ISI and SuperMaaS
 + **0.3.1** - Don't overreact on input errors in compositional searches

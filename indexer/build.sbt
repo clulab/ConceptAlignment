@@ -10,7 +10,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= {
   Seq(
-    "org.clulab"              %% "eidos"              % "1.5.0", // "1.1.0-SNAPSHOT"
+    "org.clulab"              %% "eidos"              % "1.5.0",
     // Only change this if you are prepared to reindex.
     // This is normally provided by Eidos as a transitive dependency.
     // If need be, it can be pinned down here.

@@ -6,6 +6,12 @@ import org.clulab.alignment.webapp.grounder.IndicatorDocument
 import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
 import ujson.Value
 
+/**
+ * This App "scrapes" the indicators provided in the input file and grounds them,
+ * writing results ot the output file.  It is based on the indexes in the
+ * searcherLocations.  The input file was provided to us and includes the historic
+ * values that substitute for a current scrape.
+ */
 object GroundIndicatorsApp extends App {
   val inputFilename = "../comparer/indicators_11082021.jsonl"
   val outputFilename = "../comparer/grounded_indicators_11082021.jsonl"

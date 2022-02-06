@@ -6,6 +6,13 @@ import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
 
 import scala.collection.mutable
 
+/**
+ * This App takes current indexes (in SearcherLocations) made from the datamarts and ontologies,
+ * runs through the datamarts, mapping them to ontlogy nodes, and then counts how many times each
+ * of the ontology nodes have not been mentioned.  It is used to look for ontology nodes that
+ * aren't associated with indicators and therefore might be superfluous or mismatched to the
+ * interests exemplified by the data.
+ */
 object FindUnusedOntologyNodesApp extends App {
 
   class Counter(strings: Seq[String]) {

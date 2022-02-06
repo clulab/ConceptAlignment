@@ -10,6 +10,14 @@ import org.clulab.wm.eidoscommon.utils.StringUtils
 
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * This App reads the input csv files and writes out tsv files including
+ * new columns that unscrambles the munged ontology node and then matches
+ * the compositional ontology to indicators.  The indicators should have
+ * originated in the json file, like the indicators_11082021.jsonl, and
+ * then have been turned into an indexes.  indicators_11082021.jsonl ->
+ * datamart.tsv -> datamart.idx.
+ * */
 object CheckSpreadsheetsApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
   val nafInputFilename = "../comparer/NAF2.csv"

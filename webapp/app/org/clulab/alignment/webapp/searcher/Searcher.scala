@@ -103,9 +103,9 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
         // new CompositionalOntologyToDatamarts(homeId, Seq.empty)
       }
     }
-    val datamartsResult: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
 
-    datamartsResult
+    result
   }
 
 

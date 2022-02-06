@@ -90,26 +90,22 @@ object NumberSpreadsheetsApp extends App {
 
           if (homeIdAndAwayIdOptOpt.isDefined) {
             val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
-            try {
-              val datamartIdentifiersAndValues = searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
-            }
-            catch {
-              case _ =>
-            }
-//            val (datamartIdentifiers, floats) = datamartIdentifiersAndValues.unzip
-//            val values = floats.map(_.toString)
-//
-//            xsvWriter.println(Seq(
-//              conceptName, ontologyNodes, assignedIndicator, defaultIndicatorMatch,
-//              datamartIdentifier1, datamartIdentifier2, datamartIdentifier3,
-//            ) ++ datamartIdentifiers ++ values)
-//          }
-//          else {
-//            xsvWriter.println(Seq(
-//              conceptName, ontologyNodes, assignedIndicator, defaultIndicatorMatch,
-//              datamartIdentifier1, datamartIdentifier2, datamartIdentifier3,
-//              "", "", "", "", "", ""
-//            ))
+            val datamartIdentifiersAndValues = searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
+            val (datamartIdentifiers, floats) = datamartIdentifiersAndValues.unzip
+            val values = floats.map(_.toString)
+
+            xsvWriter.println(Seq(
+              conceptName, ontologyNodes, assignedIndicator, defaultIndicatorMatch,
+              datamartIdentifier1, datamartIdentifier2, datamartIdentifier3,
+            ) ++ datamartIdentifiers ++ values)
+          }
+          else {
+            // Search on the string instead?
+            xsvWriter.println(Seq(
+              conceptName, ontologyNodes, assignedIndicator, defaultIndicatorMatch,
+              datamartIdentifier1, datamartIdentifier2, datamartIdentifier3,
+              "", "", "", "", "", ""
+            ))
           }
         }
       }

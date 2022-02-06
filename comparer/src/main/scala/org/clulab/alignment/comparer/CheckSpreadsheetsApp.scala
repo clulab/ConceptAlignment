@@ -3,7 +3,7 @@ package org.clulab.alignment.comparer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.utils.{CsvWriter, FileUtils, TsvWriter}
+import org.clulab.alignment.utils.{FileUtils, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
 import org.clulab.wm.eidoscommon.utils.StringUtils
@@ -146,7 +146,7 @@ object CheckSpreadsheetsApp extends App {
     }
     val homeIdAndAwayIdOptOpt = homeIdAndAwayIdOpts.find { case (homeId, awayIdOpt) =>
       try {
-        searcher.run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+        searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
         true
       }
       catch {
@@ -227,7 +227,7 @@ object CheckSpreadsheetsApp extends App {
                 homeIdAndAwayIdOptOpt
                     .map { case (homeId, awayIdOpt) =>
                       val datamartIdentifiers = searcher
-                          .run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+                          .runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
                           .dstResults
                           .map { case (datamartIdentifier, _) => datamartIdentifier }
                           .map(_.toString)
@@ -252,7 +252,7 @@ object CheckSpreadsheetsApp extends App {
             }
 
         val (nodeName, datamartIdentifiers) = nodeNameAndDatamartIdentifiers
-//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
+//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ datamartIdentifiers.take(3))
         xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ datamartIdentifiers.take(3))
       }
     }

@@ -131,41 +131,36 @@ object ExperimentSpreadsheetsApp extends App {
         headers.indexOf("Robyn's Score for UAZ Indicators")
       )
       val colCount = headers.length
-      var lineNo = 1 // headers
       var count = 0
-      var finished = false
 
-      linesAndLineNos.foreach { case (line, lineNo) =>
+      linesAndLineNos.foreach { case (line, zeroLineNo) =>
+        val lineNo = zeroLineNo + 1
         val values = tsvReader.readln(line, colCount)
+        val goldValues = getDocumentIdValues(values, goldCols)
+        val oldValues = getDocumentIdValues(values, oldCols)
 
-        finished = finished || values.forall(_.isEmpty)
-        if (!finished) {
-          val goldValues = getDocumentIdValues(values, goldCols)
-          val oldValues = getDocumentIdValues(values, oldCols)
+        if (goldValues.nonEmpty && oldValues.nonEmpty) {
+          val ontologyNodes = values(ontologyNodesCol)
+          val newValues = if (ontologyNodes.nonEmpty) {
+            val homeIdAndAwayIdOptOpt = mkHomeAndAwayIds(ontologyNodes.split(' '))
+            val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
+            //            val datamartIdentifiersAndValues = searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
+            //            val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
 
-          if (goldValues.nonEmpty && oldValues.nonEmpty) {
-            val ontologyNodes = values(ontologyNodesCol)
-            val newValues = if (ontologyNodes.nonEmpty) {
-              val homeIdAndAwayIdOptOpt = mkHomeAndAwayIds(ontologyNodes.split(' '))
-              val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
-              //            val datamartIdentifiersAndValues = searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
-              //            val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
-
-              //            datamartIdentifiers
-              Seq.empty[DatamartIdentifier]
-            }
-            else {
-              // Search on the string instead?
-              Seq.empty[DatamartIdentifier]
-            }
-            val oldScore = score(oldValues, goldValues)
-            val newScore = score(newValues, goldValues)
-            val concept = values(conceptNameCol)
-            val uazScores = uazScoreCols.map(values(_).toString).mkString("[", ", ", "]")
-
-            count += 1
-            println(s"count $count\tline $lineNo\t$concept\tuazScores: $uazScores\toldScore: $oldScore\tnewScore: $newScore")
+            //            datamartIdentifiers
+            Seq.empty[DatamartIdentifier]
           }
+          else {
+            // Search on the string instead?
+            Seq.empty[DatamartIdentifier]
+          }
+          val oldScore = score(oldValues, goldValues)
+          val newScore = score(newValues, goldValues)
+          val concept = values(conceptNameCol)
+          val uazScores = uazScoreCols.map(values(_).toString).mkString("[", ", ", "]")
+
+          count += 1
+          println(s"count $count\tline $lineNo\t$concept\tuazScores: $uazScores\toldScore: $oldScore\tnewScore: $newScore")
         }
       }
     }

@@ -7,6 +7,7 @@ import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
 import org.clulab.wm.eidoscommon.utils.StringUtils
 
 /**
+ * This was supposed to add scores to the spreadsheet.
  * */
 object NumberSpreadsheetsApp extends App {
   val ataInputFilename = "../comparer/04-ATA.tsv"

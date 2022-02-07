@@ -107,8 +107,10 @@ object ExperimentSpreadsheetsApp extends App {
 
   def test(inputFilename: String): Unit = {
     Sourcer.sourceFromFile(inputFilename).autoClose { source =>
-      val lines = source.getLines
-      val headers = tsvReader.readln(lines.next())
+      val allLines = source.getLines
+      val untilEmptyLines = allLines.takeWhile { line => !line.forall(_ == '\t') }
+      val linesAndLineNos = untilEmptyLines.zipWithIndex
+      val headers = tsvReader.readln(linesAndLineNos.next()._1)
       val conceptNameCol = headers.indexOf("Concept name")
       val ontologyNodesCol = headers.indexOf("OntologyNodes")
       val oldCols = Array(
@@ -129,12 +131,11 @@ object ExperimentSpreadsheetsApp extends App {
         headers.indexOf("Robyn's Score for UAZ Indicators")
       )
       val colCount = headers.length
-      var lineNo = 0
+      var lineNo = 1 // headers
+      var count = 0
       var finished = false
 
-      lines.foreach { line =>
-        lineNo += 1
-
+      linesAndLineNos.foreach { case (line, lineNo) =>
         val values = tsvReader.readln(line, colCount)
 
         finished = finished || values.forall(_.isEmpty)
@@ -162,7 +163,8 @@ object ExperimentSpreadsheetsApp extends App {
             val concept = values(conceptNameCol)
             val uazScores = uazScoreCols.map(values(_).toString).mkString("[", ", ", "]")
 
-            println(s"$concept\tuazScores: $uazScores\toldScore: $oldScore\tnewScore: $newScore")
+            count += 1
+            println(s"count $count\tline $lineNo\t$concept\tuazScores: $uazScores\toldScore: $oldScore\tnewScore: $newScore")
           }
         }
       }

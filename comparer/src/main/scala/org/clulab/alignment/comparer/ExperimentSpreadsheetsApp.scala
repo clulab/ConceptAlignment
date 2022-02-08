@@ -2,6 +2,7 @@ package org.clulab.alignment.comparer
 
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
+import org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.{Sourcer, TsvReader}
@@ -17,6 +18,7 @@ object ExperimentSpreadsheetsApp extends App {
   val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv" // TODO: This file needs preparation
   val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
+  val datamartFilename = s"$baseDir/datamarts/datamarts.tsv"
   val datamartIndexFilename = s"$baseDir/indexes/index_1/hnswlib-datamart.idx"
   val searcherLocations = new SearcherLocations(1, s"$baseDir/indexes")
 
@@ -24,7 +26,7 @@ object ExperimentSpreadsheetsApp extends App {
   val thresholdOpt = None
   val tsvReader = new TsvReader()
 
-  val datamartIndex = DatamartIndex.load(datamartIndexFilename)
+  val datamartIndex = getDatamartIndex(rebuild = true)
   val searcher = new Searcher(searcherLocations)
 
   def getSearcher(): Searcher = {
@@ -35,6 +37,15 @@ object ExperimentSpreadsheetsApp extends App {
       println("Searcher ready.")
     }
     searcher
+  }
+
+  def getDatamartIndex(rebuild: Boolean): DatamartIndex.Index = {
+    if (!rebuild)
+      DatamartIndex.load(datamartIndexFilename)
+    else {
+      HnswlibDatamartIndexerApp.run(datamartFilename, datamartIndexFilename)
+      DatamartIndex.load(datamartIndexFilename)
+    }
   }
 
   def mkHomeAndAwayIds(strings: Array[String]): Option[(CompositionalOntologyIdentifier, Option[CompositionalOntologyIdentifier])] = {

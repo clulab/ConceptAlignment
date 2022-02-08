@@ -10,23 +10,32 @@ import org.clulab.wm.eidoscommon.utils.StringUtils
 
 // Which of our answers were in the gold?
 object ExperimentSpreadsheetsApp extends App {
-  val ataInputFilename = "../comparer/07-ATA_Cheryl_Robyn.txt"
-  val nafInputFilename = "../comparer/07-NAF.tsv"
-  val xtraInputFilename = "../comparer/07-xtra.tsv"
+  val baseDir = "./comparer/src/main/resources/org/clulab/alignment/comparer"
+
+  val ataInputFilename = s"$baseDir/spreadsheets/07-ATA.tsv"
+  val nafInputFilename = s"$baseDir/spreadsheets/07-NAF.tsv" // TODO: This file needs preparation
+  val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv" // TODO: This file needs preparation
   val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
-  val datamartIndexFilename = "../builder/index_1/hnswlib-datamart.idx"
-  val searcherLocations = new SearcherLocations(1, "../builder")
+  val datamartIndexFilename = s"$baseDir/indexes/index_1/hnswlib-datamart.idx"
+  val searcherLocations = new SearcherLocations(1, s"$baseDir/indexes")
 
   val maxHits = 10
   val thresholdOpt = None
   val tsvReader = new TsvReader()
 
   val datamartIndex = DatamartIndex.load(datamartIndexFilename)
-//  val searcher = new Searcher(searcherLocations)
+  val searcher = new Searcher(searcherLocations)
 
-//  while (!searcher.isReady)
-//    Thread.sleep(100)
+  def getSearcher(): Searcher = {
+    if (!searcher.isReady) {
+      println("Waiting for searcher...")
+      while (!searcher.isReady)
+        Thread.sleep(100)
+      println("Searcher ready.")
+    }
+    searcher
+  }
 
   def mkHomeAndAwayIds(strings: Array[String]): Option[(CompositionalOntologyIdentifier, Option[CompositionalOntologyIdentifier])] = {
     def getSlot(string: String): String = StringUtils.beforeFirst(StringUtils.afterFirst(string, '/'), '/')
@@ -76,7 +85,7 @@ object ExperimentSpreadsheetsApp extends App {
 
     val ids = cols.map(values(_)).filter(_.nonEmpty)
 
-    if (ids.nonEmpty && ids.head == "[Not concept node]")
+    if (ids.nonEmpty && (ids.head == "[Not concept node]" || ids.head == "undefined"))
       Array.empty
     else {
       val datamartIdentifiers = ids.map { id =>
@@ -144,11 +153,15 @@ object ExperimentSpreadsheetsApp extends App {
           val newValues = if (ontologyNodes.nonEmpty) {
             val homeIdAndAwayIdOptOpt = mkHomeAndAwayIds(ontologyNodes.split(' '))
             val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
-            //            val datamartIdentifiersAndValues = searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
-            //            val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
 
-            //            datamartIdentifiers
-            Seq.empty[DatamartIdentifier]
+            if (false) { // (searcher.isReady) { // for the impatient
+              val datamartIdentifiersAndValues = getSearcher().runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
+              val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
+
+              datamartIdentifiers
+            }
+            else
+              Seq.empty[DatamartIdentifier]
           }
           else {
             // Search on the string instead?
@@ -166,7 +179,7 @@ object ExperimentSpreadsheetsApp extends App {
     }
   }
 
-  inputFilenames.take(1).foreach { inputFilename =>
+  inputFilenames.foreach { inputFilename =>
     test(inputFilename)
   }
 }

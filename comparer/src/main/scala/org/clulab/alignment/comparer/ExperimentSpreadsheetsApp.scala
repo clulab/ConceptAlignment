@@ -14,8 +14,8 @@ object ExperimentSpreadsheetsApp extends App {
   val baseDir = "./comparer/src/main/resources/org/clulab/alignment/comparer"
 
   val ataInputFilename = s"$baseDir/spreadsheets/07-ATA.tsv"
-  val nafInputFilename = s"$baseDir/spreadsheets/07-NAF.tsv" // TODO: This file needs preparation
-  val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv" // TODO: This file needs preparation
+  val nafInputFilename = s"$baseDir/spreadsheets/07-NAF.tsv"
+  val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv"
   val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
   val datamartFilename = s"$baseDir/datamarts/datamarts.tsv"
@@ -163,13 +163,18 @@ object ExperimentSpreadsheetsApp extends App {
           val ontologyNodes = values(ontologyNodesCol)
           val newValues = if (ontologyNodes.nonEmpty) {
             val homeIdAndAwayIdOptOpt = mkHomeAndAwayIds(ontologyNodes.split(' '))
-            val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
 
-            if (false) { // (searcher.isReady) { // for the impatient
-              val datamartIdentifiersAndValues = getSearcher().runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
-              val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
+            if (homeIdAndAwayIdOptOpt.nonEmpty) {
+              val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
 
-              datamartIdentifiers
+              if (false) { // (searcher.isReady) { // for the impatient
+                val datamartIdentifiersAndValues = getSearcher().runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
+                val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
+
+                datamartIdentifiers
+              }
+              else
+                Seq.empty[DatamartIdentifier]
             }
             else
               Seq.empty[DatamartIdentifier]

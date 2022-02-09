@@ -5,12 +5,14 @@ import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, Flat
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.utils.Closer.AutoCloser
-import org.clulab.alignment.utils.{Sourcer, TsvReader}
+import org.clulab.alignment.utils.{FileUtils, Sourcer, TsvReader, TsvWriter}
 import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
 import org.clulab.wm.eidoscommon.utils.StringUtils
 
+import java.io.File
+
 // Which of our answers were in the gold?
-object ExperimentSpreadsheetsApp extends App {
+class ExperimentSpreadsheetsApp() {
   val baseDir = "./comparer/src/main/resources/org/clulab/alignment/comparer"
 
   val ataInputFilename = s"$baseDir/spreadsheets/07-ATA.tsv"
@@ -18,6 +20,7 @@ object ExperimentSpreadsheetsApp extends App {
   val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv"
   val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
+  val outputFilename = "../ExperimentSpreadsheetsApp.txt"
   val datamartFilename = s"$baseDir/datamarts/datamarts.tsv"
   val datamartIndexFilename = s"$baseDir/indexes/index_1/hnswlib-datamart.idx"
   val searcherLocations = new SearcherLocations(1, s"$baseDir/indexes")
@@ -110,7 +113,7 @@ object ExperimentSpreadsheetsApp extends App {
           datamartIdentifier
         }
         catch {
-          case _ => throw new RuntimeException(s"Couldn't search for $id.")
+          case _: Throwable => throw new RuntimeException(s"Couldn't search for $id.")
         }
       }
       datamartIdentifiers
@@ -125,8 +128,10 @@ object ExperimentSpreadsheetsApp extends App {
     count
   }
 
-  def test(inputFilename: String): Unit = {
-    Sourcer.sourceFromFile(inputFilename).autoClose { source =>
+  def test(inputFilename: String, tsvWriter: TsvWriter): (Int, Int) = {
+    val inputFile = new File(inputFilename)
+
+    Sourcer.sourceFromFile(inputFile).autoClose { source =>
       val allLines = source.getLines
       val untilEmptyLines = allLines.takeWhile { line => !line.forall(_ == '\t') }
       val linesAndLineNos = untilEmptyLines.zipWithIndex
@@ -152,6 +157,7 @@ object ExperimentSpreadsheetsApp extends App {
       )
       val colCount = headers.length
       var count = 0
+      var (oldScoreSum, newScoreSum) = (0, 0)
 
       linesAndLineNos.foreach { case (line, zeroLineNo) =>
         val lineNo = zeroLineNo + 1
@@ -186,16 +192,38 @@ object ExperimentSpreadsheetsApp extends App {
           val oldScore = score(oldValues, goldValues)
           val newScore = score(newValues, goldValues)
           val concept = values(conceptNameCol)
-          val uazScores = uazScoreCols.map(values(_).toString).mkString("[", ", ", "]")
+          val uazScores = uazScoreCols.map(values(_)).mkString("[", ", ", "]")
 
           count += 1
-          println(s"count $count\tline $lineNo\t$concept\tuazScores: $uazScores\toldScore: $oldScore\tnewScore: $newScore")
+          oldScoreSum += oldScore
+          newScoreSum += newScore
+          tsvWriter.println(inputFile.getName, count.toString, lineNo.toString, concept, uazScores, oldScore.toString, newScore.toString)
         }
       }
+
+      (oldScoreSum, newScoreSum)
     }
   }
 
-  inputFilenames.foreach { inputFilename =>
-    test(inputFilename)
+  def run(): (Int, Int) = {
+    FileUtils.printWriterFromFile(outputFilename).autoClose { printWriter =>
+      val tsvWriter = new TsvWriter(printWriter)
+      var (oldScoreTotal, newScoreTotal) = (0, 0)
+
+      tsvWriter.println("File", "Index", "Line", "Compositional Grounding", "UAzScores", "OldScore", "NewScore")
+      inputFilenames.foreach { inputFilename =>
+        val (oldScoreSum, newScoreSum) = test(inputFilename, tsvWriter)
+        oldScoreTotal += oldScoreSum
+        newScoreTotal += newScoreSum
+      }
+      tsvWriter.println()
+      tsvWriter.println("Totals", "OldScoreTotal", "NewScoreTotal")
+      tsvWriter.println("", oldScoreTotal.toString, newScoreTotal.toString)
+      (oldScoreTotal, newScoreTotal)
+    }
   }
+}
+
+object ExperimentSpreadsheetsApp extends App {
+  new ExperimentSpreadsheetsApp().run()
 }

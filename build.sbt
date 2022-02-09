@@ -47,7 +47,7 @@ lazy val builder = project
     .dependsOn(scraper, indexer)
 
 lazy val comparer = project
-    .dependsOn(webapp)
+    .dependsOn(core % "compile -> compile; test -> test", webapp)
 
 lazy val core = (project in file("."))
 

@@ -87,6 +87,16 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
     datamartDocuments
   }
 
+  def runOld(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartIdentifier, Float)] = {
+    val vectorOpt: Option[Array[Float]] = getVectorOpt(queryString)
+    val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = vectorOpt.map { vector =>
+      DatamartIndex.findNearest(datamartIndex, vector, maxHits, thresholdOpt)
+    }.getOrElse(Seq.empty)
+    val datamartIdentifiersAndScores = searchResults.map { searchResult => (searchResult.item.id, searchResult.distance) }
+
+    datamartIdentifiersAndScores
+  }
+
   def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)] = {
     val vectorOpt: Option[Array[Float]] = getVectorOpt(queryString)
     val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = vectorOpt.map { vector =>

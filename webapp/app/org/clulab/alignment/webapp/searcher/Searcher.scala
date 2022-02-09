@@ -63,6 +63,23 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
 
   def getStatus: SearcherStatus = statusHolder.get
 
+  def runOld(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartIdentifier, Float)] = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        singleKnnApp.runOld(queryString, maxHits, thresholdOpt)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught searching for $maxHits hits of "$queryString" on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          Seq.empty
+      }
+    }
+    val result = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
   // This doesn't need a callback because we'll wait for it.
   override def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)] = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
@@ -89,6 +106,25 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     val result = Await.result(searchingFuture, maxWaitTime)
     result
   }
+
+  def runOld(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDatamarts = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        compositionalOntologyMapperOpt.get.ontologyItemToDatamartMapping(homeId, awayIds, Some(maxHits), thresholdOpt)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
+          throw throwable // statusHolder.set(SearcherStatus.Failing)
+        // new CompositionalOntologyToDatamarts(homeId, Seq.empty)
+      }
+    }
+    val result: CompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+
+    result
+  }
+
 
   def run(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier], maxHits: Int, thresholdOpt: Option[Float]): CompositionalOntologyToDocuments = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)

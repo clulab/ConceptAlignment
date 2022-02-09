@@ -3,13 +3,21 @@ package org.clulab.alignment.comparer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.utils.{CsvWriter, FileUtils, TsvWriter}
+import org.clulab.alignment.utils.{FileUtils, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
 import org.clulab.wm.eidoscommon.utils.StringUtils
 
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * This App reads the input csv files and writes out tsv files including
+ * new columns that unscrambles the munged ontology node and then matches
+ * the compositional ontology to indicators.  The indicators should have
+ * originated in the json file, like the indicators_11082021.jsonl, and
+ * then have been turned into an indexes.  indicators_11082021.jsonl ->
+ * datamart.tsv -> datamart.idx.
+ * */
 object CheckSpreadsheetsApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
   val nafInputFilename = "../comparer/NAF2.csv"
@@ -138,7 +146,7 @@ object CheckSpreadsheetsApp extends App {
     }
     val homeIdAndAwayIdOptOpt = homeIdAndAwayIdOpts.find { case (homeId, awayIdOpt) =>
       try {
-        searcher.run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+        searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
         true
       }
       catch {
@@ -219,7 +227,7 @@ object CheckSpreadsheetsApp extends App {
                 homeIdAndAwayIdOptOpt
                     .map { case (homeId, awayIdOpt) =>
                       val datamartIdentifiers = searcher
-                          .run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+                          .runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
                           .dstResults
                           .map { case (datamartIdentifier, _) => datamartIdentifier }
                           .map(_.toString)
@@ -244,7 +252,7 @@ object CheckSpreadsheetsApp extends App {
             }
 
         val (nodeName, datamartIdentifiers) = nodeNameAndDatamartIdentifiers
-//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
+//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ datamartIdentifiers.take(3))
         xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ datamartIdentifiers.take(3))
       }
     }

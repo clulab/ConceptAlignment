@@ -1,6 +1,6 @@
 import org.clulab.sbt.Resolvers
 
-name := "comparer"
+name := "conceptalignment-comparer"
 description := "comparer"
 
 resolvers ++= Seq(

@@ -63,6 +63,23 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
 
   def getStatus: SearcherStatus = statusHolder.get
 
+  def runOld(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartIdentifier, Float)] = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        singleKnnApp.runOld(queryString, maxHits, thresholdOpt)
+      }
+      catch {
+        case throwable: Throwable =>
+          Searcher.logger.error(s"""Exception caught searching for $maxHits hits of "$queryString" on index $index""", throwable)
+          statusHolder.set(SearcherStatus.Failing)
+          Seq.empty
+      }
+    }
+    val result = Await.result(searchingFuture, maxWaitTime)
+    result
+  }
+
   // This doesn't need a callback because we'll wait for it.
   override def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)] = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)

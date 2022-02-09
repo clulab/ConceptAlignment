@@ -4,6 +4,7 @@ import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
+import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.{FileUtils, Sourcer, TsvReader, TsvWriter}
 import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
@@ -26,13 +27,13 @@ class ExperimentSpreadsheetsApp() {
   val searcherLocations = new SearcherLocations(1, s"$baseDir/indexes")
 
   val maxHits = 10
-  val thresholdOpt = None
+  val thresholdOpt: Option[Float] = None
   val tsvReader = new TsvReader()
 
-  val datamartIndex = getDatamartIndex(rebuild = true)
+  val datamartIndex: Index = getDatamartIndex(rebuild = true)
   val searcher = new Searcher(searcherLocations)
 
-  def getSearcher(): Searcher = {
+  def getSearcher: Searcher = {
     if (!searcher.isReady) {
       println("Waiting for searcher...")
       while (!searcher.isReady)
@@ -80,7 +81,7 @@ class ExperimentSpreadsheetsApp() {
       case 2 =>
         val split = slots.indexOf("concept", 1) // Skip the first concept.
         Some(getId(slots.take(split), strings.take(split)), Some(getId(slots.drop(split), strings.drop(split))))
-      case _ => ???
+      case _ => throw new RuntimeException(s"Unexpected value for count: $count")
     }
   }
 
@@ -173,8 +174,8 @@ class ExperimentSpreadsheetsApp() {
             if (homeIdAndAwayIdOptOpt.nonEmpty) {
               val (homeId, awayIdOpt) = homeIdAndAwayIdOptOpt.get
 
-              if (false) { // (searcher.isReady) { // for the impatient
-                val datamartIdentifiersAndValues = getSearcher().runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
+              if (true) { // (searcher.isReady) { // for the impatient
+                val datamartIdentifiersAndValues = getSearcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt).dstResults.take(3)
                 val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
 
                 datamartIdentifiers
@@ -182,13 +183,15 @@ class ExperimentSpreadsheetsApp() {
               else
                 Seq.empty[DatamartIdentifier]
             }
-            else
-              Seq.empty[DatamartIdentifier]
+            else {
+              val datamartIdentifiersAndValues = getSearcher.runOld(ontologyNodes, maxHits, thresholdOpt).take(3)
+              val datamartIdentifiers = datamartIdentifiersAndValues.map(_._1)
+
+              datamartIdentifiers
+            }
           }
-          else {
-            // Search on the string instead?
+          else
             Seq.empty[DatamartIdentifier]
-          }
           val oldScore = score(oldValues, goldValues)
           val newScore = score(newValues, goldValues)
           val concept = values(conceptNameCol)

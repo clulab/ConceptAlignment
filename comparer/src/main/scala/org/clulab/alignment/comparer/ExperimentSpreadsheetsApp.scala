@@ -7,7 +7,7 @@ import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.{FileUtils, Sourcer, TsvReader, TsvWriter}
-import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations}
+import org.clulab.alignment.webapp.searcher.{Searcher, SearcherLocations, SearcherStatus}
 import org.clulab.wm.eidoscommon.utils.StringUtils
 
 import java.io.File
@@ -36,9 +36,12 @@ class ExperimentSpreadsheetsApp() {
   def getSearcher: Searcher = {
     if (!searcher.isReady) {
       println("Waiting for searcher...")
-      while (!searcher.isReady)
+      while (!searcher.isReady) {
+        if (searcher.getStatus == SearcherStatus.Failing)
+          throw new RuntimeException("Searcher failed to start!  Is hnswlib-glove.idx available?")
         Thread.sleep(100)
-      println("Searcher ready.")
+      }
+      println("Searcher is ready.")
     }
     searcher
   }

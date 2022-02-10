@@ -5,7 +5,10 @@ import com.typesafe.config.ConfigValueFactory
 
 import java.io.File
 import org.clulab.alignment.data.Tokenizer
+import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
+import org.clulab.alignment.embedder.DatamartEmbedder
+import org.clulab.alignment.embedder.DatamartStopwordEmbedder
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -26,6 +29,7 @@ import scala.collection.JavaConverters._
 class HnswlibIndexer {
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
+  val datamartEmbedder: DatamartEmbedder = new DatamartStopwordEmbedder(w2v)
   val config = ConfigFactory
       .empty
       .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
@@ -118,11 +122,6 @@ class HnswlibIndexer {
     indexes
   }
 
-  def getSimpleEmbedding(words: Array[String]): Array[Float] = {
-    val filtered_words = words.filter(!HnswlibIndexer.stopwords(_))
-    w2v.makeCompositeVector(filtered_words)
-  }
-
   def getComplexEmbedding(words: Array[String]): Array[Float] = {
     null
   }
@@ -132,8 +131,7 @@ class HnswlibIndexer {
     val ontology = DatamartOntology.fromFile(datamartFilename, tokenizer)
     val items = ontology.datamartEntries.map { datamartEntry =>
       val identifier = datamartEntry.identifier
-      val words = datamartEntry.words
-      val embedding = getSimpleEmbedding(words)
+      val embedding = datamartEmbedder.embed(datamartEntry)
 
       DatamartAlignmentItem(identifier, embedding)
     }
@@ -151,11 +149,7 @@ class HnswlibIndexer {
 
 object HnswlibIndexer {
   lazy val eidos: EidosSystem = new EidosSystem()
-  val stopwords = Set(
-    "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no",
-    "not", "of", "on", "or", "such", "that", "the", "their", "then", "there", "these", "they", "this",
-    "to", "was", "will", "with"
-  )
+
 
   // This needs to be coordinated with processors or at least build.sbt.
   lazy val w2v: CompactWordEmbeddingMap = {

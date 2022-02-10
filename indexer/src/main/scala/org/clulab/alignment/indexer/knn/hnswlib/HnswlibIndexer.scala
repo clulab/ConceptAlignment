@@ -24,7 +24,6 @@ import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
 import scala.collection.JavaConverters._
 
 class HnswlibIndexer {
-  val stopwords = Set("a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no", "not", "of", "on", "or", "such", "that", "the", "their", "then", "there", "these", "they", "this", "to", "was", "will", "with")
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
   val config = ConfigFactory
@@ -120,7 +119,7 @@ class HnswlibIndexer {
   }
 
   def getSimpleEmbedding(words: Array[String]): Array[Float] = {
-    val filtered_words = words.filter(!stopwords(_))
+    val filtered_words = words.filter(!HnswlibIndexer.stopwords(_))
     w2v.makeCompositeVector(filtered_words)
   }
 
@@ -152,6 +151,11 @@ class HnswlibIndexer {
 
 object HnswlibIndexer {
   lazy val eidos: EidosSystem = new EidosSystem()
+  val stopwords = Set(
+    "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no",
+    "not", "of", "on", "or", "such", "that", "the", "their", "then", "there", "these", "they", "this",
+    "to", "was", "will", "with"
+  )
 
   // This needs to be coordinated with processors or at least build.sbt.
   lazy val w2v: CompactWordEmbeddingMap = {

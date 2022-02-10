@@ -21,7 +21,7 @@ class ExperimentSpreadsheetsApp() {
   val xtraInputFilename = s"$baseDir/spreadsheets/07-XTRA.tsv"
   val inputFilenames = Seq(ataInputFilename, nafInputFilename, xtraInputFilename)
 
-  val outputFilename = "../ExperimentSpreadsheetsApp.txt"
+  val outputFilename = "../ExperimentSpreadsheetsApp.tsv"
   val datamartFilename = s"$baseDir/datamarts/datamarts.tsv"
   val datamartIndexFilename = s"$baseDir/indexes/index_1/hnswlib-datamart.idx"
   val searcherLocations = new SearcherLocations(1, s"$baseDir/indexes")
@@ -220,13 +220,15 @@ class ExperimentSpreadsheetsApp() {
         newScoreTotal += newScoreSum
       }
       tsvWriter.println()
-      tsvWriter.println("Totals", "OldScoreTotal", "NewScoreTotal")
-      tsvWriter.println("", oldScoreTotal.toString, newScoreTotal.toString)
+      tsvWriter.println("", "", "", "Totals", "", oldScoreTotal.toString, newScoreTotal.toString)
       (oldScoreTotal, newScoreTotal)
     }
   }
 }
 
 object ExperimentSpreadsheetsApp extends App {
-  new ExperimentSpreadsheetsApp().run()
+  val (oldScoreTotal, newScoreTotal) = new ExperimentSpreadsheetsApp().run()
+
+  println(s"OldScoreTotal: $oldScoreTotal")
+  println(s"NewScoreTotal: $newScoreTotal")
 }

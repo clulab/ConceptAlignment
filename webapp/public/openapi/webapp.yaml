@@ -559,6 +559,90 @@ paths:
         500:
           description: The searcher is not working correctly.
 
+  /v2/bulkCompositionalSearch:
+    get:
+      summary: For each context and compositional ontology node provided, find the best matches in the datamarts
+      description: ""
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per ontology
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        - name: ontologyId
+          in: query
+          description: identifier for the ontology
+          required: false
+          schema:
+            type: string
+          example: "0000000-1111-2222-3333-444444444444"
+        - name: geography
+          in: query
+          description: geographic entities involved (e.g., countries, cities, regions)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Country
+        - name: period_gte
+          in: query
+          description: start time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+        - name: period_lte
+          in: query
+          description: end time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/compositionalSearchRequest2"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/compositionalSearchResponse"
+        400:
+          description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
+        500:
+          description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
+
   /v1/bulkSearchOntologyToDatamart:
     get:
       summary: For each item in the ontology, find the best matches in the datamarts
@@ -642,90 +726,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/bulkSearchDatamartToOntologyResponse"
-        500:
-          description: The searcher is not working correctly.
-        503:
-          description: The searcher is not yet ready.
-
-  /v2/bulkCompositionalSearch:
-    get:
-      summary: For each context and compositional ontology node provided, find the best matches in the datamarts
-      description: ""
-      parameters:
-        - name: secret
-          in: query
-          description: the secret that allows access to this operation
-          required: true
-          schema:
-            type: string
-          example: secret
-        - name: maxHits
-          in: query
-          description: maximum number of matches to return per ontology
-          required: false
-          schema:
-            type: integer
-            format: int32
-          example: 1
-        - name: threshold
-          in: query
-          description: lowest score to return
-          required: false
-          schema:
-            type: number
-            format: float
-          example: 0.7
-        - name: ontologyId
-          in: query
-          description: identifier for the ontology
-          required: false
-          schema:
-            type: string
-          example: "0000000-1111-2222-3333-444444444444"
-        - name: geography
-          in: query
-          description: geographic entities involved (e.g., countries, cities, regions)
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          example:
-            - Country
-        - name: period_gte
-          in: query
-          description: start time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
-          required: false
-          schema:
-            type: number
-            format: int64
-          example:
-        - name: period_lte
-          in: query
-          description: end time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
-          required: false
-          schema:
-            type: number
-            format: int64
-          example:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/compositionalSearchRequest2"
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/compositionalSearchResponse"
-        400:
-          description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
         500:
           description: The searcher is not working correctly.
         503:

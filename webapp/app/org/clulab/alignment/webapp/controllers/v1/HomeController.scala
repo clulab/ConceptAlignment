@@ -93,6 +93,28 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     Ok(jsObject)
   }
 
+  def status2(ontologyIdOpt: Option[String]): Action[AnyContent] = Action {
+    logger.info(s"Called 'status2' function with ontologyIdOpt='$ontologyIdOpt'!")
+    logger.info(s"$ontologyIdOpt")
+    val indexer = currentIndexer
+    val searcher = currentSearcher
+    val (compVersion, flatVersion) = getOntologyVersions
+    val jsObject = Json.obj(
+      "version" -> HomeController.VERSION,
+      "compOntology" -> compVersion,
+      "flatOntology" -> flatVersion,
+      "searcher" -> Json.obj(
+        "index" -> searcher.index,
+        "status" -> searcher.getStatus.toJsValue
+      ),
+      "indexer" -> Json.obj(
+        "index" -> indexer.index,
+        "status" -> indexer.getStatus.toJsValue
+      )
+    )
+    Ok(jsObject)
+  }
+
   def search(query: String, maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
     logger.info(s"Called 'search' function with '$query' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt'!")
     val searcher = currentSearcher
@@ -115,7 +137,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def compositionalSearch(maxHits: Int, thresholdOpt: Option[Float]): Action[AnyContent] = Action { request =>
     val body: AnyContent = request.body
-    logger.info(s"Called 'compositionalSearch' function with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt'!")
+    logger.info(s"Called 'compositionalSearch' function with maxHits='$maxHits', thresholdOpt='$thresholdOpt', and body='$body'!")
     try {
       val searcher = currentSearcher
       val status = searcher.getStatus
@@ -152,8 +174,91 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     }
   }
 
+  def compositionalSearch2(maxHits: Int, thresholdOpt: Option[Float], ontologyIdOpt: Option[String],
+      geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Action[AnyContent] = Action { request =>
+    val body: AnyContent = request.body
+    logger.info(s"Called 'compositionalSearch2' function maxHits='$maxHits', thresholdOpt='$thresholdOpt', ontologyIdOpt='$ontologyIdOpt', geography='${geographyToString(geography)}', periodGteOpt='$periodGteOpt', periodLteOpt='$periodLteOpt', and body='$body'!")
+    try {
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else {
+        val jsonBodyOpt: Option[JsValue] = body.asJson
+        val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+        val jsonHomeId = (jsonBody \ "homeId").get
+        val homeId = CompositionalOntologyIdentifier.fromJsValue(jsonHomeId)
+        val awayIdsLookupResult: JsLookupResult = jsonBody \ "awayIds"
+        val awayIds =
+          if (awayIdsLookupResult.isEmpty)
+            Array.empty[CompositionalOntologyIdentifier]
+          else {
+            val jsonAwayIds = awayIdsLookupResult.get.asInstanceOf[JsArray]
+            jsonAwayIds.value.map { jsValue =>
+              CompositionalOntologyIdentifier.fromJsValue(jsValue)
+            }.toArray
+          }
+        val hits = math.min(HomeController.maxMaxHits, maxHits)
+        // val compositionalOntologyToDatamarts = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val compositionalOntologyToDocuments = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val jsObjects = compositionalOntologyToDocuments.resultsToJsArray()
+
+        Ok(jsObjects)
+      }
+    }
+    catch {
+      case throwable: Throwable =>
+        logger.error("An exception was thrown in compositionalSearch:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
+        BadRequest
+    }
+  }
+
+  def geographyToString(geography: List[String]): String = geography.mkString("[", ", ", "]")
+
+  def bulkCompositionalSearch2(secret: String, maxHitsOpt: Option[Int], thresholdOpt: Option[Float], ontologyIdOpt: Option[String],
+      geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Action[AnyContent] = Action { request =>
+    val maxHits = maxHitsOpt.get
+    val body: AnyContent = request.body
+    logger.info(s"Called 'bulkCompositionalSearch2' function with secret, maxHits='$maxHits', thresholdOpt='$thresholdOpt', ontologyIdOpt='$ontologyIdOpt', geography='${geographyToString(geography)}', periodGteOpt='$periodGteOpt', periodLteOpt='$periodLteOpt', and body='$body'!")
+    try {
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else {
+        val jsonBodyOpt: Option[JsValue] = body.asJson
+        val jsonBody = jsonBodyOpt.getOrElse(throw new RuntimeException("A json body was expected."))
+        val jsonHomeId = (jsonBody \ "homeId").get
+        val homeId = CompositionalOntologyIdentifier.fromJsValue(jsonHomeId)
+        val awayIdsLookupResult: JsLookupResult = jsonBody \ "awayIds"
+        val awayIds =
+          if (awayIdsLookupResult.isEmpty)
+            Array.empty[CompositionalOntologyIdentifier]
+          else {
+            val jsonAwayIds = awayIdsLookupResult.get.asInstanceOf[JsArray]
+            jsonAwayIds.value.map { jsValue =>
+              CompositionalOntologyIdentifier.fromJsValue(jsValue)
+            }.toArray
+          }
+        val hits = math.min(HomeController.maxMaxHits, maxHits)
+        // val compositionalOntologyToDatamarts = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val compositionalOntologyToDocuments = searcher.run(homeId, awayIds, hits, thresholdOpt)
+        val jsObjects = compositionalOntologyToDocuments.resultsToJsArray()
+
+        Ok(jsObjects)
+      }
+    }
+    catch {
+      case throwable: Throwable =>
+        logger.error("An exception was thrown in compositionalSearch:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
+        BadRequest
+    }
+  }
+
   def bulkSearchOntologyToDatamart(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float]): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt'!")
+    logger.info(s"Called 'bulkSearchOntologyToDatamart' function with secret, maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))
@@ -174,7 +279,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def bulkSearchDatamartToOntology(secret: String, maxHitsOpt: Option[Int] = None, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action {
-    logger.info(s"Called 'bulkSearchDatamartToOntology' function with maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    logger.info(s"Called 'bulkSearchDatamartToOntology' function with secret, maxHits='$maxHitsOpt' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
     val searcher = currentSearcher
     val status = searcher.getStatus
     if (!secrets.contains(secret))
@@ -197,6 +302,11 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
       Ok(jsValue)
     }
+  }
+
+  def addOntology2(secret: String, ontologyId: String): Action[AnyContent] = Action {
+    logger.info("Called 'addOntology2' function with secret and ontologyId=`$ontologyId`!")
+    ServiceUnavailable
   }
 
   def reindex(secret: String): Action[AnyContent] = Action {
@@ -225,7 +335,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
     val body: AnyContent = request.body
-    logger.info(s"Called 'groundIndicator' function  with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    logger.info(s"Called 'groundIndicator' function  with maxHits='$maxHits', thresholdOpt='$thresholdOpt', compositional='$compositional', and body='$body'")
     try {
       val searcher = currentSearcher
       val status = searcher.getStatus
@@ -250,7 +360,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
   def groundModel(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
     val body: AnyContent = request.body
-    logger.info(s"Called 'groundModel' function with '$body' and maxHits='$maxHits' and thresholdOpt='$thresholdOpt' and compositional='$compositional'!")
+    logger.info(s"Called 'groundModel' function with maxHits='$maxHits', thresholdOpt='$thresholdOpt', compositional='$compositional', and body='$body'!")
     try {
       val searcher = currentSearcher
       val status = searcher.getStatus

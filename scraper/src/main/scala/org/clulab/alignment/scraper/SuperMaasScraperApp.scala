@@ -20,6 +20,11 @@ class SuperMaasScraperApp(filename: String) {
         "dataset_tags",
         "dataset_description",
         "dataset_url",
+
+        "[]", // datasetGeography
+        "",   // datasetPeriodGte
+        "",   // datasetPeriodLte
+
         "variable_id",
         "variable_name",
         "variable_tags",

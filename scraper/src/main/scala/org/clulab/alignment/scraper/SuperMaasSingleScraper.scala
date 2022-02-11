@@ -69,6 +69,11 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
           tagsToJson(variableContext.datasetTags),
           variableContext.datasetDescription,
           variableContext.datasetUrl,
+
+          "[]", // datasetGeography
+          "",   // datasetPeriodGte
+          "",   // datasetPeriodLte
+
           variableId,
           variableName,
           tagsToJson(variableTags),
@@ -102,6 +107,11 @@ abstract class SuperMaasSingleScraper(baseUrl: String, createdSince: String = ""
           tagsToJson(variableContext.datasetTags),
           variableContext.datasetDescription,
           variableContext.datasetUrl,
+
+          "[]", // datasetGeography
+          "",   // datasetPeriodGte
+          "",   // datasetPeriodLte
+
           variableId,
           variableName,
           tagsToJson(variableTags),

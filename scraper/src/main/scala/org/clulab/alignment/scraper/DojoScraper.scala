@@ -6,6 +6,7 @@ import org.slf4j.Logger
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashSet => MutableHashSet}
+import scala.util.Try
 
 class DojoVariable(jVal: ujson.Value, dojoDocument: DojoDocument) {
   protected val jObj: mutable.Map[String, ujson.Value] = jVal.obj
@@ -33,7 +34,8 @@ abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value], val data
   val description: String = jObj("description").str // required
   val categories: Array[String] = DojoDocument.getCategories(jObj) // required
   val tags: Array[String] = DojoDocument.getTags(jObj) // optional
-  //  geography // optional // These won't be in our ontologies anyway.
+  val geography: Array[String] = DojoDocument.getGeography(jObj) // optional
+  val (periodGteOpt, periodLteOpt) = DojoDocument.getPeriod(jObj) // optional
   val words: Array[String] = {
     val tokenizer = Tokenizer()
     val descriptionWords = tokenizer.tokenize(description)
@@ -58,6 +60,43 @@ object DojoDocument {
       }
     }
     .getOrElse(Array.empty) // optional
+
+  def getGeography(jObj: mutable.Map[String, ujson.Value]): Array[String] = {
+    jObj.get("geography").map { geography =>
+
+      def getStringArray(key: String): Array[String] = geography.obj.get(key)
+          .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+          .map(_.arr.toArray.map(_.str))
+          .getOrElse(Array.empty)
+
+      val countries = getStringArray("country")
+      val admin1 = getStringArray("admin1")
+      val admin2 = getStringArray("admin2")
+      val admin3 = getStringArray("admin3")
+
+      countries ++ admin1 ++ admin2 ++ admin3
+    }.getOrElse(Array.empty)
+  }
+
+  def getPeriod(jObj: mutable.Map[String, ujson.Value]): (Option[Long], Option[Long]) = jObj.get("period")
+      .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+      .flatMap { period =>
+
+        def getLongOpt(key: String): Option[Long] = period.obj.get(key)
+            .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+            .flatMap { jValue =>
+              Try(jValue.num.toLong).toOption.flatMap { long =>
+                // If 0, assume that it doesn't really exist.
+                if (long == 0) None
+                else Some(long)
+              }
+            }
+
+        val gte = getLongOpt("gte")
+        val lte = getLongOpt("lte")
+
+        Some(gte, lte)
+      }.getOrElse((None, None))
 
   def getCategories(jObj: mutable.Map[String, ujson.Value]): Array[String] = asOption(jObj("category"))
     .map { categories =>
@@ -86,8 +125,8 @@ object DojoDocument {
       }.getOrElse(Array.empty) // null will turn into Some(Array.empty)
     } // optional and Optional
 
-  def tagsToJson(tags: IndexedSeq[String]): String = {
-    val value = upickle.default.writeJs(tags)
+  def stringsToJson(strings: IndexedSeq[String]): String = {
+    val value = upickle.default.writeJs(strings)
     val json = ujson.write(value)
 
     json
@@ -114,6 +153,9 @@ abstract class DojoScraper extends DatamartScraper {
     val datasetTags = dojoDocument.tags
     val datasetDescription = dojoDocument.description
     val datasetUrl = ""
+    val datasetGeography = dojoDocument.geography
+    val datasetPeriodGte = dojoDocument.periodGteOpt.map(_.toString).getOrElse("")
+    val datasetPeriodLte = dojoDocument.periodLteOpt.map(_.toString).getOrElse("")
 
     val variableId = dojoVariable.name
     val variableName = dojoVariable.displayName
@@ -128,12 +170,17 @@ abstract class DojoScraper extends DatamartScraper {
         datamartId,
         datasetId,
         datasetName,
-        DojoDocument.tagsToJson(datasetTags),
+        DojoDocument.stringsToJson(datasetTags),
         datasetDescription,
         datasetUrl,
+
+        DojoDocument.stringsToJson(datasetGeography),
+        datasetPeriodGte,
+        datasetPeriodLte,
+
         variableId,
         variableName,
-        DojoDocument.tagsToJson(variableTags),
+        DojoDocument.stringsToJson(variableTags),
         variableDescription
       )
     }

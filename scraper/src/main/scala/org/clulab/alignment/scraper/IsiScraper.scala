@@ -57,6 +57,11 @@ class IsiScraper(baseUrl: String, username: String, password: String) extends Da
               "[]", // tags
               datasetDescription,
               datasetUrl,
+
+              "[]", // datasetGeography
+              "",   // datasetPeriodGte
+              "",   // datasetPeriodLte
+
               variableId,
               variableName,
               "[]", // tags

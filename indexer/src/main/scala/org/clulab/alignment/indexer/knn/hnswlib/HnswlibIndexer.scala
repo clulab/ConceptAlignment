@@ -9,6 +9,8 @@ import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
 import org.clulab.alignment.embedder.DatamartEmbedder
 import org.clulab.alignment.embedder.DatamartStopwordEmbedder
+import org.clulab.alignment.embedder.DatamartAverageEmbedder
+import org.clulab.alignment.embedder.DatamartSingleEmbedder
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -29,7 +31,8 @@ import scala.collection.JavaConverters._
 class HnswlibIndexer {
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
-  val datamartEmbedder: DatamartEmbedder = new DatamartStopwordEmbedder(w2v)
+//  val datamartEmbedder: DatamartEmbedder = new DatamartStopwordEmbedder(w2v)
+  val datamartEmbedder: DatamartEmbedder = new DatamartSingleEmbedder(w2v)
   val config = ConfigFactory
       .empty
       .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(

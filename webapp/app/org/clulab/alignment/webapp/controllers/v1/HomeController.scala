@@ -1,8 +1,11 @@
 package org.clulab.alignment.webapp.controllers.v1
 
+import com.typesafe.config.{Config, ConfigFactory}
+
 import javax.inject._
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.grounder.{IndicatorDocument, ModelDocument}
 import org.clulab.alignment.webapp.indexer.AutoIndexer
 import org.clulab.alignment.webapp.indexer.IndexMessage
@@ -14,6 +17,7 @@ import org.clulab.alignment.webapp.searcher.AutoSearcher
 import org.clulab.alignment.webapp.searcher.Searcher
 import org.clulab.alignment.webapp.searcher.SearcherStatus
 import org.clulab.alignment.webapp.utils.OntologyVersion
+import org.clulab.wm.wmexchanger2.wmconsumer.RealRestOntologyConsumer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import play.api.http.MimeTypes
@@ -23,6 +27,8 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc._
+
+import scala.util.Try
 
 @Singleton
 class HomeController @Inject()(controllerComponents: ControllerComponents, prevIndexer: AutoIndexer, prevSearcher: AutoSearcher)
@@ -305,8 +311,27 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def addOntology2(secret: String, ontologyId: String): Action[AnyContent] = Action {
-    logger.info("Called 'addOntology2' function with secret and ontologyId=`$ontologyId`!")
-    ServiceUnavailable
+    logger.info(s"Called 'addOntology2' function with secret and ontologyId=`$ontologyId`!")
+    try {
+      // ontologyId = fd513e69-01fd-4b9a-a609-610ff0394ddb
+      val config: Config = ConfigFactory.defaultApplication().resolve()
+      val ontologyService: String = config.getString("rest.consumer.ontologyService")
+      val username: String = Try(config.getString("rest.consumer.username")).getOrElse("eidos")
+      val password: String = Try(config.getString("rest.consumer.password")).getOrElse("quick_OHIO_flat_94")
+
+      val ontology = new RealRestOntologyConsumer(ontologyService, username, password).autoClose { restOntologyConsumer =>
+        restOntologyConsumer.open()
+        restOntologyConsumer.download(ontologyId)
+      }
+      println(ontology)
+    }
+    catch {
+      case throwable: Throwable =>
+        logger.error("An exception was thrown in compositionalSearch:", throwable)
+        // Make believe that the problem is with the request.  Use the log message to diagnose.
+        BadRequest
+    }
+    Ok
   }
 
   def reindex(secret: String): Action[AnyContent] = Action {

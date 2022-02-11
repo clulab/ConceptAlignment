@@ -1,7 +1,7 @@
 package org.clulab.alignment.embedder
 
 import org.clulab.alignment.data.datamart.DatamartEntry
-import org.clulab.embeddings.CompactWordEmbeddingMap
+import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap}
 
 class DatamartAverageEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbedder {
 
@@ -22,6 +22,7 @@ class DatamartAverageEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbe
     val embedding4 = w2v.makeCompositeVector(filteredVariableDescription)
 
     val embedding = Array(embedding1, embedding2, embedding3, embedding4).transpose.map(_.sum).map(x => x/4)
+    WordEmbeddingMap.norm(embedding)
 
     embedding
   }

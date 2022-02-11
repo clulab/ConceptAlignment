@@ -1,7 +1,7 @@
 package org.clulab.alignment.embedder
 
 import org.clulab.alignment.data.datamart.DatamartEntry
-import org.clulab.embeddings.CompactWordEmbeddingMap
+import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap}
 
 class DatamartWeightedAverageEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbedder {
 
@@ -16,10 +16,10 @@ class DatamartWeightedAverageEmbedder(w2v: CompactWordEmbeddingMap) extends Data
     val filteredVariableTags = variableTags.filter(!DatamartStopwordEmbedder.stopwords(_))
     val filteredVariableDescription = variableDescription.filter(!DatamartStopwordEmbedder.stopwords(_))
 
-    val w1 = 1
-    val w2 = 1
-    val w3 = 1
-    val w4 = 1
+    val w1 = 6.14417366e-06.toFloat
+    val w2 = 1.12534466e-07.toFloat
+    val w3 = 4.13991165e-08.toFloat
+    val w4 = 9.99993702e-01.toFloat
 
     val embedding1 = w2v.makeCompositeVector(filteredDatasetTags).map(x => x*w1)
     val embedding2 = w2v.makeCompositeVector(filteredDatasetDescription).map(x => x*w2)
@@ -27,6 +27,7 @@ class DatamartWeightedAverageEmbedder(w2v: CompactWordEmbeddingMap) extends Data
     val embedding4 = w2v.makeCompositeVector(filteredVariableDescription).map(x => x*w4)
 
     val embedding = Array(embedding1, embedding2, embedding3, embedding4).transpose.map(_.sum)
+    WordEmbeddingMap.norm(embedding)
 
     embedding
   }

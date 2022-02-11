@@ -11,6 +11,7 @@ import org.clulab.alignment.embedder.DatamartEmbedder
 import org.clulab.alignment.embedder.DatamartStopwordEmbedder
 import org.clulab.alignment.embedder.DatamartAverageEmbedder
 import org.clulab.alignment.embedder.DatamartSingleEmbedder
+import org.clulab.alignment.embedder.DatamartWeightedAverageEmbedder
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -32,7 +33,7 @@ class HnswlibIndexer {
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
 //  val datamartEmbedder: DatamartEmbedder = new DatamartStopwordEmbedder(w2v)
-  val datamartEmbedder: DatamartEmbedder = new DatamartSingleEmbedder(w2v)
+  val datamartEmbedder: DatamartEmbedder = new DatamartWeightedAverageEmbedder(w2v)
   val config = ConfigFactory
       .empty
       .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(

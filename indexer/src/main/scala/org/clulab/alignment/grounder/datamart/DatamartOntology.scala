@@ -34,11 +34,16 @@ object DatamartOntology {
           datasetTagsJson,
           _, // dataset_description
           _, // dataset_url
+
+          _, // datasetGeography
+          _, // datasetPeriodGte
+          _, // datasetPeriodLte
+
           variableId,
           _, // variable_name
           variableTagsJson,
           variableDescription
-        ) = tsvReader.readln(line, length = 10)
+        ) = tsvReader.readln(line, length = 13)
         val datamartIdentifier = new DatamartIdentifier(datamartId, datasetId, variableId)
         val datasetTags = tagsToStrings(datasetTagsJson, tokenizer)
         val variableTags = tagsToStrings(variableTagsJson, tokenizer)

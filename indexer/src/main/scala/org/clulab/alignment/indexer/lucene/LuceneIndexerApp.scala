@@ -39,7 +39,7 @@ class LuceneIndexerApp(luceneLocations: LuceneLocationsTrait) {
       document.add(new StoredField("variableId", variableId))
 
       datasetGeography.foreach { geography =>
-        document.add(new TextField("geography", geography, Field.Store.NO))
+        document.add(new StringField("geography", geography.toLowerCase, Field.Store.NO))
       }
 
       datasetPeriodGteOpt.foreach { datasetPeriodGte =>
@@ -96,6 +96,7 @@ class LuceneIndexerApp(luceneLocations: LuceneLocationsTrait) {
           indexWriter.addDocument(document)
         }
       }
+      indexWriter.commit()
     }
   }
 

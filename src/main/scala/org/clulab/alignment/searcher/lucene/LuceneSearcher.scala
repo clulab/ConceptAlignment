@@ -1,17 +1,12 @@
 package org.clulab.alignment.searcher.lucene
 
 import java.nio.file.Paths
-
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.IndexSearcher
-import org.apache.lucene.search.Query
-import org.apache.lucene.search.ScoreDoc
-import org.apache.lucene.search.TermQuery
-import org.apache.lucene.search.TopScoreDocCollector
+import org.apache.lucene.search.{BooleanClause, BooleanQuery, IndexSearcher, Query, ScoreDoc, TermQuery, TopScoreDocCollector}
 import org.apache.lucene.store.FSDirectory
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -40,11 +35,56 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
       val searcher = new IndexSearcher(reader)
       searcher.search(query, collector)
 
+      val hits = collector.topDocs().totalHits
       val scoreDocs = collector.topDocs().scoreDocs
       val scoresAndDocs = scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
 
       scoresAndDocs.iterator
     }
+  }
+
+  def search(geography: Array[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier] = {
+    // If these are all empty, then there is not point to this expensive search.
+    require(geography.nonEmpty || periodGteOpt.nonEmpty || periodLteOpt.nonEmpty)
+    val collector = TopScoreDocCollector.create(1000)
+    val builder = new BooleanQuery.Builder()
+
+    geography.foreach { value =>
+      val query = new TermQuery(new Term("geography", value.toLowerCase))
+
+      builder.add(query, BooleanClause.Occur.MUST)
+    }
+//    periodGteOpt.foreach { periodGte =>
+//      val query = new TermQuery(new Term("periodGte", periodGte))
+//
+//      builder.add(query, BooleanClause.Occur.MUST)
+//    }
+//    periodLteOpt.foreach { periodGte =>
+//      val query = new TermQuery(new Term("periodLte", periodLte))
+//
+//      builder.add(query, BooleanClause.Occur.MUST)
+//    }
+
+    val query = builder.build()
+
+    // TODO: withSearcher
+    val datamartIdentifiers = withReader { reader =>
+      val searcher = new IndexSearcher(reader)
+      val topDocs = searcher.search(query, 100)
+
+      if (topDocs.totalHits > 0) {
+        topDocs.scoreDocs.map { scoreDoc =>
+          val doc = scoreDoc.doc
+          val document = searcher.doc(doc)
+
+          new DatamartDocument(document).datamartIdentifier
+        }
+      }
+      else
+        Array.empty
+    }
+
+    datamartIdentifiers
   }
 
   def withReader[T](f: DirectoryReader => T): T = {
@@ -92,6 +132,7 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
   def infiniteSearch(queryString: String, maxHits: Int, pageSize: Int): Iterator[(Float, Document)] = {
     val query = newQuery(queryString)
 
+    // Does reader need to be closed?
     new LuceneIterator(newReader(), query, maxHits, pageSize)
   }
 

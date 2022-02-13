@@ -2,7 +2,7 @@ package org.clulab.alignment.searcher.lucene
 
 import java.nio.file.Paths
 import org.apache.lucene.analysis.standard.StandardAnalyzer
-import org.apache.lucene.document.Document
+import org.apache.lucene.document.{Document, LongPoint}
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.QueryParser
@@ -54,16 +54,37 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
 
       builder.add(query, BooleanClause.Occur.MUST)
     }
-//    periodGteOpt.foreach { periodGte =>
-//      val query = new TermQuery(new Term("periodGte", periodGte))
-//
-//      builder.add(query, BooleanClause.Occur.MUST)
-//    }
-//    periodLteOpt.foreach { periodGte =>
-//      val query = new TermQuery(new Term("periodLte", periodLte))
-//
-//      builder.add(query, BooleanClause.Occur.MUST)
-//    }
+    val gteQueryOpt = periodGteOpt.map { periodGte =>
+      // The data might have neither, either, or both of these periods
+      // If either is to the future of the query's periodGte, then there is overlap.
+      val gteQuery = LongPoint.newRangeQuery("periodGte", periodGte, Long.MaxValue)
+      val lteQuery = LongPoint.newRangeQuery("periodLte", periodGte, Long.MaxValue)
+      val gteBooleanClause = new BooleanClause(gteQuery, BooleanClause.Occur.SHOULD)
+      val lteBooleanClause = new BooleanClause(lteQuery, BooleanClause.Occur.SHOULD)
+
+      val booleanBuilder = new BooleanQuery.Builder()
+      booleanBuilder.add(gteBooleanClause)
+      booleanBuilder.add(lteBooleanClause)
+      booleanBuilder.setMinimumNumberShouldMatch(1)
+      booleanBuilder.build()
+    }
+    gteQueryOpt.foreach { query => builder.add(query, BooleanClause.Occur.MUST) }
+
+    val lteQueryOpt = periodLteOpt.map { periodLte =>
+      // The data might have neither, either, or both of these periods
+      // If either is to the future of the query's periodGte, then there is overlap.
+      val gteQuery = LongPoint.newRangeQuery("periodGte", Long.MinValue, periodLte)
+      val lteQuery = LongPoint.newRangeQuery("periodLte", Long.MinValue, periodLte)
+      val gteBooleanClause = new BooleanClause(gteQuery, BooleanClause.Occur.SHOULD)
+      val lteBooleanClause = new BooleanClause(lteQuery, BooleanClause.Occur.SHOULD)
+
+      val booleanBuilder = new BooleanQuery.Builder()
+      booleanBuilder.add(gteBooleanClause)
+      booleanBuilder.add(lteBooleanClause)
+      booleanBuilder.setMinimumNumberShouldMatch(1)
+      booleanBuilder.build()
+    }
+    lteQueryOpt.foreach { query => builder.add(query, BooleanClause.Occur.MUST) }
 
     val query = builder.build()
 

@@ -7,7 +7,7 @@ import java.io.File
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
-import org.clulab.alignment.embedder.{DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
+import org.clulab.alignment.embedder.{DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartPowWeightedAverageEmbedder, DatamartStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -44,6 +44,7 @@ class HnswlibIndexer {
     // new DatamartAverageEmbedder(w2v)
     DatamartEpsWeightedAverageEmbedder(w2v)
     // DatamartExpWeightedAverageEmbedder(w2v)
+    // DatamartPowWeightedAverageEmbedder(w2v)
     // new DatamartSingleEmbedder(w2v)
     // new DatamartStopwordEmbedder(w2v)
     // new DatamartWordEmbedder(w2v)

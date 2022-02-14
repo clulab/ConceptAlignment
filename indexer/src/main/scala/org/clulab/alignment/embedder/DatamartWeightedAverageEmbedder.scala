@@ -23,3 +23,13 @@ class DatamartWeightedAverageEmbedder(w2v: CompactWordEmbeddingMap, weights: Arr
     embedding
   }
 }
+
+object DatamartWeightedAverageEmbedder {
+
+  def softmax(values: Array[Double]): Array[Float] = {
+    val expValues = values.map(math.exp)
+    val sum = expValues.sum
+
+    expValues.map { value => (value / sum).toFloat }
+  }
+}

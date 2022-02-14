@@ -3,7 +3,7 @@ package org.clulab.alignment.embedder
 import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.embeddings.CompactWordEmbeddingMap
 
-class DatamartSingleEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbedder {
+class DatamartSingleEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbedder(w2v) {
 
   def embed(datamartEntry: DatamartEntry): Array[Float] = {
 //    val filteredDatasetTags = filter(datamartEntry.datasetTags)
@@ -12,7 +12,7 @@ class DatamartSingleEmbedder(w2v: CompactWordEmbeddingMap) extends DatamartEmbed
 //    val filteredVariableDescription = filter(datamartEntry.variableDescription)
 
     // Return just one of the above.
-    val embedding = w2v.makeCompositeVector(filteredVariableTags)
+    val embedding = makeCompositeVector(filteredVariableTags)
 
     embedding
   }

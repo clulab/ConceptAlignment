@@ -5,7 +5,7 @@ class Tokenizer {
   def tokenize(text: String): Array[String] = {
     text
         .split(' ')
-        .filter(!_.isEmpty)
+        .filterNot(_.isEmpty)
         .map(_.toLowerCase)
   }
 }

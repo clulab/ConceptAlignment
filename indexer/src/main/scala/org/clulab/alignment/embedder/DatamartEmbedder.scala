@@ -12,10 +12,13 @@ abstract class DatamartEmbedder(w2v: CompactWordEmbeddingMap) {
   def filter(words: Array[String]): Array[String] = words.filterNot(DatamartEmbedder.stopwords)
 
   def makeCompositeVector(words: Array[String]): Array[Float] = {
-    // This will also take care of the empty case.
-    val outOfVocabulary = words.forall(w2v.isOutOfVocabulary)
 
-    if (!outOfVocabulary) w2v.makeCompositeVector(words)
+    def nonEmpty(values: Array[Float]) = values.exists(_ != 0)
+
+    // There could be a zero vector even with vocabulary.
+    val compositeVector = w2v.makeCompositeVector(words)
+
+    if (compositeVector.nonEmpty) compositeVector
     else unknownEmbedding
   }
 

@@ -64,8 +64,8 @@ class HnswlibIndexer {
   }
 
   def indexGlove(indexFilename: String): GloveIndex.Index = {
-    val keys = w2v.keys
-    val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get.toArray) }
+    val keys = w2v.keys + ""
+    val items = keys.map { key => GloveAlignmentItem(key, w2v.getOrElseUnknown(key).toArray) }
     val index = GloveIndex.newIndex(items)
 
     index.save(new File(indexFilename))

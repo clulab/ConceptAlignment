@@ -22,13 +22,8 @@ object DatamartOntology {
     tokenizedTags
   }
 
-  val punctuation: Set[Char] = ".!?,;:/*(){}[]".toSet
-
-  def descriptionToStrings(description: String, tokenizer: Tokenizer): Array[String] = {
-    val cleanDescription = description.filterNot(punctuation)
-
-    tokenizer.tokenize(cleanDescription)
-  }
+  def descriptionToStrings(description: String, tokenizer: Tokenizer): Array[String] =
+      tokenizer.tokenize(description)
 
   def fromFile(filename: String, tokenizer: Tokenizer): DatamartOntology = {
     val tsvReader = new TsvReader()
@@ -53,7 +48,7 @@ object DatamartOntology {
         val variableTags = tagsToStrings(variableTagsJson, tokenizer).toArray
         val tokenizedVariableDescription = descriptionToStrings(variableDescription, tokenizer)
         // For backward compatability the datasetDescription is not included in the words.
-        val words = descriptionToStrings(variableDescription, tokenizer) ++ datasetTags ++ variableTags
+        val words = tokenizedVariableDescription ++ datasetTags ++ variableTags
 
         DatamartEntry(datamartIdentifier, words, tokenizedDatasetDescription, datasetTags, tokenizedVariableDescription, variableTags)
       }.toVector

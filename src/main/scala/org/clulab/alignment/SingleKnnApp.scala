@@ -24,6 +24,9 @@ trait SingleKnnAppTrait {
 // datamart entry that can't be stored in the Knn index.
 class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartIndex.Index,
     val gloveIndex: GloveIndex.Index) extends SingleKnnAppTrait {
+  val normalizer = Normalizer()
+  val tokenizer = Tokenizer()
+  val unknownVector: Array[Float] = GloveIndex.find(gloveIndex, "").get
 
   def this(locations: KnnLocationsTrait = KnnLocations.defaultLocations, datamartIndex: Option[DatamartIndex.Index] = None,
       gloveIndexOpt: Option[GloveIndex.Index] = None) = this(
@@ -35,29 +38,27 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
   val luceneSearcher: LuceneSearcherTrait = new LuceneSearcher(knnLocations.luceneDirname, "")
 
   def getVectorOpt(words: Array[String]): Option[Array[Float]] = {
-    val normalizer = Normalizer()
-    val vector = {
-      val composite = new Array[Float](GloveIndex.dimensions)
+    val vectorOpt =
+        if (words.nonEmpty) {
+          val composite = new Array[Float](GloveIndex.dimensions)
 
-      words.foreach { word =>
-        val vectorOpt = GloveIndex.find(gloveIndex, word)
+          words.foreach { word =>
+            val vectorOpt = GloveIndex.find(gloveIndex, word)
 
-        vectorOpt.foreach { vector =>
-          vector.indices.foreach { index =>
-            composite(index) += vector(index)
+            vectorOpt.foreach { vector =>
+              vector.indices.foreach { index =>
+                composite(index) += vector(index)
+              }
+            }
           }
+          normalizer.normalize(composite)
         }
-      }
-      val len = normalizer.length(composite)
-      if (len != 0) Some(normalizer.normalize(composite))
-      else None
-    }
+        else None
 
-    vector
+    vectorOpt
   }
 
   def getVectorOpt(queryString: String): Option[Array[Float]] = {
-    val tokenizer = Tokenizer()
     val words = tokenizer.tokenize(queryString)
     val vector = getVectorOpt(words)
 
@@ -85,6 +86,16 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
     }
 
     datamartDocuments
+  }
+
+  def runOld(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartIdentifier, Float)] = {
+    val vectorOpt: Option[Array[Float]] = getVectorOpt(queryString)
+    val searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]] = vectorOpt.map { vector =>
+      DatamartIndex.findNearest(datamartIndex, vector, maxHits, thresholdOpt)
+    }.getOrElse(Seq.empty)
+    val datamartIdentifiersAndScores = searchResults.map { searchResult => (searchResult.item.id, searchResult.distance) }
+
+    datamartIdentifiersAndScores
   }
 
   def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)] = {

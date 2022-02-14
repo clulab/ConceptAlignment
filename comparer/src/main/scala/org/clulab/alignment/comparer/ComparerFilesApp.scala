@@ -1,9 +1,15 @@
 package org.clulab.alignment.comparer
 
+/**
+ * This App checks to see to what extent the indicators in either the json
+ * file correspond to those in either the tsv file or two csv files.
+ */
 object ComparerFilesApp extends App {
   // Should this be from the index instead?
-  val tsvFilename = "../comparer/datamarts.tsv"
   val jsonFilename = "../comparer/data-datacube-dump.json"
+
+  val tsvFilename = "../comparer/datamarts.tsv"
+
   val csvAtaFilename = "../comparer/ATA2.csv"
   val csvNafFilename = "../comparer/NAF2.csv"
 

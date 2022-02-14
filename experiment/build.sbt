@@ -1,6 +1,6 @@
 import org.clulab.sbt.Resolvers
 
-name := "experiment"
+name := "conceptalignment-experiment"
 description := "experiment"
 
 resolvers ++= Seq(

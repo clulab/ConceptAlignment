@@ -1,6 +1,6 @@
 import org.clulab.sbt.Resolvers
 
-name := "builder"
+name := "conceptalignment-builder"
 description := "builder"
 
 resolvers ++= Seq(

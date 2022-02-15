@@ -47,26 +47,34 @@ class TestLuceneSearcher extends Test {
 
   it should "search for times" in {
     {
-      // This is the maximum value in the data
-      val datamartIdentifiers = luceneSearcher.search(Array.empty, Some(4102444800000L), None)
+      // This is the maximum value in the data.  There are now 16 matches.
+      val datamartIdentifiers = luceneSearcher.search(Seq.empty, Some(4102444800000L), None)
 
       datamartIdentifiers should not be empty
     }
-//    {
-//      val datamartIdentifiers = luceneSearcher.search(Array.empty, None, Some(100000))
-//
-//      datamartIdentifiers should not be empty
-//    }
-//    {
-//      val datamartIdentifiers = luceneSearcher.search(Array.empty, Some(0), Some(100000))
-//
-//      datamartIdentifiers should not be empty
-//    }
+    {
+      // This is the minimum value in the data.  There are x matches.
+      val datamartIdentifiers = luceneSearcher.search(Seq.empty, None, Some(-3155673600000L))
+
+      datamartIdentifiers should not be empty
+    }
+    {
+      // This picks a couple very low values.
+      val datamartIdentifiers = luceneSearcher.search(Seq.empty, Some(-3155673600000L), Some(-2840140800000L))
+
+      datamartIdentifiers should not be empty
+    }
+    {
+      // This picks a couple very high values.
+      val datamartIdentifiers = luceneSearcher.search(Seq.empty, Some(2556021600000L), Some(4102444800000L))
+
+      datamartIdentifiers should not be empty
+    }
   }
 
-  /**
-   * 1640995200000	4102444800000
--3155673600000	873072000
+  it should "get the number of documents" in {
+    val numDocs = luceneSearcher.getNumDocs
 
-   */
+    numDocs should be > 0
+  }
 }

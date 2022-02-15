@@ -38,15 +38,15 @@ object NumberSpreadsheetsApp extends App {
     def getId(slots: Array[String], strings: Array[String]): CompositionalOntologyIdentifier = {
       slots match {
         case Array("concept") =>
-          CompositionalOntologyIdentifier(newId(strings(0)), None, None, None)
+          CompositionalOntologyIdentifier(Some(newId(strings(0))), None, None, None)
         case Array("concept", "property") =>
-          CompositionalOntologyIdentifier(newId(strings(0)), Some(newId(strings(1))), None, None)
+          CompositionalOntologyIdentifier(Some(newId(strings(0))), Some(newId(strings(1))), None, None)
         case Array("concept", "property", "process") =>
-          CompositionalOntologyIdentifier(newId(strings(0)), Some(newId(strings(1))), Some(newId(strings(2))), None)
+          CompositionalOntologyIdentifier(Some(newId(strings(0))), Some(newId(strings(1))), Some(newId(strings(2))), None)
         case Array("concept",             "process") =>
-          CompositionalOntologyIdentifier(newId(strings(0)), None, Some(newId(strings(1))), None)
+          CompositionalOntologyIdentifier(Some(newId(strings(0))), None, Some(newId(strings(1))), None)
         case Array("concept",             "process", "property") =>
-          CompositionalOntologyIdentifier(newId(strings(0)), None, Some(newId(strings(1))), Some(newId(strings(2))))
+          CompositionalOntologyIdentifier(Some(newId(strings(0))), None, Some(newId(strings(1))), Some(newId(strings(2))))
       }
     }
 

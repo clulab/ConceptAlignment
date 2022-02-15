@@ -47,11 +47,11 @@ object CheckSpreadsheetsApp extends App {
   def getNodeName(node: String, homeId: CompositionalOntologyIdentifier, awayIdOpt: Option[CompositionalOntologyIdentifier]): String = {
     val arrayBuffer = new ArrayBuffer[String]()
 
-    arrayBuffer += homeId.conceptOntologyIdentifier.nodeName
+    arrayBuffer += homeId.conceptOntologyIdentifierOpt.get.nodeName
     homeId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     homeId.processOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     homeId.processPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
-    awayIdOpt.foreach(arrayBuffer += _.conceptOntologyIdentifier.nodeName)
+    awayIdOpt.foreach(arrayBuffer += _.conceptOntologyIdentifierOpt.get.nodeName)
     awayIdOpt.foreach { awayId =>
       awayId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     }
@@ -117,20 +117,20 @@ object CheckSpreadsheetsApp extends App {
           val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPathLongOpt.get, Some(CompositionalOntologyIdentifier.concept))
           val (homeIdOpt, awayIdOpt) = {
             if (otherParts.isEmpty)
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, None, None)), None)
             else if (conceptPathShortOpt.isDefined) {
               val conceptShortIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPathShortOpt.get, Some(CompositionalOntologyIdentifier.concept))
-              val homeIdOpt = Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None))
-              val awayIdOpt = Some(new CompositionalOntologyIdentifier(conceptShortIdentifier, None, None, None))
+              val homeIdOpt = Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, None, None))
+              val awayIdOpt = Some(new CompositionalOntologyIdentifier(Some(conceptShortIdentifier), None, None, None))
               (homeIdOpt, awayIdOpt)
             }
             else if (propertyPathOpt.isDefined) {
               val propertyIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyPathOpt.get, Some(CompositionalOntologyIdentifier.property))
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, Some(propertyIdentifier), None, None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), Some(propertyIdentifier), None, None)), None)
             }
             else if (processPathOpt.isDefined) {
               val processIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processPathOpt.get, Some(CompositionalOntologyIdentifier.process))
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, Some(processIdentifier), None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, Some(processIdentifier), None)), None)
             }
             else
               (None, None)
@@ -180,7 +180,7 @@ object CheckSpreadsheetsApp extends App {
         case _ => ???
       }
       val homeId = CompositionalOntologyIdentifier(
-        FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept1),Some(CompositionalOntologyIdentifier.concept)),
+        if (concept1.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept1),Some(CompositionalOntologyIdentifier.concept))),
         if (conceptProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty),Some(CompositionalOntologyIdentifier.property))),
         if (process.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processMap(process),Some(CompositionalOntologyIdentifier.process))),
         if (processProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(processProperty),Some(CompositionalOntologyIdentifier.property))),
@@ -189,7 +189,7 @@ object CheckSpreadsheetsApp extends App {
           if (concept2.isEmpty) None
           else
             Some(CompositionalOntologyIdentifier(
-              FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept2),Some(CompositionalOntologyIdentifier.concept)),
+              if (concept2.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept2),Some(CompositionalOntologyIdentifier.concept))),
               if (conceptProperty2.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty2),Some(CompositionalOntologyIdentifier.property))),
               None,
               None

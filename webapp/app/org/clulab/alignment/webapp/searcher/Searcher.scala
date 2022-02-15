@@ -6,8 +6,7 @@ import org.clulab.alignment.{CompositionalOntologyMapper, CompositionalOntologyT
 import java.util.concurrent.TimeUnit
 import javax.inject._
 import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
-import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
+import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
@@ -150,6 +149,85 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     documentsResult
   }
 
+  def getValidDatamartDocuments(geography: Seq[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier] = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      singleKnnApp.luceneSearcher.search(geography, periodGteOpt, periodLteOpt)
+    }
+    val validDatamartIdentifiers = Await.result(searchingFuture, maxWaitTime)
+
+    validDatamartIdentifiers
+  }
+
+  class Filter(geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]) {
+    val validDatamartIdentifiersOpt =
+        if (geography.nonEmpty || periodGteOpt.nonEmpty || periodLteOpt.nonEmpty)
+          Some(getValidDatamartDocuments(geography, periodGteOpt, periodLteOpt).toSet)
+        else
+          None
+
+    def filter(compositionalOntologyToDatamarts: CompositionalOntologyToDatamarts, maxHits: Int): CompositionalOntologyToDatamarts = {
+      validDatamartIdentifiersOpt.map {validDatamartIdentifiers =>
+        val filteredPairs = compositionalOntologyToDatamarts.dstResults.filter { case (datamartIdentifier, _) =>
+          validDatamartIdentifiers(datamartIdentifier)
+        }.take(maxHits)
+
+        CompositionalOntologyToDatamarts(compositionalOntologyToDatamarts.srcId, filteredPairs)
+      }.getOrElse(compositionalOntologyToDatamarts)
+    }
+  }
+
+  def toDocuments(compositionalOntologyToDatamarts: CompositionalOntologyToDatamarts): CompositionalOntologyToDocuments = {
+    val datamartIdentifiers = compositionalOntologyToDatamarts.dstResults.map(_._1)
+    val datamartDocuments = getDatamartDocuments(datamartIdentifiers)
+    val datamartDocumentsAndFloats = compositionalOntologyToDatamarts.dstResults.zip(datamartDocuments).map { case (datamartIdentifierAndFloat, datamartDocument) =>
+      (datamartDocument, datamartIdentifierAndFloat._2)
+    }
+
+    CompositionalOntologyToDocuments(compositionalOntologyToDatamarts.srcId, datamartDocumentsAndFloats)
+  }
+
+  def run2(filter: Filter, maxHits: Int, thresholdOpt: Option[Float], compositionalSearchSpec: CompositionalSearchSpec): CompositionalOntologyToDocuments = {
+    val contextOpt = compositionalSearchSpec.contextOpt
+    val homeId = compositionalSearchSpec.homeId
+    val awayIds = compositionalSearchSpec.awayIds
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      try {
+        val contextVectorOpt = contextOpt.flatMap { context => singleKnnApp.getVectorOpt(context) }
+
+        compositionalOntologyMapperOpt.get.ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt, homeId, awayIds, None, thresholdOpt) // Skip maxHits here.
+      }
+      catch {
+        case throwable: Throwable =>
+          throw new InternalError(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
+      }
+    }
+    val rawCompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    val compositionalOntologyToDatamarts = filter.filter(rawCompositionalOntologyToDatamarts, maxHits)
+    val compositionalOntologyToDocuments = toDocuments(compositionalOntologyToDatamarts)
+
+    compositionalOntologyToDocuments
+  }
+
+  def run2(compositionalSearchSpec: CompositionalSearchSpec, maxHits: Int, thresholdOpt: Option[Float],
+           ontologyIdOpt: Option[String], geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): CompositionalOntologyToDocuments = {
+    val filter = new Filter(geography, periodGteOpt, periodLteOpt)
+    val compositionalOntologyToDocuments = run2(filter, maxHits, thresholdOpt, compositionalSearchSpec)
+
+    compositionalOntologyToDocuments
+  }
+
+  def run2(compositionalSearchSpecs: Array[CompositionalSearchSpec], maxHits: Int, thresholdOpt: Option[Float],
+      ontologyIdOpt: Option[String], geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Array[CompositionalOntologyToDocuments] = {
+    val filter = new Filter(geography, periodGteOpt, periodLteOpt)
+    val results = compositionalSearchSpecs.map { compositionalSearchSpec =>
+      run2(filter, maxHits, thresholdOpt, compositionalSearchSpec)
+    }
+
+    results
+  }
+
   def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
     val searchingFuture = loadingFuture.map { singleKnnApp =>
@@ -190,3 +268,5 @@ object Searcher {
 
 class AutoSearcher @Inject()(autoLocations: AutoLocations)
     extends Searcher(new SearcherLocations(autoLocations.index, autoLocations.baseDir, autoLocations.baseFile))
+
+case class CompositionalSearchSpec(contextOpt: Option[String], homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier])

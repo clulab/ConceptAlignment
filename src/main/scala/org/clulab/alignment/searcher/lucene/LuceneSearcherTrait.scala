@@ -12,6 +12,8 @@ trait LuceneSearcherTrait {
 
   def search(queryString: String, maxHits: Int): Iterator[(Float, Document)]
 
+  def search(geography: Seq[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier]
+
   def datamartSearch(queryString: String, maxHits: Int): Iterator[(Float, DatamartDocument)]
 
   def withReader[T](f: DirectoryReader => T): T

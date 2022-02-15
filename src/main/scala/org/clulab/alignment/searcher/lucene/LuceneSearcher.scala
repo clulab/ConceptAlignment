@@ -14,6 +14,12 @@ import org.clulab.alignment.utils.Closer.AutoCloser
 
 class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearcherTrait {
 
+  def getNumDocs: Int = {
+    withReader { reader =>
+      reader.numDocs()
+    }
+  }
+
   def newReader(): DirectoryReader = {
     val path = Paths.get(luceneDirname)
     val fsDirectory = FSDirectory.open(path)
@@ -43,10 +49,9 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
     }
   }
 
-  def search(geography: Array[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier] = {
+  def search(geography: Seq[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier] = {
     // If these are all empty, then there is not point to this expensive search.
     require(geography.nonEmpty || periodGteOpt.nonEmpty || periodLteOpt.nonEmpty)
-    val collector = TopScoreDocCollector.create(1000)
     val builder = new BooleanQuery.Builder()
 
     geography.foreach { value =>
@@ -91,7 +96,7 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
     // TODO: withSearcher
     val datamartIdentifiers = withReader { reader =>
       val searcher = new IndexSearcher(reader)
-      val topDocs = searcher.search(query, 100)
+      val topDocs = searcher.search(query, getNumDocs)
 
       if (topDocs.totalHits > 0) {
         topDocs.scoreDocs.map { scoreDoc =>
@@ -102,7 +107,7 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
         }
       }
       else
-        Array.empty
+        Array.empty[DatamartIdentifier]
     }
 
     datamartIdentifiers

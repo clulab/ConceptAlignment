@@ -560,7 +560,7 @@ paths:
           description: The searcher is not working correctly.
 
   /v2/bulkCompositionalSearch:
-    get:
+    put:
       summary: For each context and compositional ontology node provided, find the best matches in the datamarts
       description: ""
       parameters:

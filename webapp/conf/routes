@@ -14,7 +14,7 @@ GET     /v1/search                       org.clulab.alignment.webapp.controllers
 PUT     /v1/compositionalSearch          org.clulab.alignment.webapp.controllers.v1.HomeController.compositionalSearch(maxHits: Int ?= 10, threshold: Option[Float])
 PUT     /v2/compositionalSearch          org.clulab.alignment.webapp.controllers.v1.HomeController.compositionalSearch2(maxHits: Int ?= 10, threshold: Option[Float], ontologyId: Option[String], geography: List[String], period_gte: Option[Long], period_lte: Option[Long])
 
-GET     /v2/bulkCompositionalSearch      org.clulab.alignment.webapp.controllers.v1.HomeController.bulkCompositionalSearch2(secret: String, maxHits: Option[Int], threshold: Option[Float], ontologyId: Option[String], geography: List[String], period_gte: Option[Long], period_lte: Option[Long])
+PUT     /v2/bulkCompositionalSearch      org.clulab.alignment.webapp.controllers.v1.HomeController.bulkCompositionalSearch2(secret: String, maxHits: Option[Int], threshold: Option[Float], ontologyId: Option[String], geography: List[String], period_gte: Option[Long], period_lte: Option[Long])
 GET     /v1/bulkSearchOntologyToDatamart org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchOntologyToDatamart(secret: String, maxHits: Option[Int], threshold: Option[Float])
 GET     /v1/bulkSearchDatamartToOntology org.clulab.alignment.webapp.controllers.v1.HomeController.bulkSearchDatamartToOntology(secret: String, maxHits: Option[Int], threshold: Option[Float], compositional: Boolean ?= false)
 

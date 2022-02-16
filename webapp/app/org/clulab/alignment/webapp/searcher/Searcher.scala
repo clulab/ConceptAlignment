@@ -231,25 +231,24 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
   }
 
   def run2(filter: Filter, maxHits: Int, thresholdOpt: Option[Float], ontologyIdOpt: Option[String], compositionalSearchSpec: CompositionalSearchSpec): CompositionalOntologyToDocuments = {
-    val contextOpt = compositionalSearchSpec.contextOpt
-    val homeId = compositionalSearchSpec.homeId
-    val awayIds = compositionalSearchSpec.awayIds
     val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
     val searchingFuture = loadingFuture.map { singleKnnApp =>
-      try {
-        val compositionalOntologyMapper = ontologyIdOpt
-            .map { ontologyId =>
-              val dynamicCompositionalOntologyMapper = synchronized { dynamicCompositionalOntologyMapperOpt.get }
+      val compositionalOntologyMapper = ontologyIdOpt
+        .map { ontologyId =>
+          val dynamicCompositionalOntologyMapper = synchronized { dynamicCompositionalOntologyMapperOpt.get }
 
-              dynamicCompositionalOntologyMapper.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
-            }
-            .getOrElse(compositionalOntologyMapperOpt.get)
+          dynamicCompositionalOntologyMapper.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+        }
+        .getOrElse(compositionalOntologyMapperOpt.get)
+      val homeId = compositionalSearchSpec.homeId
+      try {
+        val contextOpt = compositionalSearchSpec.contextOpt
         val contextVectorOpt = contextOpt.flatMap { context => singleKnnApp.getVectorOpt(context) }
+        val awayIds = compositionalSearchSpec.awayIds
 
         compositionalOntologyMapper.ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt, homeId, awayIds, None, thresholdOpt) // Skip maxHits here.
       }
       catch {
-        case exception: ExternalException => throw exception
         case throwable: Throwable =>
           throw new InternalException(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
       }
@@ -271,17 +270,53 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       run2(filter, maxHits, thresholdOpt, ontologyIdOpt, compositionalSearchSpec)
   }
 
+  def run2(filter: Filter, maxHits: Int, thresholdOpt: Option[Float],
+           ontologyIdOpt: Option[String], compositionalSearchSpecs: Array[CompositionalSearchSpec]): Array[CompositionalOntologyToDocuments] = {
+    val maxWaitTime: FiniteDuration = Duration(300, TimeUnit.SECONDS)
+    val searchingFuture = loadingFuture.map { singleKnnApp =>
+      val compositionalOntologyMapper = ontologyIdOpt
+        .map { ontologyId =>
+          val dynamicCompositionalOntologyMapper = synchronized { dynamicCompositionalOntologyMapperOpt.get }
+
+          dynamicCompositionalOntologyMapper.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+        }
+        .getOrElse(compositionalOntologyMapperOpt.get)
+      compositionalSearchSpecs.map { compositionalSearchSpec =>
+        val homeId = compositionalSearchSpec.homeId
+        try {
+          val contextOpt = compositionalSearchSpec.contextOpt
+          val awayIds = compositionalSearchSpec.awayIds
+          val contextVectorOpt = contextOpt.flatMap { context => singleKnnApp.getVectorOpt(context) }
+
+          compositionalOntologyMapper.ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt, homeId, awayIds, None, thresholdOpt) // Skip maxHits here.
+        }
+        catch {
+          case throwable: Throwable =>
+            // These errors will be suppressed in the hopes of returning something for every slot.
+            CompositionalOntologyToDatamarts(homeId, Seq.empty)
+            // throw new InternalException(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
+        }
+      }
+    }
+
+    val multipleRawCompositionalOntologyToDatamarts = Await.result(searchingFuture, maxWaitTime)
+    val multipleCompositionalOntologyToDatamarts = multipleRawCompositionalOntologyToDatamarts.map(filter.filter(_, maxHits))
+    val multipleCompositionalOntologyToDocuments = multipleCompositionalOntologyToDatamarts.map(toDocuments)
+
+    multipleCompositionalOntologyToDocuments
+  }
+
   def run2(compositionalSearchSpecs: Array[CompositionalSearchSpec], maxHits: Int, thresholdOpt: Option[Float],
       ontologyIdOpt: Option[String], geography: List[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Array[CompositionalOntologyToDocuments] = {
     val filter = new Filter(geography, periodGteOpt, periodLteOpt)
-    // TODO.  Check for empty filter
-    // So some things just once and loop underneath
 
-    val results = compositionalSearchSpecs.map { compositionalSearchSpec =>
-      run2(filter, maxHits, thresholdOpt, ontologyIdOpt, compositionalSearchSpec)
+    if (filter.isEmpty) {
+      compositionalSearchSpecs.map { compositionalSearchSpec =>
+        CompositionalOntologyToDocuments(compositionalSearchSpec.homeId, Seq.empty)
+      }
     }
-
-    results
+    else
+      run2(filter, maxHits, thresholdOpt, ontologyIdOpt, compositionalSearchSpecs)
   }
 
   def run(dojoDocument: DojoDocument, maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): String = {

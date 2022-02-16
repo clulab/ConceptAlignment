@@ -327,24 +327,10 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
               case throwable: Throwable => throw new ExternalException("Couldn't parse input.", throwable)
             }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
-
-        val jsArray = if (false) {
-          val multipleCompositionalOntologyToDocuments = searcher.run2(compositionalSearchSpecs, hits, thresholdOpt,
-             // TODO: ontologyIdOpt
-              ontologyIdOpt, geography, periodGteOpt, periodLteOpt)
-          val jsObjects = multipleCompositionalOntologyToDocuments.map { compositionalOntologyToDocument =>
-            compositionalOntologyToDocument.resultsToJsArray()
-          }
-          val jsArray = JsArray(jsObjects)
-          jsArray
-        }
-        else {
-          val compositionalOntologyToDocuments = searcher.run2(compositionalSearchSpecs.head, hits, thresholdOpt,
-              // TODO: ontologyIdOpt
-              ontologyIdOpt, geography, periodGteOpt, periodLteOpt)
-          val jsArray = compositionalOntologyToDocuments.resultsToJsArray()
-          JsArray(List(jsArray))
-        }
+        val multipleCompositionalOntologyToDocuments = searcher.run2(compositionalSearchSpecs, hits, thresholdOpt,
+            ontologyIdOpt, geography, periodGteOpt, periodLteOpt)
+        val multipleJsArray = multipleCompositionalOntologyToDocuments.map(_.resultsToJsArray())
+        val jsArray = JsArray(multipleJsArray)
 
         Ok(jsArray)
       }

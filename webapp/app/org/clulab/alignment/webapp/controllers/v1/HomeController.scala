@@ -123,7 +123,9 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       val jsObject = Json.obj(
         "version" -> HomeController.VERSION,
         "compOntology" -> compVersion,
+        "compStatus" -> "preinstalled",
         "flatOntology" -> flatVersion,
+        "flatStatus" -> "preinstalled",
         "searcher" -> Json.obj(
           "index" -> searcher.index,
           "status" -> searcher.getStatus.toJsValue
@@ -139,16 +141,36 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def status2(ontologyIdOpt: Option[String]): Action[AnyContent] = Action {
+    // Here are potential values for compStatus:
+    // preinstalled, for then ontologyIdOpt is None
+    // pending, if getOntologyIdOpts returns None because the searcher isn't ready
+    // absent, if Some is returned, but the ontologyId is not in the list
+    // present, if Some is returned and the ontology is in the list
+
     val method = "status2"
     try {
       log(method, s"with ontologyIdOpt='$ontologyIdOpt'")
       val indexer = currentIndexer
       val searcher = currentSearcher
-      val (compVersion, flatVersion) = getOntologyVersions
+      val (preinstalledCompVersion, flatVersion) = getOntologyVersions
+      val (compVersion, compStatus) = ontologyIdOpt.map { ontologyId =>
+        val ontologyIdOpts = searcher.getOntologyIdOpts
+        val compVersion = ontologyId
+        val compStatus = ontologyIdOpts.map { ontologyIds =>
+          if (ontologyIds(ontologyId)) "present" else "absent"
+        }
+        .getOrElse("pending")
+
+        (compVersion, compStatus)
+      }
+      .getOrElse((preinstalledCompVersion, "preinstalled"))
+
       val jsObject = Json.obj(
         "version" -> HomeController.VERSION,
         "compOntology" -> compVersion,
+        "compStatus" -> compStatus,
         "flatOntology" -> flatVersion,
+        "flatStatus" -> "preinstalled",
         "searcher" -> Json.obj(
           "index" -> searcher.index,
           "status" -> searcher.getStatus.toJsValue
@@ -264,7 +286,6 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
             }
         val hits = math.min(HomeController.maxMaxHits, maxHits)
         val compositionalOntologyToDocuments = searcher.run2(compositionalSearchSpec, hits, thresholdOpt,
-            // TODO: ontologyIdOpt
             ontologyIdOpt, geography, periodGteOpt, periodLteOpt)
         val jsArray = compositionalOntologyToDocuments.resultsToJsArray()
 

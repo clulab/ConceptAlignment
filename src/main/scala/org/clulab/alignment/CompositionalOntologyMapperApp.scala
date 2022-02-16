@@ -4,7 +4,7 @@ import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.Normalizer
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, CompositionalOntologyIdentifierWithContext, FlatOntologyIdentifier}
+import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, FlatOntologyIndex}
 import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, FlatOntologyAlignmentItem}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -14,6 +14,7 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
+import java.io.File
 import scala.collection.mutable
 
 case class CompositionalOntologyToDocuments(srcId: CompositionalOntologyIdentifier, dstResults: Seq[(DatamartDocument, Float)]) {
@@ -587,6 +588,56 @@ println(s"elapsed = $elapsed sec")
 
   def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, ontologyIndex: FlatOntologyIndex.Index, topK: Int, thresholdOpt: Option[Float]): Seq[(FlatOntologyIdentifier, Float)] = {
     alignVectorToOntology(datamartItem.vector, ontologyIndex, topK, thresholdOpt)
+  }
+}
+
+object CompositionalOntologyMapper {
+
+  def apply(compositionalOntologyMapper: CompositionalOntologyMapper, datamartIndex: DatamartIndex.Index): CompositionalOntologyMapper = {
+    val conceptIndex = compositionalOntologyMapper.conceptIndex
+    val processIndex = compositionalOntologyMapper.processIndex
+    val propertyIndex = compositionalOntologyMapper.propertyIndex
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
+  }
+
+  def mkIndexFilename(baseDir: String, filename: String, ontologyId: String): String = {
+    val name = new File(filename).getName
+
+    s"$baseDir/$ontologyId.ont/$name"
+  }
+
+  def apply(ontologyId: String, datamartIndex: DatamartIndex.Index, baseDir: String,
+      conceptFilename: String, processFilename: String, propertyFilename: String): CompositionalOntologyMapper = {
+
+    def mkFilename(filename: String): String = mkIndexFilename(baseDir, filename, ontologyId)
+
+    val conceptIndex = FlatOntologyIndex.load(mkFilename(conceptFilename))
+    val processIndex = FlatOntologyIndex.load(mkFilename(processFilename))
+    val propertyIndex = FlatOntologyIndex.load(mkFilename(propertyFilename))
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
+  }
+
+  def apply(compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper], datamartIndex: DatamartIndex.Index,
+      conceptFilename: String, processFilename: String, propertyFilename: String): CompositionalOntologyMapper = {
+    val (conceptIndex, processIndex, propertyIndex) = compositionalOntologyMapperOpt
+        .map { compositionalOntologyMapper =>
+          val conceptIndex = compositionalOntologyMapper.conceptIndex
+          val processIndex = compositionalOntologyMapper.processIndex
+          val propertyIndex = compositionalOntologyMapper.propertyIndex
+
+          (conceptIndex, processIndex, propertyIndex)
+        }
+        .getOrElse {
+          val conceptIndex = FlatOntologyIndex.load(conceptFilename)
+          val processIndex = FlatOntologyIndex.load(processFilename)
+          val propertyIndex = FlatOntologyIndex.load(propertyFilename)
+
+          (conceptIndex, processIndex, propertyIndex)
+        }
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
   }
 }
 

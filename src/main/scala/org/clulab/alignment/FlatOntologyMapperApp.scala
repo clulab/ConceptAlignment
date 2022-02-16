@@ -1,7 +1,6 @@
 package org.clulab.alignment
 
 import java.io.PrintWriter
-
 import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
@@ -82,6 +81,17 @@ class FlatOntologyMapper(val datamartIndex: DatamartIndex.Index, val ontologyInd
 
   def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, topK: Int = ontologyIndex.size, thresholdOpt: Option[Float]): Seq[SearchResult[FlatOntologyAlignmentItem, Float]] = {
     alignVectorToOntology(datamartItem.vector, topK, thresholdOpt)
+  }
+}
+
+object FlatOntologyMapper {
+
+  def apply(flatOntologyMapperOpt: Option[FlatOntologyMapper], datamartIndex: DatamartIndex.Index, filename: String): FlatOntologyMapper = {
+    val ontologyIndex = flatOntologyMapperOpt
+        .map(_.ontologyIndex)
+        .getOrElse(FlatOntologyIndex.load(filename))
+
+    new FlatOntologyMapper(datamartIndex, ontologyIndex)
   }
 }
 

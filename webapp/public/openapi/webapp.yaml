@@ -40,11 +40,11 @@ components:
           type: string
           example: 1.2.6
         compOntology:
-          description: the git commit hash of the compositional ontology file
+          description: the git commit hash of the preinstalled compositional ontology file
           type: string
           example: "0f6a3510726fef3f0380bf2f966d4ea4b46af9f0"
         flatOntology:
-          description: the git commit hash of the flat ontology file
+          description: the git commit hash of the preinstalled flat ontology file
           type: string
           example: "53bb28c048264e89a30a605fddd77f93849299b1"
         searcher:
@@ -61,10 +61,18 @@ components:
           description: the ontologyId of the compositional ontology, if it was specified in the query, or the git commit hash of the default compositional ontology file
           type: string
           example: "0000000-1111-2222-3333-444444444444"
+        compStatus:
+          description: one of preinstalled, pending, absent, or present describing the state of the compositional ontology
+          type: string
+          example: present
         flatOntology:
           description: the git commit hash of the flat ontology file
           type: string
           example: "53bb28c048264e89a30a605fddd77f93849299b1"
+        flatStatus:
+          description: preinstalled, describing the state of the flat ontology
+          type: string
+          example: preinstalled
         searcher:
           $ref: "#/components/schemas/indexedStatus"
         indexer:

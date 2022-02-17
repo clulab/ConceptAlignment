@@ -85,6 +85,10 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
         FileUtils.printWriterFromFile(filename).autoClose { printWriter =>
           printWriter.print(ontology)
         }
+        val propertiesFilename = StringUtils.beforeLast(filename, '.') + ".properties"
+        FileUtils.printWriterFromFile(propertiesFilename).autoClose { printWriter =>
+          printWriter.println(s"hash = $ontologyId")
+        }
 
         {
           val indexer = new HnswlibIndexer()
@@ -92,7 +96,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
           val processFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.processFilename, ontologyId)
           val propertyFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.propertyFilename, ontologyId)
 
-          indexer.indexCompositionalOntology(conceptFilename, processFilename, propertyFilename)
+          indexer.indexCompositionalOntology(conceptFilename, processFilename, propertyFilename, Some(filename))
         }
         val datamartIndex = singleKnnApp.datamartIndex
         val compositionalOntologyMapper = CompositionalOntologyMapper(ontologyId, datamartIndex, searcherLocations.baseDir,
@@ -274,7 +278,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       val compositionalOntologyMapper = ontologyIdOpt
         .map { ontologyId =>
           synchronized {
-            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException(s"The ontologyId '$ontologyId' is not available.  Please check its status."))
           }
         }
         .getOrElse(compositionalOntologyMapperOpt.get)
@@ -315,7 +319,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       val compositionalOntologyMapper = ontologyIdOpt
         .map { ontologyId =>
           synchronized {
-            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException(s"The ontologyId '$ontologyId' is not available.  Please check its status."))
           }
         }
         .getOrElse(compositionalOntologyMapperOpt.get)

@@ -30,15 +30,6 @@ class HnswlibIndexer {
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
   val datamartEmbedder: DatamartEmbedder = getEmbedder()
 
-  val config = ConfigFactory
-      .empty
-      .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
-        // Both of these are needed and Eidos isn't configured that way by default.
-        Seq("wm_flattened", "wm_compositional").asJava
-      ))
-      .withFallback(EidosSystem.defaultConfig)
-
-
   def getEmbedder(): DatamartEmbedder = {
     // Pick one of these.
     // new DatamartAverageEmbedder(w2v)
@@ -75,6 +66,14 @@ class HnswlibIndexer {
 
   def readFlatOntologyItems(): Seq[FlatOntologyAlignmentItem] = {
     val namespace = "wm_flattened"
+    val config = ConfigFactory
+      .empty
+      .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
+        // Both of these are needed and Eidos isn't configured that way by default.
+        Seq(namespace).asJava
+      ))
+      .withFallback(EidosSystem.defaultConfig)
+
     val ontologyHandler = OntologyHandler.fromConfig(config)
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
         .collect { case grounder: EidosOntologyGrounder => grounder}
@@ -104,14 +103,28 @@ class HnswlibIndexer {
     index
   }
 
-  // TODO, share the ontologyHandler
   def indexCompositionalOntology(conceptIndexFilename: String, processIndexFilename: String,
-      propertyIndexFilename: String): Seq[FlatOntologyIndex.Index] = {
-    val namespace = "wm_compositional"
+      propertyIndexFilename: String, ontologyFilenameOpt: Option[String] = None): Seq[FlatOntologyIndex.Index] = {
     val conceptBranchAndFilename = ("concept", conceptIndexFilename)
     val processBranchAndFilename = ("process", processIndexFilename)
     val propertyBranchAndFilename = ("property", propertyIndexFilename)
     val branchesAndFilenames = Seq(conceptBranchAndFilename, processBranchAndFilename, propertyBranchAndFilename)
+
+    val namespace = "wm_compositional"
+    val config = {
+      val config1 = ConfigFactory
+          .empty
+          .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
+            Seq("wm_compositional").asJava
+          ))
+        val config2 =
+            if (ontologyFilenameOpt.isEmpty) config1
+            else
+              config1.withValue("ontologies.wm_compositional", ConfigValueFactory.fromAnyRef(ontologyFilenameOpt.get))
+
+        config2.withFallback(EidosSystem.defaultConfig)
+    }
+
     val ontologyHandler = OntologyHandler.fromConfig(config)
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
         .collect { case grounder: EidosOntologyGrounder => grounder}

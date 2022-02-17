@@ -195,6 +195,7 @@ class ExperimentSpreadsheetsApp() {
           }
           else
             Seq.empty[DatamartIdentifier]
+
           val oldScore = score(oldValues, goldValues)
           val newScore = score(newValues, goldValues)
           val concept = values(conceptNameCol)

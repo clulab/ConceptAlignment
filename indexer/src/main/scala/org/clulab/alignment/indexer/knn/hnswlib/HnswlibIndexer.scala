@@ -7,11 +7,7 @@ import java.io.File
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
-import org.clulab.alignment.embedder.DatamartEmbedder
-import org.clulab.alignment.embedder.DatamartStopwordEmbedder
-import org.clulab.alignment.embedder.DatamartAverageEmbedder
-import org.clulab.alignment.embedder.DatamartSingleEmbedder
-import org.clulab.alignment.embedder.DatamartWeightedAverageEmbedder
+import org.clulab.alignment.embedder.{DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartPowWeightedAverageEmbedder, DatamartStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -32,8 +28,8 @@ import scala.collection.JavaConverters._
 class HnswlibIndexer {
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
-//  val datamartEmbedder: DatamartEmbedder = new DatamartStopwordEmbedder(w2v)
-  val datamartEmbedder: DatamartEmbedder = new DatamartWeightedAverageEmbedder(w2v)
+  val datamartEmbedder: DatamartEmbedder = getEmbedder()
+
   val config = ConfigFactory
       .empty
       .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
@@ -41,6 +37,18 @@ class HnswlibIndexer {
         Seq("wm_flattened", "wm_compositional").asJava
       ))
       .withFallback(EidosSystem.defaultConfig)
+
+
+  def getEmbedder(): DatamartEmbedder = {
+    // Pick one of these.
+    // new DatamartAverageEmbedder(w2v)
+    DatamartEpsWeightedAverageEmbedder(w2v)
+    // DatamartExpWeightedAverageEmbedder(w2v)
+    // DatamartPowWeightedAverageEmbedder(w2v)
+    // new DatamartSingleEmbedder(w2v)
+    // new DatamartStopwordEmbedder(w2v)
+    // new DatamartWordEmbedder(w2v)
+  }
 
   // This is just for testing.
   def indexSample(): Unit = {
@@ -56,8 +64,8 @@ class HnswlibIndexer {
   }
 
   def indexGlove(indexFilename: String): GloveIndex.Index = {
-    val keys = w2v.keys
-    val items = keys.map { key => GloveAlignmentItem(key, w2v.get(key).get.toArray) }
+    val keys = (w2v.keys + "").toSeq.sorted // Always insert in the same order!
+    val items = keys.map { key => GloveAlignmentItem(key, w2v.getOrElseUnknown(key).toArray) }
     val index = GloveIndex.newIndex(items)
 
     index.save(new File(indexFilename))

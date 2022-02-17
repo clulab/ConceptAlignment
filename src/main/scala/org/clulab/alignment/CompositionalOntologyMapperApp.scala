@@ -607,6 +607,15 @@ object CompositionalOntologyMapper {
     s"$baseDir/$ontologyId.ont/$name"
   }
 
+  def mkOntologyFilename(baseDir: String, ontologyId: String): String = {
+    val dirName =  s"$baseDir/$ontologyId.ont"
+    val file = new File(dirName)
+
+    if (!file.exists)
+      file.mkdirs()
+    s"$dirName/ontology.yml"
+  }
+
   def apply(ontologyId: String, datamartIndex: DatamartIndex.Index, baseDir: String,
       conceptFilename: String, processFilename: String, propertyFilename: String): CompositionalOntologyMapper = {
 

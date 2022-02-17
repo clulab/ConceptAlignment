@@ -4,6 +4,7 @@ import org.apache.http.HttpHost
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.impl.client.CloseableHttpClient
+import org.clulab.alignment.exception.{ExternalException, InternalException}
 import org.clulab.wm.eidoscommon.utils.Closer.AutoCloser
 import org.clulab.wm.eidoscommon.utils.Sourcer
 import org.clulab.wm.wmexchanger.utils.RestExchanger
@@ -39,7 +40,10 @@ class RealRestOntologyConsumer(service: String, username: String, password: Stri
       val statusCode = response.getStatusLine.getStatusCode
 
       if (statusCode != 200)
-        throw new Exception(s"Status code '$statusCode' for ontologyId '$ontologyId''")
+        if (statusCode == 404)
+          throw new ExternalException(s"Status code '$statusCode' for ontologyId '$ontologyId'")
+        else
+          throw new InternalException(s"Status code '$statusCode' for ontologyId '$ontologyId'")
 
       val content = response.getEntity.getContent
       val json = Source.fromInputStream(content, Sourcer.utf8).autoClose { source =>

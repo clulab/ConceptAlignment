@@ -1,30 +1,26 @@
 package org.clulab.alignment.webapp.searcher
 
-import com.github.jelmerk.knn.scalalike.SearchResult
 import org.clulab.alignment.{CompositionalOntologyMapper, CompositionalOntologyToDatamarts, CompositionalOntologyToDocuments, FlatOntologyMapper, SingleKnnApp, SingleKnnAppTrait}
-
-import java.util.concurrent.TimeUnit
-import javax.inject._
 import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
+import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.exception.ExternalException
 import org.clulab.alignment.exception.InternalException
+import org.clulab.alignment.indexer.knn.hnswlib.HnswlibIndexer
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
-import org.clulab.alignment.indexer.knn.hnswlib.index.FlatOntologyIndex
-import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.utils.FileUtils
-import org.clulab.alignment.webapp.controllers.v1.HomeController.logger
 import org.clulab.alignment.webapp.grounder.DojoDocument
-import org.clulab.alignment.webapp.grounder.FlatGroundings
-import org.clulab.alignment.webapp.grounder.SingleGrounding
 import org.clulab.alignment.webapp.utils.AutoLocations
 import org.clulab.alignment.webapp.utils.StatusHolder
 import org.clulab.utils.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.util.concurrent.TimeUnit
+import javax.inject._
+import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
@@ -36,14 +32,15 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     var gloveIndexOpt: Option[GloveIndex.Index] = None,
     var flatOntologyMapperOpt: Option[FlatOntologyMapper] = None,
     var compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper] = None,
-    var dynamicCompositionalOntologyMapperOpt: Option[Map[String, CompositionalOntologyMapper]] = None)
+    var dynamicCompositionalOntologyMapperOpt: Option[mutable.Map[String, CompositionalOntologyMapper]] = None)
     extends SingleKnnAppTrait {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def isReady: Boolean = flatOntologyMapperOpt.nonEmpty && compositionalOntologyMapperOpt.nonEmpty
 
-  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](getClass.getSimpleName, logger, SearcherStatus.Loading)
+  val statusHolder: StatusHolder[SearcherStatus] = new StatusHolder[SearcherStatus](getClass.getSimpleName, Searcher.logger, SearcherStatus.Loading)
   val index: Int = searcherLocations.index
+  var addingOntology: Boolean = false
   protected val loadingFuture: Future[SingleKnnApp] = Future {
     try {
       // Reuse the glove index when possible.
@@ -58,9 +55,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       // Look for new ontologies _or_ find the existing ones and copy them over with a new datamartIndex.
 
       val dynamicCompositionalOntologyMapper = mkOrCopyDynamicOntologyMap(dynamicCompositionalOntologyMapperOpt, datamartIndex)
-      dynamicCompositionalOntologyMapperOpt = synchronized {
-        Some(dynamicCompositionalOntologyMapper)
-      }
+      dynamicCompositionalOntologyMapperOpt = Some(dynamicCompositionalOntologyMapper)
 
       statusHolder.set(SearcherStatus.Waiting)
       singleKnnApp
@@ -73,33 +68,77 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     }
   }
 
-  def getOntologyIdOpts: Option[Set[String]] = synchronized {
+  def addOntology(ontologyId: String, ontology: String): Unit = {
+    val addingFuture = loadingFuture.map { singleKnnApp =>
+      // We don't know what ontologies are pre-loaded until loading is complete.
+      Searcher.synchronized {
+        if (addingOntology)
+          throw new ExternalException("Please wait until the previous ontology has been loaded before adding another.")
+        addingOntology = true
+        // This needs to be synchronized in case it is called twice.
+        // It is synchronized against the object because the global filesystem is changing.
+        // It may be that this is called on a Searcher that has become obsolete.
+        val dynamicCompositionalOntologyMapper = dynamicCompositionalOntologyMapperOpt.get
+        if (dynamicCompositionalOntologyMapper.contains(ontologyId))
+          throw new ExternalException(s"Ontology `$ontologyId` already exists.")
+        val filename = CompositionalOntologyMapper.mkOntologyFilename(searcherLocations.baseDir, ontologyId)
+        FileUtils.printWriterFromFile(filename).autoClose { printWriter =>
+          printWriter.print(ontology)
+        }
+
+        {
+          val indexer = new HnswlibIndexer()
+          val conceptFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.conceptFilename, ontologyId)
+          val processFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.processFilename, ontologyId)
+          val propertyFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.propertyFilename, ontologyId)
+
+          indexer.indexCompositionalOntology(conceptFilename, processFilename, propertyFilename)
+        }
+        val datamartIndex = singleKnnApp.datamartIndex
+        val compositionalOntologyMapper = CompositionalOntologyMapper(ontologyId, datamartIndex, searcherLocations.baseDir,
+          searcherLocations.conceptFilename, searcherLocations.processFilename, searcherLocations.propertyFilename)
+
+        synchronized {
+          dynamicCompositionalOntologyMapper += ontologyId -> compositionalOntologyMapper
+        }
+        addingOntology = false
+      }
+    }
+
+    // What happens when this doesn't finish in time?  A TimeoutException is thrown here, but
+    // the future should run to completion.  Because of the exception, no value is returned,
+    // so the called should be able to do without it.
+    Await.result(addingFuture, Searcher.maxWaitTime * 10)
+  }
+
+  def getOntologyIdOpts: Option[collection.Set[String]] = synchronized {
     dynamicCompositionalOntologyMapperOpt.map(_.keySet)
   }
 
-  // TODO: Access to the map needs to be synchronized because will be adding to it via addOntolgy.
-  def mkOrCopyDynamicOntologyMap(dynamicCompositionalOntologyMapperOpt: Option[Map[String, CompositionalOntologyMapper]],
-      datamartIndex: DatamartIndex.Index): Map[String, CompositionalOntologyMapper] = {
-    val dynamicCompositionalOntologyMapper = dynamicCompositionalOntologyMapperOpt
+  // This is only called during loading.
+  def mkOrCopyDynamicOntologyMap(dynamicCompositionalOntologyMapperOpt: Option[mutable.Map[String, CompositionalOntologyMapper]],
+      datamartIndex: DatamartIndex.Index): mutable.Map[String, CompositionalOntologyMapper] = {
+    dynamicCompositionalOntologyMapperOpt
         .map { dynamicCompositionalOntologyMapper =>
-          dynamicCompositionalOntologyMapper.mapValues { compositionalOntologyMapper =>
+          val immutableMap = dynamicCompositionalOntologyMapper.mapValues { compositionalOntologyMapper =>
             CompositionalOntologyMapper(compositionalOntologyMapper, datamartIndex)
           }
+
+          mutable.Map(immutableMap.toSeq: _*)
         }
         .getOrElse {
           val ontologyIds = FileUtils.findFiles(searcherLocations.baseDir, ".ont").map { file =>
             StringUtils.beforeLast(file.getName, '.')
           }
-
-          ontologyIds.map { ontologyId =>
+          val pairs = ontologyIds.map { ontologyId =>
             ontologyId -> CompositionalOntologyMapper(ontologyId, datamartIndex, searcherLocations.baseDir,
               searcherLocations.conceptFilename, searcherLocations.processFilename, searcherLocations.propertyFilename)
-          }.toMap
+          }
+          val alternative: mutable.Map[String, CompositionalOntologyMapper] = mutable.Map(pairs: _*)
+
+          alternative
         }
-
-    dynamicCompositionalOntologyMapper
   }
-
 
   def getStatus: SearcherStatus = statusHolder.get
 
@@ -228,14 +267,15 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     val searchingFuture = loadingFuture.map { singleKnnApp =>
       val compositionalOntologyMapper = ontologyIdOpt
         .map { ontologyId =>
-          val dynamicCompositionalOntologyMapper = synchronized { dynamicCompositionalOntologyMapperOpt.get }
-
-          dynamicCompositionalOntologyMapper.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+          synchronized {
+            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+          }
         }
         .getOrElse(compositionalOntologyMapperOpt.get)
       val homeId = compositionalSearchSpec.homeId
       try {
         val contextOpt = compositionalSearchSpec.contextOpt
+        Searcher.logger.trace(s"ContextOpt: $contextOpt")
         val contextVectorOpt = contextOpt.flatMap { context => singleKnnApp.getVectorOpt(context) }
         val awayIds = compositionalSearchSpec.awayIds
 
@@ -268,15 +308,16 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     val searchingFuture = loadingFuture.map { singleKnnApp =>
       val compositionalOntologyMapper = ontologyIdOpt
         .map { ontologyId =>
-          val dynamicCompositionalOntologyMapper = synchronized { dynamicCompositionalOntologyMapperOpt.get }
-
-          dynamicCompositionalOntologyMapper.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+          synchronized {
+            dynamicCompositionalOntologyMapperOpt.get.getOrElse(ontologyId, throw new ExternalException("The ontologyId `` is not available.  Please check its status."))
+          }
         }
         .getOrElse(compositionalOntologyMapperOpt.get)
       compositionalSearchSpecs.map { compositionalSearchSpec =>
         val homeId = compositionalSearchSpec.homeId
         try {
           val contextOpt = compositionalSearchSpec.contextOpt
+          Searcher.logger.trace(s"ContextOpt: $contextOpt")
           val awayIds = compositionalSearchSpec.awayIds
           val contextVectorOpt = contextOpt.flatMap { context => singleKnnApp.getVectorOpt(context) }
 

@@ -8,13 +8,13 @@ class TestLuceneSearcher extends Test {
   val luceneSearcher = new LuceneSearcher("../lucene-datamart-withgeotime", "variableDescription")
 
   def getDatamartDocumentsFromIds(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[DatamartDocument] = {
-    luceneSearcher.withReader { reader =>
-      datamartIdentifiers.map { datamartIdentifier =>
-        val document = luceneSearcher.find(reader, datamartIdentifier)
+    val datamartDocuments = datamartIdentifiers.map { datamartIdentifier =>
+      val document = luceneSearcher.find(datamartIdentifier)
 
-        new DatamartDocument(document)
-      }
+      new DatamartDocument(document)
     }
+
+    datamartDocuments
   }
 
   behavior of "LuceneSearcher"

@@ -13,12 +13,7 @@ import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.Closer.AutoCloser
 
 class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearcherTrait {
-
-  def getNumDocs: Int = {
-    withReader { reader =>
-      reader.numDocs()
-    }
-  }
+  val reader = newReader()
 
   def newReader(): DirectoryReader = {
     val path = Paths.get(luceneDirname)
@@ -33,20 +28,24 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
     new QueryParser(field, analyzer).parse(query)
   }
 
-  def search(queryString: String, maxHits: Int): Iterator[(Float, Document)] = {
+  def getNumDocs: Int = reader.numDocs()
+
+  def documentSearch(queryString: String, maxHits: Int): Iterator[(Float, Document)] = {
     val collector = TopScoreDocCollector.create(maxHits)
     val query = newQuery(queryString)
+    val searcher = new IndexSearcher(reader)
 
-    newReader().autoClose { reader =>
-      val searcher = new IndexSearcher(reader)
-      searcher.search(query, collector)
+    searcher.search(query, collector)
 
-      val hits = collector.topDocs().totalHits
-      val scoreDocs = collector.topDocs().scoreDocs
-      val scoresAndDocs = scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
+    val scoreDocs = collector.topDocs().scoreDocs
+    val hits = collector.topDocs().totalHits
+    val scoresAndDocs =
+        if (hits > 0)
+          scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
+        else
+          Array.empty
 
-      scoresAndDocs.iterator
-    }
+    scoresAndDocs.iterator
   }
 
   def search(geography: Seq[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier] = {
@@ -92,36 +91,24 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
     lteQueryOpt.foreach { query => builder.add(query, BooleanClause.Occur.MUST) }
 
     val query = builder.build()
+    val searcher = new IndexSearcher(reader)
+    val topDocs = searcher.search(query, getNumDocs)
+    val datamartIdentifiers =
+        if (topDocs.totalHits > 0) {
+          topDocs.scoreDocs.map { scoreDoc =>
+            val doc = scoreDoc.doc
+            val document = searcher.doc(doc)
 
-    // TODO: withSearcher
-    val datamartIdentifiers = withReader { reader =>
-      val searcher = new IndexSearcher(reader)
-      val topDocs = searcher.search(query, getNumDocs)
-
-      if (topDocs.totalHits > 0) {
-        topDocs.scoreDocs.map { scoreDoc =>
-          val doc = scoreDoc.doc
-          val document = searcher.doc(doc)
-
-          new DatamartDocument(document).datamartIdentifier
+            new DatamartDocument(document).datamartIdentifier
+          }
         }
-      }
-      else
-        Array.empty[DatamartIdentifier]
-    }
+        else
+          Array.empty[DatamartIdentifier]
 
     datamartIdentifiers
   }
 
-  def withReader[T](f: DirectoryReader => T): T = {
-    val result = newReader().autoClose { reader =>
-      f(reader)
-    }
-
-    result
-  }
-
-  def find(reader: DirectoryReader, identifier: DatamartIdentifier): Document = {
+  def find(identifier: DatamartIdentifier): Document = {
     val query = new TermQuery(new Term("id", identifier.toString))
     val searcher = new IndexSearcher(reader)
     val topDocs = searcher.search(query, 1)
@@ -134,37 +121,11 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
     document
   }
 
-  class LuceneIterator(reader: DirectoryReader, query: Query, maxHits: Int, pageSize: Int) extends Iterator[(Float, Document)] {
-/*    var opened = true
-    val collector = TopScoreDocCollector.create(math.min(pageSize, maxHits), null)
-    val scoreDocs = collector.topDocs(0, ).scoreDocs
-    val searcher = new IndexSearcher(reader)
-
-    scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
-    searcher.search(query, collector)
-    val scoresAndDocs = scoreDocs.map { hit => (hit.score, searcher.doc(hit.doc)) }
-    new LuceneIterator(collector)
-
-    def close(): Unit = {
-      if (opened)
-        reader.close()
-      opened = false
-    }*/
-    override def hasNext: Boolean = ???
-
-    override def next(): (Float, Document) = ???
-  }
-
-  def infiniteSearch(queryString: String, maxHits: Int, pageSize: Int): Iterator[(Float, Document)] = {
-    val query = newQuery(queryString)
-
-    // Does reader need to be closed?
-    new LuceneIterator(newReader(), query, maxHits, pageSize)
-  }
-
   def datamartSearch(queryString: String, maxHits: Int): Iterator[(Float, DatamartDocument)] = {
-    val scoreDocs = search(queryString, maxHits)
+    val scoreDocs = documentSearch(queryString, maxHits)
 
     scoreDocs.map { case (score, document) => (score, new DatamartDocument(document)) }
   }
+
+  def close(): Unit = reader.close()
 }

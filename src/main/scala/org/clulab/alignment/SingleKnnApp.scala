@@ -66,24 +66,22 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
   }
 
   def getDatamartDocumentsFromIds(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[DatamartDocument] = {
-    luceneSearcher.withReader { reader =>
-      datamartIdentifiers.map { datamartIdentifier =>
-        val document = luceneSearcher.find(reader, datamartIdentifier)
+    val datamartDocuments = datamartIdentifiers.map { datamartIdentifier =>
+      val document = luceneSearcher.find(datamartIdentifier)
 
-        new DatamartDocument(document)
-      }
+      new DatamartDocument(document)
     }
+
+    datamartDocuments
   }
 
   def getDatamartDocuments(searchResults: Seq[SearchResult[DatamartAlignmentItem, Float]]): Seq[(DatamartDocument, Float)] = {
-    val datamartDocuments = luceneSearcher.withReader { reader =>
-      searchResults.map { case SearchResult(item, score) =>
-        val document = luceneSearcher.find(reader, item.id)
-        val datamartDocument = new DatamartDocument(document)
+    val datamartDocuments = searchResults.map { case SearchResult(item, score) =>
+      val document = luceneSearcher.find(item.id)
+      val datamartDocument = new DatamartDocument(document)
 
-        (datamartDocument, score)
-      }.toArray // must be retrieved before reader is closed
-    }
+      (datamartDocument, score)
+    }.toArray // must be retrieved before reader is closed
 
     datamartDocuments
   }

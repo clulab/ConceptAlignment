@@ -85,10 +85,6 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
         FileUtils.printWriterFromFile(filename).autoClose { printWriter =>
           printWriter.print(ontology)
         }
-        val propertiesFilename = StringUtils.beforeLast(filename, '.') + ".properties"
-        FileUtils.printWriterFromFile(propertiesFilename).autoClose { printWriter =>
-          printWriter.println(s"hash = $ontologyId")
-        }
 
         {
           val indexer = new HnswlibIndexer()
@@ -96,7 +92,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
           val processFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.processFilename, ontologyId)
           val propertyFilename = CompositionalOntologyMapper.mkIndexFilename(searcherLocations.baseDir, searcherLocations.propertyFilename, ontologyId)
 
-          indexer.indexCompositionalOntology(conceptFilename, processFilename, propertyFilename, Some(filename))
+          indexer.indexCompositionalOntology(conceptFilename, processFilename, propertyFilename, Some(filename), Some(ontologyId))
         }
         val datamartIndex = singleKnnApp.datamartIndex
         val compositionalOntologyMapper = CompositionalOntologyMapper(ontologyId, datamartIndex, searcherLocations.baseDir,

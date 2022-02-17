@@ -3,11 +3,10 @@ package org.clulab.alignment.indexer.knn.hnswlib
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
 
-import java.io.File
+import java.io.{File, FileInputStream}
 import org.clulab.alignment.data.Tokenizer
-import org.clulab.alignment.data.datamart.DatamartEntry
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
-import org.clulab.alignment.embedder.{DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartPowWeightedAverageEmbedder, DatamartStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
+import org.clulab.alignment.embedder.{DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartPowWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -17,20 +16,23 @@ import org.clulab.alignment.indexer.knn.hnswlib.item.DatamartAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.GloveAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.FlatOntologyAlignmentItem
 import org.clulab.alignment.indexer.knn.hnswlib.item.SampleAlignmentItem
-import org.clulab.alignment.utils.{OntologyHandlerHelper => OntologyHandler}
-import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMap, WordEmbeddingMapPool}
+import org.clulab.alignment.utils.Closer.AutoCloser
+import org.clulab.alignment.utils.OntologyHandlerHelper
+import org.clulab.embeddings.{CompactWordEmbeddingMap, WordEmbeddingMapPool}
 import org.clulab.wm.eidos.EidosSystem
-import org.clulab.wm.eidos.groundings.RealWordToVec
+import org.clulab.wm.eidos.groundings.OntologyHandler
 import org.clulab.wm.eidos.groundings.grounders.EidosOntologyGrounder
+import org.clulab.wm.eidoscommon.{EidosProcessor, EidosTokenizer}
+import org.clulab.wm.ontologies.NodeTreeDomainOntologyBuilder
 
 import scala.collection.JavaConverters._
 
 class HnswlibIndexer {
   val dimensions = 300
   val w2v: CompactWordEmbeddingMap = HnswlibIndexer.w2v
-  val datamartEmbedder: DatamartEmbedder = getEmbedder()
+  val datamartEmbedder: DatamartEmbedder = getEmbedder
 
-  def getEmbedder(): DatamartEmbedder = {
+  def getEmbedder: DatamartEmbedder = {
     // Pick one of these.
     // new DatamartAverageEmbedder(w2v)
     DatamartEpsWeightedAverageEmbedder(w2v)
@@ -74,7 +76,7 @@ class HnswlibIndexer {
       ))
       .withFallback(EidosSystem.defaultConfig)
 
-    val ontologyHandler = OntologyHandler.fromConfig(config)
+    val ontologyHandler = OntologyHandlerHelper.fromConfig(config)
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
         .collect { case grounder: EidosOntologyGrounder => grounder}
         .find { grounder => grounder.name == namespace }
@@ -103,29 +105,58 @@ class HnswlibIndexer {
     index
   }
 
+  def newOntologyHandler(ontologyFilename: String, version: String, oldOntologyHandler: OntologyHandler, namespace: String, oldTokenizer: EidosTokenizer): OntologyHandler = {
+    val file = new File(ontologyFilename)
+    val oldSentencesExtractor = oldOntologyHandler.sentencesExtractor
+    val oldCanonicalizer = oldOntologyHandler.canonicalizer
+    val newDomainOntologyBuilder = new NodeTreeDomainOntologyBuilder(oldSentencesExtractor, oldCanonicalizer, filtered = true)
+    val newDomainOntology = new FileInputStream(file).autoClose { inputStream =>
+      newDomainOntologyBuilder.buildFromStream(inputStream, Some(version), None)
+    }
+    val newOntologyGrounder = EidosOntologyGrounder.mkGrounder(namespace, newDomainOntology, oldOntologyHandler.wordToVec, oldOntologyHandler.canonicalizer, oldTokenizer)
+    val newOntologyHandler = new OntologyHandler(
+      Seq(newOntologyGrounder),
+      oldOntologyHandler.wordToVec,
+      oldOntologyHandler.sentencesExtractor,
+      oldOntologyHandler.canonicalizer,
+      oldOntologyHandler.includeParents,
+      oldOntologyHandler.topN,
+      oldOntologyHandler.threshold
+    )
+
+    newOntologyHandler
+  }
+
   def indexCompositionalOntology(conceptIndexFilename: String, processIndexFilename: String,
-      propertyIndexFilename: String, ontologyFilenameOpt: Option[String] = None): Seq[FlatOntologyIndex.Index] = {
+      propertyIndexFilename: String, ontologyFilenameOpt: Option[String] = None, ontologyIdOpt: Option[String] = None): Seq[FlatOntologyIndex.Index] = {
     val conceptBranchAndFilename = ("concept", conceptIndexFilename)
     val processBranchAndFilename = ("process", processIndexFilename)
     val propertyBranchAndFilename = ("property", propertyIndexFilename)
     val branchesAndFilenames = Seq(conceptBranchAndFilename, processBranchAndFilename, propertyBranchAndFilename)
-
     val namespace = "wm_compositional"
-    val config = {
-      val config1 = ConfigFactory
+    val ontologyHandler = ontologyFilenameOpt.map { ontologyFilename =>
+      val config = ConfigFactory
+          .empty
+          .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
+            Seq().asJava // Do not preload any for efficiency.
+          ))
+          .withFallback(EidosSystem.defaultConfig)
+      val oldOntologyHandler = OntologyHandlerHelper.fromConfig(config)
+      val language = config.getString("EidosSystem.language")
+      val eidosProcessor = EidosProcessor(language, cutoff = 150) // How expensive is this?
+      val oldTokenizer = eidosProcessor.getTokenizer
+
+      newOntologyHandler(ontologyFilename, ontologyIdOpt.get, oldOntologyHandler, namespace, oldTokenizer)
+    }.getOrElse {
+      val config = ConfigFactory
           .empty
           .withValue("ontologies.ontologies", ConfigValueFactory.fromIterable(
             Seq("wm_compositional").asJava
           ))
-        val config2 =
-            if (ontologyFilenameOpt.isEmpty) config1
-            else
-              config1.withValue("ontologies.wm_compositional", ConfigValueFactory.fromAnyRef(ontologyFilenameOpt.get))
+          .withFallback(EidosSystem.defaultConfig)
 
-        config2.withFallback(EidosSystem.defaultConfig)
+      OntologyHandlerHelper.fromConfig(config)
     }
-
-    val ontologyHandler = OntologyHandler.fromConfig(config)
     val eidosOntologyGrounder = ontologyHandler.ontologyGrounders
         .collect { case grounder: EidosOntologyGrounder => grounder}
         .find { grounder => grounder.name == namespace }

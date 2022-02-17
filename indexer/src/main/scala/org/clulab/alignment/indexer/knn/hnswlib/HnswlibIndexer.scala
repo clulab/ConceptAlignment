@@ -63,8 +63,9 @@ class HnswlibIndexer {
     index.save(new File(filename))
   }
 
-  def indexGlove(indexFilename: String): GloveIndex.Index = {
-    val keys = (w2v.keys + "").toSeq.sorted // Always insert in the same order!
+  def indexGlove(indexFilename: String, countOpt: Option[Int] = None): GloveIndex.Index = {
+    val allKeys = (w2v.keys + "").toSeq.sorted // Always insert in the same order!
+    val keys = countOpt.map(allKeys.take).getOrElse(allKeys)
     val items = keys.map { key => GloveAlignmentItem(key, w2v.getOrElseUnknown(key).toArray) }
     val index = GloveIndex.newIndex(items)
 
@@ -93,6 +94,9 @@ class HnswlibIndexer {
   }
 
   def indexFlatOntology(indexFilename: String): FlatOntologyIndex.Index = {
+    // Turn off warnings from this class.
+    edu.stanford.nlp.ie.NumberNormalizer.setVerbose(false)
+
     val items = readFlatOntologyItems()
     val index = FlatOntologyIndex.newIndex(items)
 

@@ -32,6 +32,10 @@
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
+  <logger name="edu.stanford.nlp.ling.tokensregex.SequenceMatcher" level="OFF" />
+  <logger name="edu.stanford.nlp.ling.tokensregex.SequenceMatcher" level="OFF" />
+  <logger name="com.sun.xml.bind.v2.runtime.unmarshaller.SAXConnector" level="OFF" />
+  <logger name="com.sun.xml.bind.v2.runtime.unmarshaller.UnmarshallingContext" level="OFF" />
 
   <root level="ALL">
     <appender-ref ref="ASYNCFILE" />

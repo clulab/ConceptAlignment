@@ -394,6 +394,10 @@ paths:
                 $ref: "#/components/schemas/statusResponse2"
         400:
           description: Something was wrong, possibly with an ontologyId that is unknown.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
 
   /v1/search:
     get:
@@ -492,6 +496,10 @@ paths:
                 $ref: "#/components/schemas/compositionalSearchResponse"
         400:
           description: Something was wrong, possibly with the request, probably the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
 
@@ -564,6 +572,10 @@ paths:
                 $ref: "#/components/schemas/compositionalSearchResponse"
         400:
           description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
 
@@ -646,6 +658,10 @@ paths:
                   $ref: "#/components/schemas/compositionalSearchResponse"
         400:
           description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
         503:
@@ -784,6 +800,10 @@ paths:
                 $ref: "#/components/schemas/groundIndicatorResponse"
         400:
           description: Something was wrong, possibly with the request.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
 
@@ -831,6 +851,10 @@ paths:
                 $ref: "#/components/schemas/groundModelResponse"
         400:
           description: Something was wrong, possibly with the request.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
 
@@ -854,10 +878,16 @@ paths:
             type: string
           example: "0000000-1111-2222-3333-444444444444"
       responses:
+        200:
+          description: OK
         201:
-          description: The new index is being created.
+          description: The new ontology is being created.
         400:
           description: Something was wrong, possibly with an ontologyId that is unknown.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         401:
           description: The request is not authorized by the secret.
         500:
@@ -878,6 +908,8 @@ paths:
             type: string
           example: secret
       responses:
+        200:
+          description: OK
         201:
           description: The new index is being created.
         401:

@@ -1,8 +1,6 @@
 package org.clulab.alignment.webapp.controllers.v1
 
 import com.typesafe.config.{Config, ConfigFactory}
-
-import javax.inject._
 import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
 import org.clulab.alignment.exception.{ExternalException, InternalException}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -27,12 +25,14 @@ import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc._
 
+import javax.inject._
+import scala.concurrent.Future
 import scala.util.Try
 
 @Singleton
 class HomeController @Inject()(controllerComponents: ControllerComponents, prevIndexer: AutoIndexer, prevSearcher: AutoSearcher)
     extends AbstractController(controllerComponents) with IndexReceiver {
-  import HomeController.logger
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   var currentIndexer: IndexerTrait = prevIndexer
   var currentSearcher: Searcher = prevSearcher
@@ -47,13 +47,13 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   protected def log(method: String, message: String = ""): Unit = {
     val sep = if (message.nonEmpty) " " else ""
 
-    logger.info(s"Called '$method' function$sep$message!")
+    HomeController.logger.info(s"Called '$method' function$sep$message!")
   }
 
   protected def getCatcher(method: String): PartialFunction[Throwable, Result] = {
     val catcher: PartialFunction[Throwable, Result] = {
       case throwable: Throwable =>
-        logger.error(s"Caught exception in '$method'!", throwable)
+        HomeController.logger.error(s"Caught exception in '$method'!", throwable)
         throwable match {
           case _: InternalException =>
             InternalServerError
@@ -68,7 +68,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   def receive(indexSender: IndexSender, indexMessage: IndexMessage): Unit = {
-    logger.info(s"Called 'receive' function with index ${indexMessage.index}")
+    HomeController.logger.info(s"Called 'receive' function with index ${indexMessage.index}")
     // It will only get here if the reindexing was successful so that the new Searcher
     // is able to rely on the values coming from the message.
     val prevSearcher = currentSearcher
@@ -393,27 +393,44 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     catch getCatcher(method)
   }
 
+  // This is expected to take a long time.  Play seems to retry requests before they have completed.
+  // That is why the reason for the check on addingOntology.
   def addOntology2(secret: String, ontologyId: String): Action[AnyContent] = Action {
     val method = "addOntology2"
     try {
-      log(method,s"with secret and ontologyId=`$ontologyId`")
-      // ontologyId = fd513e69-01fd-4b9a-a609-610ff0394ddb
-      val config: Config = ConfigFactory.defaultApplication().resolve()
-      val ontologyService: String = config.getString("rest.consumer.ontologyService")
-      val username: String = Try(config.getString("rest.consumer.username")).getOrElse("eidos")
-      val password: String = Try(config.getString("rest.consumer.password")).getOrElse("quick_OHIO_flat_94")
-
-      val ontology = new RealRestOntologyConsumer(ontologyService, username, password).autoClose { restOntologyConsumer =>
-        restOntologyConsumer.open()
-        restOntologyConsumer.download(ontologyId)
+      log(method, s"with secret and ontologyId=`$ontologyId`")
+      val searcher = currentSearcher
+      val status = searcher.getStatus
+      //      if (!secrets.contains(secret))
+      //        Unauthorized
+      if (status == SearcherStatus.Failing)
+        InternalServerError
+      else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
+        ServiceUnavailable
+      else if (searcher.addingOntology)
+        throw new ExternalException("Please wait until the previous ontology has been loaded before adding another.")
+      else if (searcher.getOntologyIdOpts.exists(_ (ontologyId)))
+        throw new ExternalException(s"Ontology `$ontologyId` already exists.")
+      else {
+        // ontologyId = fd513e69-01fd-4b9a-a609-610ff0394ddb
+        val config: Config = ConfigFactory.defaultApplication().resolve()
+        val ontologyService: String = config.getString("rest.consumer.ontologyService")
+        val username: String = Try(config.getString("rest.consumer.username")).getOrElse("eidos")
+        val password: String = Try(config.getString("rest.consumer.password")).getOrElse("quick_OHIO_flat_94")
+        val ontology = new RealRestOntologyConsumer(ontologyService, username, password).autoClose { restOntologyConsumer =>
+          restOntologyConsumer.open()
+          restOntologyConsumer.download(ontologyId)
+        }
+        // Since the return value is not used, it is OK if it times out.
+        searcher.addOntology(ontologyId, ontology)
+        Ok
       }
-      println(ontology)
-      Ok
     }
     catch getCatcher(method)
   }
 
-  def reindex(secret: String): Action[AnyContent] = Action {
+  // This is expected to take a long time.
+  def reindex(secret: String): Action[AnyContent] = Action.async { Future {
     val method = "reindex"
     try {
       log(method, "with secret")
@@ -434,12 +451,14 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         // Do not set the currentSearcher yet because it could fail.
         // Do set the current indexer so that upon fail, a different
         // one can be used with the next index.
-        currentIndexer = indexer.next(Some(this))
+        //currentIndexer = indexer.next(Some(this))
+
+        Thread.sleep(20)
         Created
       }
     }
     catch getCatcher(method)
-  }
+  }}
 
   def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
     val method = "groundIndicator"

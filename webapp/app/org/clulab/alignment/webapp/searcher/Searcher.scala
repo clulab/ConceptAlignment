@@ -243,13 +243,19 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
     def isEmpty: Boolean = validDatamartIdentifiersOpt.isDefined && validDatamartIdentifiersOpt.get.isEmpty
 
     def filter(compositionalOntologyToDatamarts: CompositionalOntologyToDatamarts, maxHits: Int): CompositionalOntologyToDatamarts = {
-      validDatamartIdentifiersOpt.map {validDatamartIdentifiers =>
-        val filteredPairs = compositionalOntologyToDatamarts.dstResults.filter { case (datamartIdentifier, _) =>
-          validDatamartIdentifiers(datamartIdentifier)
-        }.take(maxHits)
+      validDatamartIdentifiersOpt
+          .map {validDatamartIdentifiers =>
+            val filteredPairs = compositionalOntologyToDatamarts.dstResults.filter { case (datamartIdentifier, _) =>
+              validDatamartIdentifiers(datamartIdentifier)
+            }.take(maxHits)
 
-        CompositionalOntologyToDatamarts(compositionalOntologyToDatamarts.srcId, filteredPairs)
-      }.getOrElse(compositionalOntologyToDatamarts)
+            CompositionalOntologyToDatamarts(compositionalOntologyToDatamarts.srcId, filteredPairs)
+          }
+          .getOrElse {
+            val filteredPairs = compositionalOntologyToDatamarts.dstResults.take(maxHits)
+
+            CompositionalOntologyToDatamarts(compositionalOntologyToDatamarts.srcId, filteredPairs)
+          }
     }
   }
 

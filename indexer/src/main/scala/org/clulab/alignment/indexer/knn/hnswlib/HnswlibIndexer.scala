@@ -33,14 +33,17 @@ class HnswlibIndexer {
   val datamartEmbedder: DatamartEmbedder = getEmbedder
 
   def getEmbedder: DatamartEmbedder = {
-    // Pick one of these.
+    // Pick one of these.  The old result was 10 correct, so anything better is good.
+    // Remember that the indexing process is unstable, so results can differ across runs.
+
     // new DatamartAverageEmbedder(w2v)
-    DatamartEpsWeightedAverageEmbedder(w2v)
-    // DatamartExpWeightedAverageEmbedder(w2v)
-    // DatamartPowWeightedAverageEmbedder(w2v)
+    // DatamartEpsWeightedAverageEmbedder(w2v) // ~15 correct
+    // DatamartExpWeightedAverageEmbedder(w2v) // ~13 correct
+    // DatamartPowWeightedAverageEmbedder(w2v) // ~14 correct for 0.5
     // new DatamartSingleEmbedder(w2v)
-    // new DatamartStopwordEmbedder(w2v)
-    // new DatamartWordEmbedder(w2v)
+    // new DatamartStopwordEmbedder(w2v) // up to ~21 correct
+    DatamartWeightedAverageEmbedder(w2v) // ~14 correct
+    // new DatamartWordEmbedder(w2v) // ~12 correct
   }
 
   // This is just for testing.

@@ -25,6 +25,9 @@ class DatamartWeightedAverageEmbedder(w2v: CompactWordEmbeddingMap, weights: Arr
 }
 
 object DatamartWeightedAverageEmbedder {
+  val defaultWeights: Array[Double] = Array(5.0, 1.0, 0.0, 17.0)
+
+  def apply(w2v: CompactWordEmbeddingMap): DatamartWeightedAverageEmbedder = new DatamartWeightedAverageEmbedder(w2v, defaultWeights.map(_.toFloat))
 
   def softmax(values: Array[Double]): Array[Float] = {
     val expValues = values.map(math.exp)

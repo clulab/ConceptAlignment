@@ -45,7 +45,7 @@ class TestLuceneSearcher extends Test {
     datamartIdentifiers should not be empty
   }
 
-  it should "search for times" in {
+  ignore should "search for times" in {
     {
       // This is the maximum value in the data.  There are now 16 matches.
       val datamartIdentifiers = luceneSearcher.search(Seq.empty, Some(4102444800000L), None)
@@ -72,7 +72,7 @@ class TestLuceneSearcher extends Test {
     }
   }
 
-  it should "get the number of documents" in {
+  ignore should "get the number of documents" in {
     val numDocs = luceneSearcher.getNumDocs
 
     numDocs should be > 0

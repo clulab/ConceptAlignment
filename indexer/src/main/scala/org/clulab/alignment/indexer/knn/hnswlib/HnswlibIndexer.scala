@@ -41,7 +41,7 @@ class HnswlibIndexer {
     // DatamartEpsWeightedAverageEmbedder(w2v) // ~15 correct
     // DatamartExpWeightedAverageEmbedder(w2v) // ~13 correct
     // new DatamartNonStopwordEmbedder(w2v) // up to ~21 correct
-    DatamartOptWeightedAverageEmbedder(w2v)
+    DatamartOptWeightedAverageEmbedder(w2v) // ~21 correct and up to 23
     // DatamartPowWeightedAverageEmbedder(w2v) // ~14 correct for 0.5
     // new DatamartSingleEmbedder(w2v)
     // DatamartWeightedAverageEmbedder(w2v) // ~14 correct

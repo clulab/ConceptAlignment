@@ -2,7 +2,7 @@ package org.clulab.alignment.comparer
 
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
-import org.clulab.alignment.indexer.knn.hnswlib.HnswlibDatamartIndexerApp
+import org.clulab.alignment.indexer.knn.hnswlib.{HnswlibDatamartIndexerApp, HnswlibIndexer}
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex.Index
 import org.clulab.alignment.utils.Closer.AutoCloser
@@ -50,7 +50,7 @@ class ExperimentSpreadsheetsApp() {
     if (!rebuild)
       DatamartIndex.load(datamartIndexFilename)
     else {
-      HnswlibDatamartIndexerApp.run(datamartFilename, datamartIndexFilename)
+      new HnswlibIndexer().indexDatamart(datamartFilename, datamartIndexFilename)
       DatamartIndex.load(datamartIndexFilename)
     }
   }

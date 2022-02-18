@@ -7,7 +7,7 @@ import play.api.libs.json.Json
 
 @SerialVersionUID(1L)
 case class CompositionalOntologyIdentifier(
-  conceptOntologyIdentifier: FlatOntologyIdentifier, conceptPropertyOntologyIdentifierOpt: Option[FlatOntologyIdentifier],
+  conceptOntologyIdentifierOpt: Option[FlatOntologyIdentifier], conceptPropertyOntologyIdentifierOpt: Option[FlatOntologyIdentifier],
   processOntologyIdentifierOpt: Option[FlatOntologyIdentifier], processPropertyOntologyIdentifierOpt: Option[FlatOntologyIdentifier]
 ) extends Identifier {
 
@@ -16,15 +16,15 @@ case class CompositionalOntologyIdentifier(
     conceptOntologyIdentifier: FlatOntologyIdentifier, conceptPropertyOntologyIdentifier: FlatOntologyIdentifier,
     processOntologyIdentifier: FlatOntologyIdentifier, processPropertyOntologyIdentifier: FlatOntologyIdentifier
   ) = this(
-    conceptOntologyIdentifier, Some(conceptPropertyOntologyIdentifier),
+    Some(conceptOntologyIdentifier), Some(conceptPropertyOntologyIdentifier),
     Some(processOntologyIdentifier), Some(processPropertyOntologyIdentifier)
   )
 
   def this(
-    conceptOntologyName: String, conceptPropertyOntologyNameOpt: Option[String],
-    processOntologyNameOpt: Option[String], processPropertyOntologyNameOpt: Option[String]
+    conceptOntologyNameOpt: Option[String], conceptPropertyOntologyNameOpt: Option[String],
+    processOntologyNameOpt: Option[String], processPropertyOntologyNameOpt: Option[String], unused: Any
   ) = this(
-    FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptOntologyName, Some(CompositionalOntologyIdentifier.concept)),
+            conceptOntologyNameOpt.map(name => FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, name, Some(CompositionalOntologyIdentifier.concept))),
     conceptPropertyOntologyNameOpt.map(name => FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, name, Some(CompositionalOntologyIdentifier.property))),
             processOntologyNameOpt.map(name => FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, name, Some(CompositionalOntologyIdentifier.process))),
     processPropertyOntologyNameOpt.map(name => FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, name, Some(CompositionalOntologyIdentifier.property)))
@@ -34,15 +34,21 @@ case class CompositionalOntologyIdentifier(
     conceptOntologyName: String, conceptPropertyOntologyName: String,
     processOntologyName: String, processPropertyOntologyName: String
   ) = this(
-    conceptOntologyName, Some(conceptPropertyOntologyName),
-    Some(processOntologyName), Some(processPropertyOntologyName)
+    Some(conceptOntologyName), Some(conceptPropertyOntologyName),
+    Some(processOntologyName), Some(processPropertyOntologyName), unused = 0
   )
 
-  override def toString(): String = s"$conceptOntologyIdentifier\t$conceptPropertyOntologyIdentifierOpt\t$processOntologyIdentifierOpt\t$processPropertyOntologyIdentifierOpt"
+  override def toString(): String = s"$conceptOntologyIdentifierOpt\t$conceptPropertyOntologyIdentifierOpt\t$processOntologyIdentifierOpt\t$processPropertyOntologyIdentifierOpt"
+
+  def isEmpty: Boolean =
+              conceptOntologyIdentifierOpt.isEmpty &&
+      conceptPropertyOntologyIdentifierOpt.isEmpty &&
+              processOntologyIdentifierOpt.isEmpty &&
+      processPropertyOntologyIdentifierOpt.isEmpty
 
   def toJsObject: JsObject = {
     Json.obj(
-      CompositionalOntologyIdentifier.concept         -> conceptOntologyIdentifier.nodeName,
+      CompositionalOntologyIdentifier.concept         ->         conceptOntologyIdentifierOpt.map(_.nodeName),
       CompositionalOntologyIdentifier.conceptProperty -> conceptPropertyOntologyIdentifierOpt.map(_.nodeName),
       CompositionalOntologyIdentifier.process         ->         processOntologyIdentifierOpt.map(_.nodeName),
       CompositionalOntologyIdentifier.processProperty -> processPropertyOntologyIdentifierOpt.map(_.nodeName)
@@ -73,13 +79,13 @@ object CompositionalOntologyIdentifier {
     def getIdentifierOpt(valueOpt: Option[String], branch: String): Option[FlatOntologyIdentifier] =
         valueOpt.map(value => FlatOntologyIdentifier(ontology, value, Some(branch)))
 
-    val conceptIdentifier = FlatOntologyIdentifier(ontology, conceptOpt.get, Some(concept))
+    val         conceptIdentifierOpt = getIdentifierOpt(        conceptOpt, concept)
     val conceptPropertyIdentifierOpt = getIdentifierOpt(conceptPropertyOpt, property)
     val         processIdentifierOpt = getIdentifierOpt(        processOpt, process)
     val processPropertyIdentifierOpt = getIdentifierOpt(processPropertyOpt, property)
 
     CompositionalOntologyIdentifier(
-      conceptIdentifier, conceptPropertyIdentifierOpt,
+      conceptIdentifierOpt, conceptPropertyIdentifierOpt,
       processIdentifierOpt, processPropertyIdentifierOpt
     )
   }

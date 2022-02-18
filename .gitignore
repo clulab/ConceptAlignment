@@ -21,3 +21,5 @@ Docker/credentials/
 # Files for Docker deployment
 Docker/stage/
 
+# File for evaluation
+comparer/src/main/resources/org/clulab/alignment/comparer/indexes/hnswlib-glove.idx

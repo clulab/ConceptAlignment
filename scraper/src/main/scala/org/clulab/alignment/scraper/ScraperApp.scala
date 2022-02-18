@@ -32,6 +32,11 @@ object Scraper {
     "dataset_tags",
     "dataset_description",
     "dataset_url",
+
+    "dataset_geography",
+    "dataset_period_gte",
+    "dataset_period_lte",
+
     "variable_id",
     "variable_name",
     "variable_tags",

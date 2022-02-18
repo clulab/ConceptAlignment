@@ -3,13 +3,21 @@ package org.clulab.alignment.comparer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.webapp.searcher.Searcher
-import org.clulab.alignment.utils.{CsvWriter, FileUtils, TsvWriter}
+import org.clulab.alignment.utils.{FileUtils, TsvWriter}
 import org.clulab.alignment.utils.Closer.AutoCloser
 import org.clulab.alignment.webapp.searcher.SearcherLocations
 import org.clulab.wm.eidoscommon.utils.StringUtils
 
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ * This App reads the input csv files and writes out tsv files including
+ * new columns that unscrambles the munged ontology node and then matches
+ * the compositional ontology to indicators.  The indicators should have
+ * originated in the json file, like the indicators_11082021.jsonl, and
+ * then have been turned into an indexes.  indicators_11082021.jsonl ->
+ * datamart.tsv -> datamart.idx.
+ * */
 object CheckSpreadsheetsApp extends App {
   val ataInputFilename = "../comparer/ATA2.csv"
   val nafInputFilename = "../comparer/NAF2.csv"
@@ -39,11 +47,11 @@ object CheckSpreadsheetsApp extends App {
   def getNodeName(node: String, homeId: CompositionalOntologyIdentifier, awayIdOpt: Option[CompositionalOntologyIdentifier]): String = {
     val arrayBuffer = new ArrayBuffer[String]()
 
-    arrayBuffer += homeId.conceptOntologyIdentifier.nodeName
+    arrayBuffer += homeId.conceptOntologyIdentifierOpt.get.nodeName
     homeId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     homeId.processOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     homeId.processPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
-    awayIdOpt.foreach(arrayBuffer += _.conceptOntologyIdentifier.nodeName)
+    awayIdOpt.foreach(arrayBuffer += _.conceptOntologyIdentifierOpt.get.nodeName)
     awayIdOpt.foreach { awayId =>
       awayId.conceptPropertyOntologyIdentifierOpt.foreach(arrayBuffer += _.nodeName)
     }
@@ -109,20 +117,20 @@ object CheckSpreadsheetsApp extends App {
           val conceptIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPathLongOpt.get, Some(CompositionalOntologyIdentifier.concept))
           val (homeIdOpt, awayIdOpt) = {
             if (otherParts.isEmpty)
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, None, None)), None)
             else if (conceptPathShortOpt.isDefined) {
               val conceptShortIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptPathShortOpt.get, Some(CompositionalOntologyIdentifier.concept))
-              val homeIdOpt = Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, None, None))
-              val awayIdOpt = Some(new CompositionalOntologyIdentifier(conceptShortIdentifier, None, None, None))
+              val homeIdOpt = Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, None, None))
+              val awayIdOpt = Some(new CompositionalOntologyIdentifier(Some(conceptShortIdentifier), None, None, None))
               (homeIdOpt, awayIdOpt)
             }
             else if (propertyPathOpt.isDefined) {
               val propertyIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyPathOpt.get, Some(CompositionalOntologyIdentifier.property))
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, Some(propertyIdentifier), None, None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), Some(propertyIdentifier), None, None)), None)
             }
             else if (processPathOpt.isDefined) {
               val processIdentifier = FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processPathOpt.get, Some(CompositionalOntologyIdentifier.process))
-              (Some(new CompositionalOntologyIdentifier(conceptIdentifier, None, Some(processIdentifier), None)), None)
+              (Some(new CompositionalOntologyIdentifier(Some(conceptIdentifier), None, Some(processIdentifier), None)), None)
             }
             else
               (None, None)
@@ -138,7 +146,7 @@ object CheckSpreadsheetsApp extends App {
     }
     val homeIdAndAwayIdOptOpt = homeIdAndAwayIdOpts.find { case (homeId, awayIdOpt) =>
       try {
-        searcher.run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+        searcher.runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
         true
       }
       catch {
@@ -172,7 +180,7 @@ object CheckSpreadsheetsApp extends App {
         case _ => ???
       }
       val homeId = CompositionalOntologyIdentifier(
-        FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept1),Some(CompositionalOntologyIdentifier.concept)),
+        if (concept1.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept1),Some(CompositionalOntologyIdentifier.concept))),
         if (conceptProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty),Some(CompositionalOntologyIdentifier.property))),
         if (process.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, processMap(process),Some(CompositionalOntologyIdentifier.process))),
         if (processProperty.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(processProperty),Some(CompositionalOntologyIdentifier.property))),
@@ -181,7 +189,7 @@ object CheckSpreadsheetsApp extends App {
           if (concept2.isEmpty) None
           else
             Some(CompositionalOntologyIdentifier(
-              FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept2),Some(CompositionalOntologyIdentifier.concept)),
+              if (concept2.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, conceptMapShort(concept2),Some(CompositionalOntologyIdentifier.concept))),
               if (conceptProperty2.isEmpty) None else Some(FlatOntologyIdentifier(CompositionalOntologyIdentifier.ontology, propertyMap(conceptProperty2),Some(CompositionalOntologyIdentifier.property))),
               None,
               None
@@ -219,7 +227,7 @@ object CheckSpreadsheetsApp extends App {
                 homeIdAndAwayIdOptOpt
                     .map { case (homeId, awayIdOpt) =>
                       val datamartIdentifiers = searcher
-                          .run(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
+                          .runOld(homeId, awayIdOpt.toArray, maxHits, thresholdOpt)
                           .dstResults
                           .map { case (datamartIdentifier, _) => datamartIdentifier }
                           .map(_.toString)
@@ -244,7 +252,7 @@ object CheckSpreadsheetsApp extends App {
             }
 
         val (nodeName, datamartIdentifiers) = nodeNameAndDatamartIdentifiers
-//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ variableIds.take(3))
+//        xsvWriter.println(Seq(node, nodeName) ++ Seq(record.assigned, record.default) ++ datamartIdentifiers.take(3))
         xsvWriter.println(Seq(node, nodeName) ++ Seq("", "") ++ datamartIdentifiers.take(3))
       }
     }

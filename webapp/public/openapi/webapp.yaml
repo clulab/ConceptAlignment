@@ -33,20 +33,46 @@ components:
               description: a textual value for humans
               type: string
               example: waiting
-    statusResponse:
+    statusResponse1:
       type: object
       properties:
         version:
           type: string
           example: 1.2.6
         compOntology:
-          description: the git commit hash of the compositional ontology file
+          description: the git commit hash of the preinstalled compositional ontology file
           type: string
           example: "0f6a3510726fef3f0380bf2f966d4ea4b46af9f0"
+        flatOntology:
+          description: the git commit hash of the preinstalled flat ontology file
+          type: string
+          example: "53bb28c048264e89a30a605fddd77f93849299b1"
+        searcher:
+          $ref: "#/components/schemas/indexedStatus"
+        indexer:
+          $ref: "#/components/schemas/indexedStatus"
+    statusResponse2:
+      type: object
+      properties:
+        version:
+          type: string
+          example: 1.2.6
+        compOntology:
+          description: the ontologyId of the compositional ontology, if it was specified in the query, or the git commit hash of the default compositional ontology file
+          type: string
+          example: "0000000-1111-2222-3333-444444444444"
+        compStatus:
+          description: one of preinstalled, pending, absent, or present describing the state of the compositional ontology
+          type: string
+          example: present
         flatOntology:
           description: the git commit hash of the flat ontology file
           type: string
           example: "53bb28c048264e89a30a605fddd77f93849299b1"
+        flatStatus:
+          description: preinstalled, describing the state of the flat ontology
+          type: string
+          example: preinstalled
         searcher:
           $ref: "#/components/schemas/indexedStatus"
         indexer:
@@ -119,6 +145,38 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/scoredDatamart"
+    compositionalSearchRequest2:
+      type: object
+      properties:
+        context:
+          description: "Text near by or related to what is being grounded"
+          type: string
+        homeId:
+          $ref: "#/components/schemas/compositionalOntologyNode"
+        awayIds:
+          type: array
+          items:
+            $ref: "#/components/schemas/compositionalOntologyNode"
+      example:
+        context: "An aging population of farmers can create insecurity that might be addressed with training."
+        homeId:
+          concept: "wm/concept/population_demographics/age"
+          conceptProperty: "wm/property/stability"
+          process: "wm/process/training/agriculture_training"
+          processProperty: "wm/property/diversity"
+        awayIds:
+          - concept: "wm/concept/health/life"
+            conceptProperty: "wm/property/insecurity"
+            process: "wm/process/intake"
+            processProperty: "wm/property/preference"
+          - concept: "wm/concept/health/life"
+            conceptProperty: "wm/property/insecurity"
+            process: "wm/process/intake"
+            processProperty: "wm/property/preference"
+    bulkCompositionalSearchRequest2:
+      type: array
+      items:
+        $ref: "#/components/schemas/compositionalSearchRequest2"
     compositionalSearchResponse:
       type: array
       items:
@@ -314,7 +372,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/statusResponse"
+                $ref: "#/components/schemas/statusResponse1"
+
+  /v2/status:
+    get:
+      summary: Report the status (busy or ready)
+      parameters:
+        - name: ontologyId
+          in: query
+          description: identifier for the ontology
+          required: false
+          schema:
+            type: string
+          example: "0000000-1111-2222-3333-444444444444"
+      responses:
+        200:
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/statusResponse2"
+        400:
+          description: Something was wrong, possibly with an ontologyId that is unknown.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
 
   /v1/search:
     get:
@@ -413,8 +496,176 @@ paths:
                 $ref: "#/components/schemas/compositionalSearchResponse"
         400:
           description: Something was wrong, possibly with the request, probably the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
+
+  /v2/compositionalSearch:
+    put:
+      summary: For a home item in the compositional ontology and zero or more away items, find the best matches in the datamarts.
+      description: ""
+      parameters:
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        - name: ontologyId
+          in: query
+          description: identifier for the ontology
+          required: false
+          schema:
+            type: string
+          example: "0000000-1111-2222-3333-444444444444"
+        - name: geography
+          in: query
+          description: geographic entities involved (e.g., countries, cities, regions)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Country
+        - name: period_gte
+          in: query
+          description: start time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+        - name: period_lte
+          in: query
+          description: end time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/compositionalSearchRequest2"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/compositionalSearchResponse"
+        400:
+          description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+        500:
+          description: The searcher is not working correctly.
+
+  /v2/bulkCompositionalSearch:
+    put:
+      summary: For each context and compositional ontology node provided, find the best matches in the datamarts
+      description: ""
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+        - name: maxHits
+          in: query
+          description: maximum number of matches to return per ontology
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 1
+        - name: threshold
+          in: query
+          description: lowest score to return
+          required: false
+          schema:
+            type: number
+            format: float
+          example: 0.7
+        - name: ontologyId
+          in: query
+          description: identifier for the ontology
+          required: false
+          schema:
+            type: string
+          example: "0000000-1111-2222-3333-444444444444"
+        - name: geography
+          in: query
+          description: geographic entities involved (e.g., countries, cities, regions)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Country
+        - name: period_gte
+          in: query
+          description: start time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+        - name: period_lte
+          in: query
+          description: end time in milliseconds since the Unix epoch (January 1, 1970, 00:00 GMT)
+          required: false
+          schema:
+            type: number
+            format: int64
+          example:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/compositionalSearchRequest2"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/compositionalSearchResponse"
+        400:
+          description: Something was wrong, possibly with the request, probably the ontologyId or the Ids in the request body.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+        500:
+          description: The searcher is not working correctly.
+        503:
+          description: The searcher is not yet ready.
 
   /v1/bulkSearchOntologyToDatamart:
     get:
@@ -549,6 +800,10 @@ paths:
                 $ref: "#/components/schemas/groundIndicatorResponse"
         400:
           description: Something was wrong, possibly with the request.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
 
@@ -596,8 +851,47 @@ paths:
                 $ref: "#/components/schemas/groundModelResponse"
         400:
           description: Something was wrong, possibly with the request.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
         500:
           description: The searcher is not working correctly.
+
+  /v2/addOntology:
+    put:
+      summary: Let the system know of a new ontology
+      description: "The new ontology will be downloaded and used to reindex datamarts already scraped  Thereafter it is available for use in searches."
+      parameters:
+        - name: secret
+          in: query
+          description: the secret that allows access to this operation
+          required: true
+          schema:
+            type: string
+          example: secret
+        - name: ontologyId
+          in: query
+          description: identifier for the ontology
+          required: true
+          schema:
+            type: string
+          example: "0000000-1111-2222-3333-444444444444"
+      responses:
+        200:
+          description: OK, the new ontology it being created.  Please monitor the status.
+        400:
+          description: Something was wrong, possibly with an ontologyId that is unknown.
+          content:
+            'text/plain; charset=utf-8':
+              schema:
+                type: string
+        401:
+          description: The request is not authorized by the secret.
+        500:
+          description: The indexer is not working correctly.
+        503:
+          description: The indexer is busy loading or indexing.
 
   /v1/reindex:
     put:
@@ -612,8 +906,8 @@ paths:
             type: string
           example: secret
       responses:
-        201:
-          description: The new index is being created.
+        200:
+          description: OK, the new index is being created.  Please monitor the status.
         401:
           description: The request is not authorized by the secret.
         500:

@@ -22,6 +22,9 @@ object DatamartOntology {
     tokenizedTags
   }
 
+  def descriptionToStrings(description: String, tokenizer: Tokenizer): Array[String] =
+      tokenizer.tokenize(description)
+
   def fromFile(filename: String, tokenizer: Tokenizer): DatamartOntology = {
     val tsvReader = new TsvReader()
     val datamartEntries = Sourcer.sourceFromFile(filename).autoClose { source =>
@@ -32,19 +35,27 @@ object DatamartOntology {
           datasetId,
           _, // dataset_name
           datasetTagsJson,
-          _, // dataset_description
+          datasetDescription,
           _, // dataset_url
+
+          _, // datasetGeography
+          _, // datasetPeriodGte
+          _, // datasetPeriodLte
+
           variableId,
           _, // variable_name
           variableTagsJson,
           variableDescription
-        ) = tsvReader.readln(line, length = 10)
+        ) = tsvReader.readln(line, length = 13)
         val datamartIdentifier = new DatamartIdentifier(datamartId, datasetId, variableId)
-        val datasetTags = tagsToStrings(datasetTagsJson, tokenizer)
-        val variableTags = tagsToStrings(variableTagsJson, tokenizer)
-        val words = tokenizer.tokenize(variableDescription) ++ datasetTags ++ variableTags
+        val datasetTags = tagsToStrings(datasetTagsJson, tokenizer).toArray
+        val tokenizedDatasetDescription = descriptionToStrings(datasetDescription, tokenizer)
+        val variableTags = tagsToStrings(variableTagsJson, tokenizer).toArray
+        val tokenizedVariableDescription = descriptionToStrings(variableDescription, tokenizer)
+        // For backward compatability the datasetDescription is not included in the words.
+        val words = tokenizedVariableDescription ++ datasetTags ++ variableTags
 
-        DatamartEntry(datamartIdentifier, words)
+        DatamartEntry(datamartIdentifier, words, tokenizedDatasetDescription, datasetTags, tokenizedVariableDescription, variableTags)
       }.toVector
     }
 

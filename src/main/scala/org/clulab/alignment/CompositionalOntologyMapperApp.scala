@@ -1,9 +1,10 @@
 package org.clulab.alignment
 
 import com.github.jelmerk.knn.scalalike.SearchResult
+import org.clulab.alignment.combiner.{ContextAndOntologyCombiner, HomeAndAwayVectorCombiner}
+import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
-import org.clulab.alignment.data.ontology.CompositionalOntologyIdentifier
-import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
+import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
 import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, FlatOntologyIndex}
 import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, FlatOntologyAlignmentItem}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -13,6 +14,7 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
+import java.io.File
 import scala.collection.mutable
 
 case class CompositionalOntologyToDocuments(srcId: CompositionalOntologyIdentifier, dstResults: Seq[(DatamartDocument, Float)]) {
@@ -232,82 +234,6 @@ class HomeAndAwayOntologyScorer(homeWeight: Float, awayWeight: Float,
   }
 }
 
-class HomeAndAwayVectorCombiner(val homeWeight: Float, val awayWeight: Float,
-    val conceptWeight: Float, val conceptPropertyWeight: Float, val processWeight: Float, val processPropertyWeight: Float) {
-  require(homeWeight > 0)
-  require(conceptWeight > 0)
-
-  val homeAwaySum: Float = homeWeight + awayWeight
-  val homeFactor: Float = homeWeight / homeAwaySum
-  // This will be further divided by the number of away values so that they don't overwhelm the home value.
-  val awayFactor: Float = awayWeight / homeAwaySum
-  val weightSum: Float = conceptWeight + conceptPropertyWeight + processWeight + processPropertyWeight
-
-  def norm(array: Array[Float]): Array[Float] = {
-    val len = mul(array, array).sum
-    val result =
-        if (len == 0f) array
-        else mul(array, math.sqrt(1f / len).toFloat)
-
-    val len2 = mul(result, result).sum
-    result
-  }
-
-  def mul(array: Array[Float], factor: Float): Array[Float] = array.map(_ * factor)
-
-  def mulOpt(arrayOpt: Option[Array[Float]], factor: Float): Option[Array[Float]] =
-    arrayOpt.map(array => mul(array, factor))
-
-  def mul(left: Array[Float], right: Array[Float]): Array[Float] =
-    left.zip(right).map {
-      case (left, right) => left * right
-    }
-
-  def add(left: Array[Float], right: Array[Float]): Array[Float] =
-      left.zip(right).map {
-        case (left, right) => left + right
-      }
-
-  def addOpt(left: Array[Float], rightOpt: Option[Array[Float]]): Array[Float] = {
-    rightOpt.map { right =>
-      left.zip(right).map {
-        case (left, right) => left + right
-      }
-    }.getOrElse(left)
-  }
-
-  def combine(conceptVector: Array[Float], conceptPropertyVectorOpt: Option[Array[Float]],
-      processVectorOpt: Option[Array[Float]], processPropertyVectorOpt: Option[Array[Float]]): Array[Float] = {
-    val weightSum1 = conceptWeight
-    val weightSum2 = weightSum1 + conceptPropertyVectorOpt.map(_ => conceptPropertyWeight).getOrElse(0f)
-    val weightSum3 = weightSum2 +         processVectorOpt.map(_ =>         processWeight).getOrElse(0f)
-    val weightSum4 = weightSum3 + processPropertyVectorOpt.map(_ => processPropertyWeight).getOrElse(0f)
-    val weightSum = weightSum4
-
-    val step1 = mul(conceptVector, conceptWeight / weightSum)
-    val step2 = addOpt(step1, mulOpt(conceptPropertyVectorOpt, conceptPropertyWeight / weightSum))
-    val step3 = addOpt(step2, mulOpt(        processVectorOpt,         processWeight / weightSum))
-    val step4 = addOpt(step3, mulOpt(processPropertyVectorOpt, processPropertyWeight / weightSum))
-    val combined = step4
-    val normalized = norm(combined)
-
-    normalized
-  }
-
-  def combine(homeVector: Array[Float], awayVectors: Array[Array[Float]]): Array[Float] = {
-    if (awayVectors.nonEmpty) {
-      val totalAwayVector = awayVectors.tail.foldLeft(awayVectors.head) { (sum, score) => add(sum, score) }
-      val awayVector = mul(totalAwayVector, 1f / awayVectors.length)
-      val homeAndAwayVector = add(mul(homeVector, homeFactor), mul(awayVector, awayFactor))
-      val normalized = norm(homeAndAwayVector)
-
-      normalized
-    }
-    else
-      homeVector
-  }
-}
-
 // See SeqOdometer in Eidos.  This is here in part to avoid the dependency.
 class NestedIterator[T <: AnyRef](iterables: Array[Iterable[T]]) extends Iterator[mutable.ArraySeq[T]] {
   require(iterables.nonEmpty)
@@ -343,53 +269,84 @@ class NestedIterator[T <: AnyRef](iterables: Array[Iterable[T]]) extends Iterato
 
 class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val conceptIndex: FlatOntologyIndex.Index,
     val processIndex: FlatOntologyIndex.Index, val propertyIndex: FlatOntologyIndex.Index) {
+  val homeAndAwayCombiner = new HomeAndAwayVectorCombiner(1f, 1f, 1f, 1f, 1f, 1f)
+  val contextAndOntologyCombiner = new ContextAndOntologyCombiner(1f, 1f)
+  val tokenizer = Tokenizer()
 
-  def ontologyItemToDatamartMapping(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
-      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): CompositionalOntologyToDatamarts = {
+  def toVectorOpt(flatOntologyIdentifierOpt: Option[FlatOntologyIdentifier], index: FlatOntologyIndex.Index): Option[Array[Float]] = {
+    if (flatOntologyIdentifierOpt.isDefined) {
+      val flatOntologyIdentifier = flatOntologyIdentifierOpt.get
+      val flatOntologyAlignmentItemOpt = index.get(flatOntologyIdentifier)
 
-    val combiner = new HomeAndAwayVectorCombiner(1f, 1f, 1f, 1f, 1f, 1f)
-
-    def toVectorOpt(flatOntologyIdentifierOpt: Option[FlatOntologyIdentifier], index: FlatOntologyIndex.Index): Option[Array[Float]] = {
-      if (flatOntologyIdentifierOpt.isDefined) {
-        val flatOntologyIdentifier = flatOntologyIdentifierOpt.get
-        val flatOntologyAlignmentItemOpt = index.get(flatOntologyIdentifier)
-
-        // If it was specified but not found, then throw an exception.
-        if (flatOntologyAlignmentItemOpt.isEmpty)
-          None // throw new RuntimeException("")
-        else
-          Some(flatOntologyAlignmentItemOpt.get.vector)
-      }
-      // If it wasn't specified to start with, that's OK.
-      else None
+      // If it was specified but not found, then throw an exception.
+      if (flatOntologyAlignmentItemOpt.isEmpty)
+        None // throw new RuntimeException("")
+      else
+        Some(flatOntologyAlignmentItemOpt.get.vector)
     }
+    // If it wasn't specified to start with, that's OK.
+    else None
+  }
 
-    def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Array[Float] = {
-      val         conceptVectorOpt = toVectorOpt(Some(compositionalOntologyId.conceptOntologyIdentifier),      conceptIndex)
-      val conceptPropertyVectorOpt = toVectorOpt(compositionalOntologyId.conceptPropertyOntologyIdentifierOpt, propertyIndex)
-      val         processVectorOpt = toVectorOpt(compositionalOntologyId.        processOntologyIdentifierOpt, processIndex)
-      val processPropertyVectorOpt = toVectorOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, propertyIndex)
-      // If some Ids were specified, but not found, it is an error.
-      val bad = conceptVectorOpt.isEmpty ||
+  def toVector(compositionalOntologyId: CompositionalOntologyIdentifier): Array[Float] = {
+    val         conceptVectorOpt = toVectorOpt(compositionalOntologyId.        conceptOntologyIdentifierOpt, conceptIndex)
+    val conceptPropertyVectorOpt = toVectorOpt(compositionalOntologyId.conceptPropertyOntologyIdentifierOpt, propertyIndex)
+    val         processVectorOpt = toVectorOpt(compositionalOntologyId.        processOntologyIdentifierOpt, processIndex)
+    val processPropertyVectorOpt = toVectorOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, propertyIndex)
+    // If some Ids were specified, but not found, it is an error.
+    val bad =
+        (compositionalOntologyId.conceptOntologyIdentifierOpt.isDefined && conceptVectorOpt.isEmpty) ||
         (compositionalOntologyId.conceptPropertyOntologyIdentifierOpt.isDefined && conceptPropertyVectorOpt.isEmpty) ||
         (compositionalOntologyId.processOntologyIdentifierOpt.isDefined && processVectorOpt.isEmpty) ||
         (compositionalOntologyId.processPropertyOntologyIdentifierOpt.isDefined && processPropertyVectorOpt.isEmpty)
 
-      if (bad)
-        throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
-      else
-        combiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
-    }
+    if (bad)
+      throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
+    else
+      homeAndAwayCombiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
+  }
 
-    val homeVector = toVector(homeId)
-    val awayVector = awayIds.map(toVector)
-    val combinedVector = combiner.combine(homeVector, awayVector)
-    val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
-    val results = searchResults.map { searchResult =>
-      (searchResult.item.id, searchResult.distance)
-    }
+  def ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt: Option[Array[Float]], homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
+      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): CompositionalOntologyToDatamarts = {
+    if (contextVectorOpt.isEmpty || contextVectorOpt.get.isEmpty)
+      ontologyItemToDatamartMapping(homeId, awayIds, topKOpt, thresholdOpt)
+    else
+      ontologyItemToDatamartMappingWithContext(contextVectorOpt.get, homeId, awayIds, topKOpt, thresholdOpt)
+  }
 
-    CompositionalOntologyToDatamarts(homeId, results)
+  def ontologyItemToDatamartMapping(homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
+      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): CompositionalOntologyToDatamarts = {
+    if (homeId.isEmpty || awayIds.exists(_.isEmpty))
+      CompositionalOntologyToDatamarts(homeId, Seq.empty)
+    else {
+      val homeVector = toVector(homeId)
+      val awayVector = awayIds.map(toVector)
+      val combinedVector = homeAndAwayCombiner.combine(homeVector, awayVector)
+      val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
+      val results = searchResults.map { searchResult =>
+        (searchResult.item.id, searchResult.distance)
+      }
+
+      CompositionalOntologyToDatamarts(homeId, results)
+    }
+  }
+
+  def ontologyItemToDatamartMappingWithContext(contextVector: Array[Float], homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
+      topKOpt: Option[Int] = Some(datamartIndex.size), thresholdOpt: Option[Float] = None): CompositionalOntologyToDatamarts = {
+    if (homeId.isEmpty || awayIds.exists(_.isEmpty))
+      CompositionalOntologyToDatamarts(homeId, Seq.empty)
+    else {
+      val homeVector = toVector(homeId)
+      val awayVector = awayIds.map(toVector)
+      val contextAndHomeVector = contextAndOntologyCombiner.combine(contextVector, homeVector)
+      val combinedVector = homeAndAwayCombiner.combine(contextAndHomeVector, awayVector)
+      val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
+      val results = searchResults.map { searchResult =>
+        (searchResult.item.id, searchResult.distance)
+      }
+
+      CompositionalOntologyToDatamarts(homeId, results)
+    }
   }
 
   // NOTE: This is not being used in production.  It is an example of how it might be done.
@@ -448,7 +405,7 @@ println(s"elapsed = $elapsed ms")
   def idSearchResults(identifiersAndScores: mutable.Seq[(FlatOntologyIdentifier, Float)]): CompositionalOntologyIdentifier = {
     val ids = identifiersAndScores.map(_._1)
 
-    CompositionalOntologyIdentifier(ids(0), Some(ids(1)), Some(ids(2)), Some(ids(3)))
+    CompositionalOntologyIdentifier(Some(ids(0)), Some(ids(1)), Some(ids(2)), Some(ids(3)))
   }
 
   // NOTE: This is not being used in production.  It is an example of how it might be done.
@@ -541,6 +498,65 @@ println(s"elapsed = $elapsed sec")
 
   def alignDatamartItemToOntology(datamartItem: DatamartAlignmentItem, ontologyIndex: FlatOntologyIndex.Index, topK: Int, thresholdOpt: Option[Float]): Seq[(FlatOntologyIdentifier, Float)] = {
     alignVectorToOntology(datamartItem.vector, ontologyIndex, topK, thresholdOpt)
+  }
+}
+
+object CompositionalOntologyMapper {
+
+  def apply(compositionalOntologyMapper: CompositionalOntologyMapper, datamartIndex: DatamartIndex.Index): CompositionalOntologyMapper = {
+    val conceptIndex = compositionalOntologyMapper.conceptIndex
+    val processIndex = compositionalOntologyMapper.processIndex
+    val propertyIndex = compositionalOntologyMapper.propertyIndex
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
+  }
+
+  def mkIndexFilename(baseDir: String, filename: String, ontologyId: String): String = {
+    val name = new File(filename).getName
+
+    s"$baseDir/$ontologyId.ont/$name"
+  }
+
+  def mkOntologyFilename(baseDir: String, ontologyId: String): String = {
+    val dirName =  s"$baseDir/$ontologyId.ont"
+    val file = new File(dirName)
+
+    if (!file.exists)
+      file.mkdirs()
+    s"$dirName/ontology.yml"
+  }
+
+  def apply(ontologyId: String, datamartIndex: DatamartIndex.Index, baseDir: String,
+      conceptFilename: String, processFilename: String, propertyFilename: String): CompositionalOntologyMapper = {
+
+    def mkFilename(filename: String): String = mkIndexFilename(baseDir, filename, ontologyId)
+
+    val conceptIndex = FlatOntologyIndex.load(mkFilename(conceptFilename))
+    val processIndex = FlatOntologyIndex.load(mkFilename(processFilename))
+    val propertyIndex = FlatOntologyIndex.load(mkFilename(propertyFilename))
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
+  }
+
+  def apply(compositionalOntologyMapperOpt: Option[CompositionalOntologyMapper], datamartIndex: DatamartIndex.Index,
+      conceptFilename: String, processFilename: String, propertyFilename: String): CompositionalOntologyMapper = {
+    val (conceptIndex, processIndex, propertyIndex) = compositionalOntologyMapperOpt
+        .map { compositionalOntologyMapper =>
+          val conceptIndex = compositionalOntologyMapper.conceptIndex
+          val processIndex = compositionalOntologyMapper.processIndex
+          val propertyIndex = compositionalOntologyMapper.propertyIndex
+
+          (conceptIndex, processIndex, propertyIndex)
+        }
+        .getOrElse {
+          val conceptIndex = FlatOntologyIndex.load(conceptFilename)
+          val processIndex = FlatOntologyIndex.load(processFilename)
+          val propertyIndex = FlatOntologyIndex.load(propertyFilename)
+
+          (conceptIndex, processIndex, propertyIndex)
+        }
+
+    new CompositionalOntologyMapper(datamartIndex, conceptIndex, processIndex, propertyIndex)
   }
 }
 

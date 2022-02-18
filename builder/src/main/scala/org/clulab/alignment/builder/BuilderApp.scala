@@ -17,7 +17,7 @@ object BuilderApp extends App {
     dirName
   }
 
-  val baseDirName = ".."
+  val baseDirName = "../builder"
   val datamartFileName = "/datamarts.tsv"
   // $ # Make a directory to contain the indexes of the form ../index_# where the number might be 0.
   val indexDirName0 = ensureDirExists(baseDirName + "/index_0")
@@ -26,11 +26,11 @@ object BuilderApp extends App {
   val datamartFileName0 = indexDirName0 + datamartFileName
   val datamartFileName1 = indexDirName1 + datamartFileName
 
-  def indexGlove(): Unit = {
+  def indexGlove(countOpt: Option[Int] = None): Unit = {
     // $ # Run this one just once because it takes a long time and glove shouldn't change.  It doesn't go into ../Index_0.
     // $ sbt "indexer/runMain org.clulab.alignment.indexer.knn.hnswlib.HnswlibGloveIndexerApp ../hnswlib-glove.idx"
     val gloveFileName = baseDirName + "/hnswlib-glove.idx"
-    HnswlibGloveIndexerApp.run(gloveFileName)
+    HnswlibGloveIndexerApp.run(gloveFileName, countOpt)
   }
 
   def scrapeDatamarts0(): Unit = {
@@ -91,14 +91,14 @@ object BuilderApp extends App {
     HnswlibCompositionalOntologyIndexerApp.run(conceptIndexFileName, processIndexFileName, propertyIndexFileName)
   }
 
-  scrapeDatamarts0()
-  indexDatamarts0()
-  luceneIndexDatamarts0()
+//  scrapeDatamarts0()
+//  indexDatamarts0()
+//  luceneIndexDatamarts0()
 
-  scrapeDatamarts1()
-  indexDatamarts1()
-  luceneIndexDatamarts1()
+//  scrapeDatamarts1()
+//  indexDatamarts1()
+//  luceneIndexDatamarts1()
 
-  indexOntologies()
-  indexGlove()
+//  indexOntologies()
+  indexGlove(Some(1000))
 }

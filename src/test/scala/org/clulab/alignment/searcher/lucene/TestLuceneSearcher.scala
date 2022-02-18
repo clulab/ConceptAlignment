@@ -5,7 +5,7 @@ import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 
 class TestLuceneSearcher extends Test {
-  val luceneSearcher = new LuceneSearcher("../lucene-datamart-withgeotime", "variableDescription")
+  val luceneSearcher = null // new LuceneSearcher("../lucene-datamart-withgeotime", "variableDescription")
 
   def getDatamartDocumentsFromIds(datamartIdentifiers: Seq[DatamartIdentifier]): Seq[DatamartDocument] = {
     val datamartDocuments = datamartIdentifiers.map { datamartIdentifier =>

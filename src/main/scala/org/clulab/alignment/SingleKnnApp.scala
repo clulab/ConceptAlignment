@@ -12,6 +12,7 @@ import org.clulab.alignment.searcher.knn.KnnLocationsTrait
 import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
+import org.clulab.alignment.utils.Stopwords
 
 trait SingleKnnAppTrait {
   def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)]
@@ -60,7 +61,8 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
 
   def getVectorOpt(queryString: String): Option[Array[Float]] = {
     val words = tokenizer.tokenize(queryString)
-    val vector = getVectorOpt(words)
+    val nonStopWords = words.filterNot(Stopwords.values)
+    val vector = getVectorOpt(nonStopWords)
 
     vector
   }

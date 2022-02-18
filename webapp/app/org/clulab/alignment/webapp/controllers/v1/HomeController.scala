@@ -34,6 +34,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
     extends AbstractController(controllerComponents) with IndexReceiver {
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  // HelloApp.run("Testing...")
+
   var currentIndexer: IndexerTrait = prevIndexer
   var currentSearcher: Searcher = prevSearcher
   val secrets: Array[String] = Option(System.getenv(HomeController.secretsKey))
@@ -510,4 +512,20 @@ object HomeController {
   val secretsKey = "secrets"
   val maxMaxHits = 500 // Cap it off at some reasonable amount.
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
+}
+
+// For an object that extends App, the initialization code, here the setting of
+// the message, does not appear to be executed.  run(args(0)) does not get called.
+// However, as tested above, the call to run() can be made.  It's just that the
+// message will be null.  This pattern is used elsewhere in the code, but it
+// should probably be changed to something more conventional in case the functionality
+// is circumstantial.
+object HelloApp extends App {
+  val message = "Hello, there."
+
+  def run(ignore: String): Unit = {
+    println(message)
+  }
+
+  run(args(0))
 }

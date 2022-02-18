@@ -879,9 +879,7 @@ paths:
           example: "0000000-1111-2222-3333-444444444444"
       responses:
         200:
-          description: OK
-        201:
-          description: The new ontology is being created.
+          description: OK, the new ontology it being created.  Please monitor the status.
         400:
           description: Something was wrong, possibly with an ontologyId that is unknown.
           content:
@@ -909,9 +907,7 @@ paths:
           example: secret
       responses:
         200:
-          description: OK
-        201:
-          description: The new index is being created.
+          description: OK, the new index is being created.  Please monitor the status.
         401:
           description: The request is not authorized by the secret.
         500:

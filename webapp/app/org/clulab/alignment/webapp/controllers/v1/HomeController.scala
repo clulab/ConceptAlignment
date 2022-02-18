@@ -306,12 +306,12 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       log(method,s"with secret, maxHits='$maxHits', thresholdOpt='$thresholdOpt', ontologyIdOpt='$ontologyIdOpt', geography='${geographyToString(geography)}', periodGteOpt='$periodGteOpt', periodLteOpt='$periodLteOpt', and body='$body'")
       val searcher = currentSearcher
       val status = searcher.getStatus
-      if (false) // !secrets.contains(secret)) // TODO
+      if (!secrets.contains(secret))
         Unauthorized
       else if (status == SearcherStatus.Failing)
         InternalServerError
-//      else if (searcher.compositionalOntologyMapperOpt.isEmpty)
-//        ServiceUnavailable
+      else if (searcher.compositionalOntologyMapperOpt.isEmpty)
+        ServiceUnavailable
       else {
         val jsonBodyOpt: Option[JsValue] = body.asJson
         val jsonBody = jsonBodyOpt.getOrElse(throw new ExternalException("A json body was expected."))
@@ -321,7 +321,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 
               jsArray.value.map { jsValue =>
                 getCompositionalSearchSpec(jsValue)
-              }.toArray // TODO
+              }.toArray
             }
             catch {
               case throwable: Throwable => throw new ExternalException("Couldn't parse input.", throwable)
@@ -394,15 +394,15 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   // This is expected to take a long time.  Play seems to retry requests before they have completed.
-  // That is why the reason for the check on addingOntology.
+  // That is in part the reason for the check on addingOntology.
   def addOntology2(secret: String, ontologyId: String): Action[AnyContent] = Action {
     val method = "addOntology2"
     try {
       log(method, s"with secret and ontologyId=`$ontologyId`")
       val searcher = currentSearcher
       val status = searcher.getStatus
-      //      if (!secrets.contains(secret))
-      //        Unauthorized
+      if (!secrets.contains(secret))
+        Unauthorized
       if (status == SearcherStatus.Failing)
         InternalServerError
       else if (searcher.flatOntologyMapperOpt.isEmpty || searcher.compositionalOntologyMapperOpt.isEmpty)
@@ -412,17 +412,20 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       else if (searcher.getOntologyIdOpts.exists(_ (ontologyId)))
         throw new ExternalException(s"Ontology `$ontologyId` already exists.")
       else {
-        // ontologyId = fd513e69-01fd-4b9a-a609-610ff0394ddb
         val config: Config = ConfigFactory.defaultApplication().resolve()
         val ontologyService: String = config.getString("rest.consumer.ontologyService")
         val username: String = Try(config.getString("rest.consumer.username")).getOrElse("eidos")
         val password: String = Try(config.getString("rest.consumer.password")).getOrElse("quick_OHIO_flat_94")
+        // There should at least be enough time to see if this works.
         val ontology = new RealRestOntologyConsumer(ontologyService, username, password).autoClose { restOntologyConsumer =>
           restOntologyConsumer.open()
           restOntologyConsumer.download(ontologyId)
         }
-        // Since the return value is not used, it is OK if it times out.
-        searcher.addOntology(ontologyId, ontology)
+        Future {
+          // This takes some time.  Do it offline, in the future.
+          // Since the return value is not used, it is OK if it times out.
+          searcher.addOntology(ontologyId, ontology)
+        }
         Ok
       }
     }
@@ -430,7 +433,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
   }
 
   // This is expected to take a long time.
-  def reindex(secret: String): Action[AnyContent] = Action.async { Future {
+  def reindex(secret: String): Action[AnyContent] = Action {
     val method = "reindex"
     try {
       log(method, "with secret")
@@ -441,8 +444,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       else if (status == IndexerStatus.Crashing)
         InternalServerError
       // Allow retries by ignoring this state.
-      // else if (status == IndexerStatus.Failing)
-      //   InternalServerError
+      else if (status == IndexerStatus.Failing)
+        InternalServerError
       else if (status == IndexerStatus.Loading)
         ServiceUnavailable
       else if (status == IndexerStatus.Indexing)
@@ -451,14 +454,12 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
         // Do not set the currentSearcher yet because it could fail.
         // Do set the current indexer so that upon fail, a different
         // one can be used with the next index.
-        //currentIndexer = indexer.next(Some(this))
-
-        Thread.sleep(20)
-        Created
+        currentIndexer = indexer.next(Some(this))
+        Ok
       }
     }
     catch getCatcher(method)
-  }}
+  }
 
   def groundIndicator(maxHits: Int, thresholdOpt: Option[Float], compositional: Boolean): Action[AnyContent] = Action { request =>
     val method = "groundIndicator"
@@ -504,7 +505,7 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
 }
 
 object HomeController {
-  val VERSION = "1.5.1"
+  val VERSION = "1.5.5"
 
   val secretsKey = "secrets"
   val maxMaxHits = 500 // Cap it off at some reasonable amount.

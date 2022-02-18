@@ -13,4 +13,6 @@ trait LuceneSearcherTrait {
   def search(geography: Seq[String], periodGteOpt: Option[Long], periodLteOpt: Option[Long]): Seq[DatamartIdentifier]
 
   def find(identifier: DatamartIdentifier): Document
+
+  def close(): Unit
 }

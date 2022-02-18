@@ -388,8 +388,9 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
   }
 
   def close(): Unit = {
-    // Change state to closing
-    // TODO: maybe shut down the datamart Lucene searcher
+    loadingFuture.map { singleKnnApp =>
+      singleKnnApp.luceneSearcher.close()
+    }
   }
 }
 

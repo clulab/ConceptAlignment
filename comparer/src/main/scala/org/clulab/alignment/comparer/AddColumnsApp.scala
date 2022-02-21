@@ -20,8 +20,8 @@ object AddColumnsApp extends App {
 
       tsvWriter.println(
         "datamart_id", "dataset_id", "dataset_name", "dataset_tags", "dataset_description",
-        "dataset_url", "dataset_geography", "dataset_period_gte", "dataset_period_lte", "variable_id",
-        "variable_name", "variable_tags", "variable_description"
+        "dataset_url", "dataset_geography", "dataset_period_gte",
+        "dataset_period_lte", "variable_id", "variable_name", "variable_tags", "variable_description"
       )
       source.getLines.foreach { line =>
         val values = tsvReader.readln(line)

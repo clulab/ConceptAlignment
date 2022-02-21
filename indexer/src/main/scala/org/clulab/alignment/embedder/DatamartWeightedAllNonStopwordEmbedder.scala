@@ -40,7 +40,9 @@ class DatamartWeightedAllNonStopwordEmbedder(w2v: CompactWordEmbeddingMap, weigh
 }
 
 object DatamartWeightedAllNonStopwordEmbedder {
-  val weights = DatamartOptWeightedAverageEmbedder.weights
+  val weights = Array(1f, 0f, 1f, 1f) // ~19 correct
+  // val weights = Array(1f, 1f, 1f, 1f) // ~13 correct
+  // val weights = DatamartOptWeightedAverageEmbedder.weights // ~13 correct
 
   def apply(w2v: CompactWordEmbeddingMap): DatamartWeightedAllNonStopwordEmbedder = new DatamartWeightedAllNonStopwordEmbedder(w2v, weights)
 }

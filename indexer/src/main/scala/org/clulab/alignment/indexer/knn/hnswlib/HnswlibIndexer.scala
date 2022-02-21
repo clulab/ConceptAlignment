@@ -36,7 +36,7 @@ class HnswlibIndexer {
     // Pick one of these.  The old result was 10 correct, so anything better is good.
     // Remember that the indexing process is unstable, so results can differ across runs.
 
-    // DatamartWeightedAllNonStopwordEmbedder(w2v) // ~13 correct, whether optimal array or 1f.
+    // DatamartWeightedAllNonStopwordEmbedder(w2v) // ~19 correct
     // new DatamartAllNonStopwordEmbedder(w2v) // ~10 correct
     // new DatamartAverageEmbedder(w2v)
     // DatamartEpsWeightedAverageEmbedder(w2v) // ~15 correct

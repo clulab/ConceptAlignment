@@ -1,7 +1,7 @@
 package org.clulab.alignment
 
 import com.github.jelmerk.knn.scalalike.SearchResult
-import org.clulab.alignment.combiner.{ContextAndOntologyCombiner, HomeAndAwayVectorCombiner}
+import org.clulab.alignment.combiner.{CompositionalCombiner, ContextAndOntologyCombiner, HomeAndAwayVectorCombiner}
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
@@ -269,7 +269,8 @@ class NestedIterator[T <: AnyRef](iterables: Array[Iterable[T]]) extends Iterato
 
 class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val conceptIndex: FlatOntologyIndex.Index,
     val processIndex: FlatOntologyIndex.Index, val propertyIndex: FlatOntologyIndex.Index) {
-  val homeAndAwayCombiner = new HomeAndAwayVectorCombiner(1f, 1f, 1f, 1f, 1f, 1f)
+  val compositionalCombiner = new CompositionalCombiner(1f, 1f, 1f, 1f)
+  val homeAndAwayCombiner = new HomeAndAwayVectorCombiner(1f, 1f)
   val contextAndOntologyCombiner = new ContextAndOntologyCombiner(1f, 1f)
   val tokenizer = Tokenizer()
 
@@ -303,7 +304,7 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
     if (bad)
       throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
     else
-      homeAndAwayCombiner.combine(conceptVectorOpt.get, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
+      compositionalCombiner.combine(conceptVectorOpt, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
   }
 
   def ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt: Option[Array[Float]], homeId: CompositionalOntologyIdentifier, awayIds: Array[CompositionalOntologyIdentifier],
@@ -338,7 +339,7 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
     else {
       val homeVector = toVector(homeId)
       val awayVector = awayIds.map(toVector)
-      val contextAndHomeVector = contextAndOntologyCombiner.combine(contextVector, homeVector)
+      val contextAndHomeVector = contextAndOntologyCombiner.combine(Some(contextVector), Some(homeVector))
       val combinedVector = homeAndAwayCombiner.combine(contextAndHomeVector, awayVector)
       val searchResults = alignOntologyVectorToDatamart(combinedVector, topKOpt.getOrElse(datamartIndex.size), thresholdOpt)
       val results = searchResults.map { searchResult =>

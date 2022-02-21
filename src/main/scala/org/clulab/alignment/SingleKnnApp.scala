@@ -1,7 +1,6 @@
 package org.clulab.alignment
 
 import com.github.jelmerk.knn.scalalike.SearchResult
-import org.clulab.alignment.data.Normalizer
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
@@ -13,6 +12,7 @@ import org.clulab.alignment.searcher.lucene.LuceneSearcher
 import org.clulab.alignment.searcher.lucene.LuceneSearcherTrait
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
 import org.clulab.alignment.utils.Stopwords
+import org.clulab.normalizer.{MutableNormalizer, Normalizer}
 
 trait SingleKnnAppTrait {
   def run(queryString: String, maxHits: Int, thresholdOpt: Option[Float]): Seq[(DatamartDocument, Float)]
@@ -25,7 +25,7 @@ trait SingleKnnAppTrait {
 // datamart entry that can't be stored in the Knn index.
 class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartIndex.Index,
     val gloveIndex: GloveIndex.Index) extends SingleKnnAppTrait {
-  val normalizer = Normalizer()
+  val normalizer: Normalizer = MutableNormalizer()
   val tokenizer = Tokenizer()
   val unknownVector: Array[Float] = GloveIndex.find(gloveIndex, "").get
 
@@ -52,6 +52,7 @@ class SingleKnnApp(knnLocations: KnnLocationsTrait, val datamartIndex: DatamartI
               }
             }
           }
+          // Mutable is file here because composite is locally created.
           normalizer.normalize(composite)
         }
         else None

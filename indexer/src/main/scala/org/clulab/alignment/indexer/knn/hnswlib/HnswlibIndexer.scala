@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigValueFactory
 import java.io.{File, FileInputStream}
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.ontology.FlatOntologyIdentifier
-import org.clulab.alignment.embedder.{DatamartAllNonStopwordEmbedder, DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartNonStopwordEmbedder, DatamartOptWeightedAverageEmbedder, DatamartPowWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
+import org.clulab.alignment.embedder.{DatamartAllNonStopwordEmbedder, DatamartAverageEmbedder, DatamartEmbedder, DatamartEpsWeightedAverageEmbedder, DatamartExpWeightedAverageEmbedder, DatamartNonStopwordEmbedder, DatamartOptWeightedAverageEmbedder, DatamartPowWeightedAverageEmbedder, DatamartSingleEmbedder, DatamartWeightedAllNonStopwordEmbedder, DatamartWeightedAverageEmbedder, DatamartWordEmbedder}
 import org.clulab.alignment.grounder.datamart.DatamartOntology
 import org.clulab.alignment.indexer.knn.hnswlib.index.DatamartIndex
 import org.clulab.alignment.indexer.knn.hnswlib.index.GloveIndex
@@ -36,11 +36,12 @@ class HnswlibIndexer {
     // Pick one of these.  The old result was 10 correct, so anything better is good.
     // Remember that the indexing process is unstable, so results can differ across runs.
 
+    // DatamartWeightedAllNonStopwordEmbedder(w2v) // ~19 correct
     // new DatamartAllNonStopwordEmbedder(w2v) // ~10 correct
     // new DatamartAverageEmbedder(w2v)
     // DatamartEpsWeightedAverageEmbedder(w2v) // ~15 correct
     // DatamartExpWeightedAverageEmbedder(w2v) // ~13 correct
-    // new DatamartNonStopwordEmbedder(w2v) // up to ~21 correct
+    // new DatamartNonStopwordEmbedder(w2v) // often ~18, but up to ~21 correct
     DatamartOptWeightedAverageEmbedder(w2v) // ~21 correct and up to 23
     // DatamartPowWeightedAverageEmbedder(w2v) // ~14 correct for 0.5
     // new DatamartSingleEmbedder(w2v)

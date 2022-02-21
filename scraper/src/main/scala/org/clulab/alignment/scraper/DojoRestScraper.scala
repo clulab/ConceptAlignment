@@ -120,7 +120,7 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
   }
 
   def scrape(tsvWriter: TsvWriter): Unit = {
-//    scrapeModels(tsvWriter)
+    scrapeModels(tsvWriter)
     scrapeIndicators(tsvWriter)
   }
 }

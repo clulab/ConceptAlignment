@@ -91,14 +91,14 @@ object BuilderApp extends App {
     HnswlibCompositionalOntologyIndexerApp.run(conceptIndexFileName, processIndexFileName, propertyIndexFileName)
   }
 
-//  scrapeDatamarts0()
-//  indexDatamarts0()
-//  luceneIndexDatamarts0()
+  scrapeDatamarts0()
+  indexDatamarts0()
+  luceneIndexDatamarts0()
 
-//  scrapeDatamarts1()
-//  indexDatamarts1()
-//  luceneIndexDatamarts1()
+  scrapeDatamarts1()
+  indexDatamarts1()
+  luceneIndexDatamarts1()
 
-//  indexOntologies()
-  indexGlove(Some(1000))
+  indexOntologies()
+//  indexGlove(Some(1000))
 }

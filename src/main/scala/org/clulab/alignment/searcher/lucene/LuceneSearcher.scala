@@ -92,7 +92,10 @@ class LuceneSearcher(luceneDirname: String, field: String) extends LuceneSearche
 
     val query = builder.build()
     val searcher = new IndexSearcher(reader)
-    val topDocs = searcher.search(query, getNumDocs)
+    // Try to get at least 1 doc, even if there aren't any.
+    // Lucene throws an exception when 0 documents are requested.
+    val numDocs = math.max(getNumDocs, 1)
+    val topDocs = searcher.search(query, numDocs)
     val datamartIdentifiers =
         if (topDocs.totalHits > 0) {
           topDocs.scoreDocs.map { scoreDoc =>

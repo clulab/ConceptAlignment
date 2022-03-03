@@ -5,6 +5,7 @@ import org.clulab.alignment.combiner.{CompositionalCombiner, ContextAndOntologyC
 import org.clulab.alignment.data.Tokenizer
 import org.clulab.alignment.data.datamart.DatamartIdentifier
 import org.clulab.alignment.data.ontology.{CompositionalOntologyIdentifier, FlatOntologyIdentifier}
+import org.clulab.alignment.exception.ExternalException
 import org.clulab.alignment.indexer.knn.hnswlib.index.{DatamartIndex, FlatOntologyIndex}
 import org.clulab.alignment.indexer.knn.hnswlib.item.{DatamartAlignmentItem, FlatOntologyAlignmentItem}
 import org.clulab.alignment.searcher.lucene.document.DatamartDocument
@@ -295,15 +296,23 @@ class CompositionalOntologyMapper(val datamartIndex: DatamartIndex.Index, val co
     val         processVectorOpt = toVectorOpt(compositionalOntologyId.        processOntologyIdentifierOpt, processIndex)
     val processPropertyVectorOpt = toVectorOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, propertyIndex)
     // If some Ids were specified, but not found, it is an error.
-    val bad =
-        (compositionalOntologyId.conceptOntologyIdentifierOpt.isDefined && conceptVectorOpt.isEmpty) ||
-        (compositionalOntologyId.conceptPropertyOntologyIdentifierOpt.isDefined && conceptPropertyVectorOpt.isEmpty) ||
-        (compositionalOntologyId.processOntologyIdentifierOpt.isDefined && processVectorOpt.isEmpty) ||
-        (compositionalOntologyId.processPropertyOntologyIdentifierOpt.isDefined && processPropertyVectorOpt.isEmpty)
 
-    if (bad)
-      throw new RuntimeException(s"No vector is associated with '${compositionalOntologyId.toString}'." )
-    else
+    def getBadIdOpt(flatOntologyIdentifierOpt: Option[FlatOntologyIdentifier], vectorOpt: Option[Array[Float]]): Option[FlatOntologyIdentifier] = {
+      if (flatOntologyIdentifierOpt.isDefined && vectorOpt.isEmpty) flatOntologyIdentifierOpt
+      else None
+    }
+
+    val badIds = (
+      getBadIdOpt(compositionalOntologyId.conceptOntologyIdentifierOpt, conceptVectorOpt) ++
+      getBadIdOpt(compositionalOntologyId.conceptPropertyOntologyIdentifierOpt, conceptPropertyVectorOpt) ++
+      getBadIdOpt(compositionalOntologyId.processOntologyIdentifierOpt, processVectorOpt) ++
+      getBadIdOpt(compositionalOntologyId.processPropertyOntologyIdentifierOpt, processPropertyVectorOpt)
+    ).toSeq
+
+    if (badIds.nonEmpty) {
+      val parts = badIds.mkString(" and ")
+      throw new ExternalException(s"No vector is associated with '${compositionalOntologyId.toString}, specifically with these parts: $parts'.")
+    } else
       compositionalCombiner.combine(conceptVectorOpt, conceptPropertyVectorOpt, processVectorOpt, processPropertyVectorOpt)
   }
 

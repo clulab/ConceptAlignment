@@ -288,6 +288,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
         compositionalOntologyMapper.ontologyItemToDatamartMappingWithContextOpt(contextVectorOpt, homeId, awayIds, None, thresholdOpt) // Skip maxHits here.
       }
       catch {
+        case externalException: ExternalException => throw externalException
         case throwable: Throwable =>
           throw new InternalException(s"""Exception caught compositionally searching for $maxHits hits of "$homeId" on index $index""", throwable)
       }

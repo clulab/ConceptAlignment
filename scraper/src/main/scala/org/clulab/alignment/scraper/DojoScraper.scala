@@ -30,6 +30,7 @@ class DojoQualifierOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends
 
 abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value], val datamartId: String) {
   val id: String = jObj("id").str // required
+  val deprecated: Boolean = jObj.get("deprecated").map(_.bool).getOrElse(false) // optional
   val name: String = jObj("name").str
   val description: String = jObj("description").str // required
   val categories: Array[String] = DojoDocument.getCategories(jObj) // required

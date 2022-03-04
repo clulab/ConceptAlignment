@@ -44,18 +44,22 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         val dojoDocument = new ModelDocument(jObj)
         val datasetId = dojoDocument.id
 
-        DojoRestScraper.logger.info(s"Scraping DOJO model with datasetId $datasetId")
-        dojoDocument.parameters.map { parameter =>
-          writeDojoRecord(dojoDocument, parameter, tsvWriter, doubleIds, DojoRestScraper.logger)
-        }
-        dojoDocument.outputs.foreach { dojoOutput =>
-          writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
-        }
+        if (dojoDocument.deprecated)
+          DojoRestScraper.logger.info(s"Skip scraping deprecated DOJO model with datasetId $datasetId")
+        else {
+          DojoRestScraper.logger.info(s"Scraping DOJO model with datasetId $datasetId")
+          dojoDocument.parameters.map { parameter =>
+            writeDojoRecord(dojoDocument, parameter, tsvWriter, doubleIds, DojoRestScraper.logger)
+          }
+          dojoDocument.outputs.foreach { dojoOutput =>
+            writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+          }
 //        dojoDocument.qualifierOutputsOpt.map { qualifierOutputs =>
 //          qualifierOutputs.foreach { qualifierOutput =>
 //            writeDojoRecord(dojoDocument, qualifierOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
 //          }
 //        }
+        }
       }
 
       if (scrollIdOpt.isDefined && size >= modelsUrl.size) {
@@ -93,15 +97,19 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         val dojoDocument = new IndicatorDocument(jObj)
         val datasetId = dojoDocument.id
 
-        DojoRestScraper.logger.info(s"Scraping DOJO indicator with datasetId $datasetId")
-        dojoDocument.outputs.foreach { dojoOutput =>
-          writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+        if (dojoDocument.deprecated)
+          DojoRestScraper.logger.info(s"Skip scraping deprecated DOJO indicator with datasetId $datasetId")
+        else {
+          DojoRestScraper.logger.info(s"Scraping DOJO indicator with datasetId $datasetId")
+          dojoDocument.outputs.foreach { dojoOutput =>
+            writeDojoRecord(dojoDocument, dojoOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+          }
+  //        dojoDocument.qualifierOutputsOpt.map { qualifierOutputs =>
+  //          qualifierOutputs.foreach { qualifierOutput =>
+  //            writeDojoRecord(dojoDocument, qualifierOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
+  //          }
+  //        }
         }
-//        dojoDocument.qualifierOutputsOpt.map { qualifierOutputs =>
-//          qualifierOutputs.foreach { qualifierOutput =>
-//            writeDojoRecord(dojoDocument, qualifierOutput, tsvWriter, doubleIds, DojoRestScraper.logger)
-//          }
-//        }
       }
 
       if (scrollIdOpt.isDefined && size >= indicatorsUrl.size) {

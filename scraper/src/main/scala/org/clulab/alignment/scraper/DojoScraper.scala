@@ -31,6 +31,14 @@ class DojoQualifierOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends
 abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value], val datamartId: String) {
   val id: String = jObj("id").str // required
   val deprecated: Boolean = jObj.get("deprecated").map(_.bool).getOrElse(false) // optional
+  val doNotScrape: Boolean = {
+    val isPublished: Boolean = jObj.get("is_published").map(_.bool).getOrElse(false)
+    val hasNextVersion: Boolean = jObj.get("next_version")
+        .flatMap(DojoDocument.toOption) // It can be JNull.
+        .map(_.str.nonEmpty)
+        .getOrElse(false)
+    hasNextVersion || !isPublished
+  }
   val name: String = jObj("name").str
   val description: String = jObj("description").str // required
   val categories: Array[String] = DojoDocument.getCategories(jObj) // required
@@ -66,7 +74,7 @@ object DojoDocument {
     jObj.get("geography").map { geography =>
 
       def getStringArray(key: String): Array[String] = geography.obj.get(key)
-          .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+          .flatMap(toOption) // It can be JNull.
           .map(_.arr.toArray.map(_.str))
           .getOrElse(Array.empty)
 
@@ -79,12 +87,15 @@ object DojoDocument {
     }.getOrElse(Array.empty)
   }
 
+  def toOption(jValue: ujson.Value): Option[ujson.Value] =
+      if (jValue.isNull) None else Option(jValue)
+
   def getPeriod(jObj: mutable.Map[String, ujson.Value]): (Option[Long], Option[Long]) = jObj.get("period")
-      .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+      .flatMap(toOption) // It can be JNull.
       .flatMap { period =>
 
         def getLongOpt(key: String): Option[Long] = period.obj.get(key)
-            .flatMap { jValue => if (jValue.isNull) None else Option(jValue) } // It can be JNull.
+            .flatMap(toOption) // It can be JNull.
             .flatMap { jValue =>
               Try(jValue.num.toLong).toOption.flatMap { long =>
                 // If 0, assume that it doesn't really exist.

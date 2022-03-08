@@ -44,7 +44,7 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         val dojoDocument = new ModelDocument(jObj)
         val datasetId = dojoDocument.id
 
-        if (dojoDocument.doNotScrape)
+        if (dojoDocument.skip)
           DojoRestScraper.logger.info(s"Skip scraping deprecated DOJO model with datasetId $datasetId")
         else {
           DojoRestScraper.logger.info(s"Scraping DOJO model with datasetId $datasetId")
@@ -97,7 +97,7 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
         val dojoDocument = new IndicatorDocument(jObj)
         val datasetId = dojoDocument.id
 
-        if (dojoDocument.doNotScrape)
+        if (dojoDocument.skip)
           DojoRestScraper.logger.info(s"Skip scraping deprecated DOJO indicator with datasetId $datasetId")
         else {
           DojoRestScraper.logger.info(s"Scraping DOJO indicator with datasetId $datasetId")

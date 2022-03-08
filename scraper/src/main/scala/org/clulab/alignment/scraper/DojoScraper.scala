@@ -29,16 +29,8 @@ class DojoOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVari
 class DojoQualifierOutput(jVal: ujson.Value, dojoDocument: DojoDocument) extends DojoVariable(jVal, dojoDocument)
 
 abstract class DojoDocument(val jObj: mutable.Map[String, ujson.Value], val datamartId: String) {
+  val skip: Boolean
   val id: String = jObj("id").str // required
-  val deprecated: Boolean = jObj.get("deprecated").map(_.bool).getOrElse(false) // optional
-  val doNotScrape: Boolean = {
-    val isPublished: Boolean = jObj.get("is_published").map(_.bool).getOrElse(false)
-    val hasNextVersion: Boolean = jObj.get("next_version")
-        .flatMap(DojoDocument.toOption) // It can be JNull.
-        .map(_.str.nonEmpty)
-        .getOrElse(false)
-    hasNextVersion || !isPublished
-  }
   val name: String = jObj("name").str
   val description: String = jObj("description").str // required
   val categories: Array[String] = DojoDocument.getCategories(jObj) // required
@@ -146,12 +138,24 @@ object DojoDocument {
 }
 
 class ModelDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj, DojoScraper.datamartModelId) {
+  val skip: Boolean = {
+    val isPublished: Boolean = jObj.get("is_published").map(_.bool).getOrElse(false)
+    val hasNextVersion: Boolean = jObj.get("next_version")
+        .flatMap(DojoDocument.toOption) // It can be JNull.
+        .map(_.str.nonEmpty)
+        .getOrElse(false)
+    hasNextVersion || !isPublished
+  }
   val parameters: Array[DojoParameter] = DojoDocument.getParameters(jObj, this) // required
   val outputs: Array[DojoOutput] = DojoDocument.getOutputs(jObj, this) // required
   val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoDocument.getQualifierOutputsOpt(jObj, this)
 }
 
 class IndicatorDocument(jObj: mutable.Map[String, ujson.Value]) extends DojoDocument(jObj, DojoScraper.datamartIndicatorId) {
+  val skip: Boolean = {
+    val deprecated: Boolean = jObj.get("deprecated").map(_.bool).getOrElse(false) // optional
+    deprecated
+  }
   val outputs: Array[DojoOutput] = DojoDocument.getOutputs(jObj, this) // required
   val qualifierOutputsOpt: Option[Array[DojoQualifierOutput]] = DojoDocument.getQualifierOutputsOpt(jObj, this)
 }

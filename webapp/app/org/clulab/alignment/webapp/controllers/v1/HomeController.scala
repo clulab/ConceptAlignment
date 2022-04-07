@@ -446,8 +446,8 @@ class HomeController @Inject()(controllerComponents: ControllerComponents, prevI
       else if (status == IndexerStatus.Crashing)
         InternalServerError
       // Allow retries by ignoring this state.
-      else if (status == IndexerStatus.Failing)
-        InternalServerError
+      // else if (status == IndexerStatus.Failing)
+      //   InternalServerError
       else if (status == IndexerStatus.Loading)
         ServiceUnavailable
       else if (status == IndexerStatus.Indexing)

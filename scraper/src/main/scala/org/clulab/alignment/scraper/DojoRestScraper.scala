@@ -16,11 +16,12 @@ import scala.util.control.NonFatal
 class DojoRestScraper(baseUrl: String, username: String, password: String) extends DojoScraper {
   protected val auth = new Basic(username, password)
   protected val readTimeout = 60000
+  protected val connectTimeout = 20000
   val modelsUrl = new ModelsUrl(baseUrl)
   val indicatorsUrl = new IndicatorsUrl(baseUrl)
 
   def getJVal(datasetsUrl: String): ujson.Value = {
-    val json = requests.get(datasetsUrl, auth = auth, readTimeout = readTimeout).text(StandardCharsets.UTF_8)
+    val json = requests.get(datasetsUrl, auth = auth, readTimeout = readTimeout, connectTimeout = connectTimeout).text(StandardCharsets.UTF_8)
     ujson.read(json)
   }
 
@@ -123,7 +124,9 @@ class DojoRestScraper(baseUrl: String, username: String, password: String) exten
       loop(jVal)
     }
     catch {
-      case NonFatal(throwable) => println(throwable.getMessage)
+      case NonFatal(throwable) =>
+        println(throwable.getMessage)
+        throw throwable
     }
   }
 

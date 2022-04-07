@@ -46,6 +46,7 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       // Reuse the glove index when possible.
       val singleKnnApp = new SingleKnnApp(searcherLocations, datamartIndexOpt, gloveIndexOpt)
       val datamartIndex = singleKnnApp.datamartIndex
+      val isDatamartEmpty = datamartIndex.isEmpty
       gloveIndexOpt = Some(singleKnnApp.gloveIndex)
       // Reuse the ontologyIndex when possible.
       flatOntologyMapperOpt = Some(FlatOntologyMapper(flatOntologyMapperOpt, datamartIndex, searcherLocations.ontologyFilename))
@@ -57,7 +58,8 @@ class Searcher(val searcherLocations: SearcherLocations, datamartIndexOpt: Optio
       val dynamicCompositionalOntologyMapper = mkOrCopyDynamicOntologyMap(dynamicCompositionalOntologyMapperOpt, datamartIndex)
       dynamicCompositionalOntologyMapperOpt = Some(dynamicCompositionalOntologyMapper)
 
-      statusHolder.set(SearcherStatus.Waiting)
+      if (isDatamartEmpty) statusHolder.set(SearcherStatus.Wanting)
+      else statusHolder.set(SearcherStatus.Waiting)
       singleKnnApp
     }
     catch {

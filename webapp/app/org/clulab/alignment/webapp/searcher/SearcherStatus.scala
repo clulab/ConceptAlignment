@@ -17,7 +17,8 @@ class SearcherStatus(number: Int, text: String) extends Status {
 }
 
 object SearcherStatus {
-  case object Failing  extends SearcherStatus(-1, "failing")
-  case object Waiting  extends SearcherStatus( 0, "waiting")
-  case object Loading  extends SearcherStatus( 1, "loading")
+  case object Wanting extends SearcherStatus(-2, "wanting")
+  case object Failing extends SearcherStatus(-1, "failing")
+  case object Waiting extends SearcherStatus( 0, "waiting")
+  case object Loading extends SearcherStatus( 1, "loading")
 }

@@ -16,7 +16,7 @@ import scala.util.control.NonFatal
 class DojoRestScraper(baseUrl: String, username: String, password: String) extends DojoScraper {
   protected val auth = new Basic(username, password)
   protected val readTimeout = 60000
-  protected val connectTimeout = 20000
+  protected val connectTimeout = 60000
   val modelsUrl = new ModelsUrl(baseUrl)
   val indicatorsUrl = new IndicatorsUrl(baseUrl)
 

@@ -173,7 +173,7 @@ class ModelsUrl(baseUrl: String, query: String = DatasetsUrl.defaultQuery, size:
 
 object DatasetsUrl {
   val defaultQuery = "*"
-  val defaultSize = 1000
+  val defaultSize = 500
   val defaultIndicatorsPath = "indicators"
   val defaultModelsPath = "models"
 }

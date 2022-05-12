@@ -17,7 +17,7 @@ object BuilderApp extends App {
     dirName
   }
 
-  val baseDirName = "../builder"
+  val baseDirName = ".."
   val datamartFileName = "/datamarts.tsv"
   // $ # Make a directory to contain the indexes of the form ../index_# where the number might be 0.
   val indexDirName0 = ensureDirExists(baseDirName + "/index_0")

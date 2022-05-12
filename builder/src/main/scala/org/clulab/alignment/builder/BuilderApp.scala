@@ -100,5 +100,5 @@ object BuilderApp extends App {
   luceneIndexDatamarts1()
 
   indexOntologies()
-//  indexGlove(Some(1000))
+  indexGlove(None) // Some(1000))
 }

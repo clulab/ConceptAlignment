@@ -7,7 +7,7 @@ val appDir = topDir + "/app"
 val binDir = appDir + "/bin/" // The second half is determined by the plug-in.  Don't change.
 val app = binDir + "conceptalignment-webapp"
 val port = 9001
-val tag = "1.5.1"
+val tag = "1.5.6"
 
 Docker / defaultLinuxInstallLocation := appDir
 Docker / dockerBaseImage := "openjdk:8"

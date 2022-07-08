@@ -1,4 +1,5 @@
 # Changes
++ **0.5.7** - Allow dojo and ontology server URLs to be overridden with environment variables
 + **0.5.6** - Optimize weights, scrape models, rework combiners, improve error handling, account for deprecation, adjust timeouts and sizes
 + **0.5.5** - Scrape indicators, filter stopwords, embedders, V2 interface, Lucene search for countries and periods, combiners, dynamically add ontologies, 
 + **0.5.1** - Update Eidos dependency, logback

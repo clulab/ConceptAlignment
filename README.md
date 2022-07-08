@@ -106,6 +106,10 @@ environment variable.  If both ConceptAlignment and SuperMaaS are running in Doc
 containers, it may be necessary to reconfigure the scraper to use something like
 `supermaas_server_1:8000`.
 
+The scraper for Dojo is configured in the same `scraper/src/main/resources/application.conf` file.  It will either use the value recorded there or, when evailable, the value in environment variable `dojo`.  
+
+The `webapp` has the ability to download new ontologies which are supplied by a service with a REST interface.  The URL of the service is configured in `webapp/conf/application.conf` and can be overridden with the environment variable `REST_CONSUMER_ONTOLOGYSERVICE`.
+
 ### Preparing the Docker image
 
 #### Automatic preparation
@@ -171,4 +175,6 @@ $ docker run -p 9001:9001 --name conceptalignment --network supermaas_supermaas 
 $ # Access the webapp in a browser at http://localhost:9001.
 $ # If the credentials files were not included in the image, they must be added.  For automatically generated images for which they are not included, they should end up in `/conceptalignment/credentials`.
 $ docker run -p 9001:9001 --name conceptalignment -e secret="<secret_for_web_server>" -e secrets="password1|password2" -v`pwd`/../credentials:/conceptalignment/credentials clulab/conceptalignment:1.2.0
+$ # If server URLs need to be overridden, additional environment variables can be provided.
+$ docker run -p 9001:9001 --name conceptalignment -e dojo=<URL> -e REST_CONSUMER_ONTOLOGYSERVICE=<URL> -e secret="<secret_for_web_server>" -e secrets="password1|password2" -v`pwd`/../credentials:/conceptalignment/credentials clulab/conceptalignment:1.2.0
 ```

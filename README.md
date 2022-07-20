@@ -43,7 +43,11 @@ bottom-up components.
 Some of the instructions below use 1.2.0 as a version number.  Change this number as necessary.
 The standard port 9000 may already be used for SuperMaaS, so some instructions use 9001 instead.
 
-Scraping the datamarts in order to index them does require authorization.  Account login information is stored in files that are specified in `./scraper/src/main/resources/application.conf`.  For obvious reasons, the files are not included in this repo.  If you need access, please ask for them.
+Scraping the datamarts in order to index them does require authorization.  Account login information is stored in files that are specified in `./scraper/src/main/resources/application.conf`.  For obvious reasons, the files are not included in this repo.  If you need access, please ask for them.  They are formatted as such:
+```properties
+username = <username>
+password = <password>
+```
 
 In addition, scraping via the webapp as part of its reindexing operation is also protected by a secret.  To use the functionality, record a secret value in an environment variable called `secrets` before starting the webapp and then use the same value when requesting to reindex.
 

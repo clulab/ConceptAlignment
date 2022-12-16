@@ -10,9 +10,9 @@ This library under development for the DARPA WorldModelers program.
 It is intended to be used to align concepts from a top-down
 program ontology to bottom-up concepts/indicators/variables/model components.
 
-The REST API is served from http://linking.cs.arizona.edu which provides
-access to the OpenAPI documentation, either [statically](http://linking.cs.arizona.edu/assets/openapi/webapp.yaml)
-or [dynamically](http://linking.cs.arizona.edu/api).
+The REST API is served from https://linking.clulab.org (and http://linking.clulab.org as well as a deprecated
+http://linking.cs.arizona.edu) which provides access to the OpenAPI documentation, either
+[statically](https://linking.clulab.org/assets/openapi/webapp.yaml) or [dynamically](https://linking.clulab.org/api).
 
 ## Notes for the initiated
 

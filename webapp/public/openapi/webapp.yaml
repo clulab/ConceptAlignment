@@ -263,7 +263,8 @@ components:
           type: string
           example: "wm/entity/people/"
         score:
-          type: float
+          type: number
+          format: float
           example: 0.6891140341758728
     scoredCompGroundedNode:
       type: object
